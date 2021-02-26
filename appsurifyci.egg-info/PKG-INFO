@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: appsurifyci
-Version: 0.0.6.post5
+Version: 0.0.8
 Summary: Package used to run tests using Appsurify
 Home-page: https://appsurify.com
 Author: James Farrier
@@ -492,6 +492,10 @@ Description: # Appsurify CI Script
         
         Change Log
         ==========
+        
+        0.0.7 (08/02/2021)
+        -------------------
+        - Update for Azure to run tests via saved variable
         
         0.0.5 (08/02/2021)
         -------------------

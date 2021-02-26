@@ -2,6 +2,11 @@
 #requires python>3.6
 #Requires - pip install pyyaml
 
+#upload - https://www.youtube.com/watch?v=zhpI6Yhz9_4&ab_channel=MakerBytes
+#python setup.py sdist
+#twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+
+
 from urllib.parse import quote
 import os
 import sys
@@ -78,6 +83,7 @@ apikey =""
 project =""
 testsuite =""
 report = ""
+trainer = "false"
 
 
 def find(name):
@@ -588,6 +594,8 @@ def getresults():
         exit(1)    
 
 def push_results():
+    if trainer == "true":
+        runcommand("trainer")
     echo("pushing test results")
     if reporttype == "directory":
         filetype = ".xml"
@@ -656,7 +664,7 @@ def runtestswithappsurify(*args):
     global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecifi, endrunspecific
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
-    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun
+    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer
 
     tests=""
     testsrun=""
@@ -714,6 +722,7 @@ def runtestswithappsurify(*args):
     endrunpostfix=""
     executetests = "true"
     encodetests = "false"
+    trainer = "false"
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -725,9 +734,8 @@ def runtestswithappsurify(*args):
         argv = args[0]
         if type(argv) == tuple:
             argv = argv[0]
-    except: # catch *all* exceptions
-        e = sys.exc_info()[0]
-        print( "Error: %s" % e )
+    except Exception as e:
+        print(e)
     c=0
     print("===================================")
     if len(argv) > 1 :
@@ -832,6 +840,17 @@ def runtestswithappsurify(*args):
         startrunall="ant -f "+testtemplatearg2
         startrunspecific="ant -f "+testtemplatearg3
         report = testtemplatearg1
+
+    #https://stackoverflow.com/questions/35166214/running-individual-xctest-ui-unit-test-cases-for-ios-apps-from-the-command-li
+    if testtemplate == "kif":
+        testseparator=" "
+        addtestsuitename="true"
+        testsuitesnameseparator="/"
+        prefixtest = "-only-testing:"
+        startrunall="xcodebuild test "+testtemplatearg1
+        startrunspecific="xcodebuild test "+testtemplatearg1
+        report = "Test.xml"
+        trainer = "true"
 
 
     #set endrun to being final command for test runner i.e. browser etc
@@ -1019,8 +1038,8 @@ def runtestswithappsurify(*args):
         executetests = "false"
         testseparator="|"
         reporttype="file"
-        startrunspecific="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'" + "/TestCaseFilter:\"("
-        endrunspecific="\")"
+        startrunspecific="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'" + "/TestCaseFilter:\""
+        endrunspecific="\""
         postfixtest=""
         prefixtest="Name="
         startrunall="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'"
@@ -1206,6 +1225,8 @@ def runtestswithappsurify(*args):
                 password = argv[k+1]
             if argv[k] == "--executetests":
                 executetests = argv[k+1]
+            if argv[k] == "--trainer":
+                trainer = "true"
             if argv[k] == "--help":
                 echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCIScript")
 
@@ -1327,20 +1348,23 @@ def runtestswithappsurify(*args):
     print("Tests to run")
     print(testsrun)
 
-    try:
-        os.environ["TESTSTORUN"] = testsrun
-    except: # catch *all* exceptions
-        e = sys.exc_info()[0]
-        print( "Error: %s" % e )
+    #try:
+    #    os.environ["TESTSTORUN"] = testsrun
+    #except Exception as e:
+    #    print(e)
     
 
     if testsrun == "":
             print("executing all tests")
             execute_tests("", 0)
-            os.environ["TESTSTORUN"] = "*"
+            #os.environ["TESTSTORUN"] = "*"
 
     #print("tests " + os.environ.get('TESTSTORUN'))
     #print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
+    if testtemplate == "azure dotnet":
+        print (f'##vso[task.setvariable variable=TestsToRun]{testsrun}')
+    #print("##vso[task.setvariable variable=BuildVersion;]998")
+
 
 
     if failfast == "false" and rerun == "true" and teststorun != "none":

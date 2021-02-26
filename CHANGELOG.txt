@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.0.7 (08/02/2021)
+-------------------
+- Update for Azure to run tests via saved variable
+
 0.0.5 (08/02/2021)
 -------------------
 - Default rerun to false
