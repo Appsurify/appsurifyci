@@ -3,7 +3,7 @@
 #Requires - pip install pyyaml
 
 #upload - https://www.youtube.com/watch?v=zhpI6Yhz9_4&ab_channel=MakerBytes
-#python setup.py sdist
+#python3 setup.py sdist
 #twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
 
@@ -84,6 +84,7 @@ project =""
 testsuite =""
 report = ""
 trainer = "false"
+azure_variable = "testtorun"
 
 
 def find(name):
@@ -664,7 +665,7 @@ def runtestswithappsurify(*args):
     global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecifi, endrunspecific
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
-    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer
+    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable
 
     tests=""
     testsrun=""
@@ -723,6 +724,7 @@ def runtestswithappsurify(*args):
     executetests = "true"
     encodetests = "false"
     trainer = "false"
+    azure_variable = "testtorun"
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -1227,6 +1229,8 @@ def runtestswithappsurify(*args):
                 executetests = argv[k+1]
             if argv[k] == "--trainer":
                 trainer = "true"
+            if argv[k] == "--azurevariable":
+                azure_variable = argv[k+1]    
             if argv[k] == "--help":
                 echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCIScript")
 
@@ -1362,7 +1366,15 @@ def runtestswithappsurify(*args):
     #print("tests " + os.environ.get('TESTSTORUN'))
     #print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
     if testtemplate == "azure dotnet":
-        print (f'##vso[task.setvariable variable=TestsToRun]{testsrun}')
+        max_length = 28000
+        variable_num = 1
+        while len(testsrun) > max_length:
+            split_string = testsrun.find("|Name=",max_length)
+            setval = testsrun[:split_string]
+            testsrun = testsrun[split_string:]
+            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+            variable_num = variable_num + 1
+        print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
     #print("##vso[task.setvariable variable=BuildVersion;]998")
 
 
