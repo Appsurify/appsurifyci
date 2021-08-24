@@ -3,9 +3,10 @@
 #Requires - pip install pyyaml
 
 #upload - https://www.youtube.com/watch?v=zhpI6Yhz9_4&ab_channel=MakerBytes
-#python3 setup.py sdist
+#python setup.py sdist
 #twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
+#github actions - https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
 
 from urllib.parse import quote
 import os
@@ -85,7 +86,12 @@ testsuite =""
 report = ""
 trainer = "false"
 azure_variable = "testtorun"
-
+pipeoutput = "false"
+bitrise = "false"
+recursive = "false"
+executioncommand = ""
+printcommand = ""
+githubactionsvariable = ""
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -316,28 +322,46 @@ def urlencode(name):
 def echo(stringtoprint):
     print (stringtoprint)
 
-def runcommand(command):
-    echo("platform = " + sys.platform)
-    result = subprocess.run(command,  shell=True, capture_output=True)
-    #subprocess.run(['ls', '-l'])stdout=subprocess.PIPE,
-    print((result.stdout.decode('utf-8')))
-    print((result.stderr.decode('utf-8')))
-    return result.stdout.decode('utf-8')
+def runcommand(command, stream="false"):
+    print("Running command "+ command)
+    print("platform = " + sys.platform)
+    if stream == "true":
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf-8')
+        output = ""
+        while(True):
+            # returns None while subprocess is running
+            retcode = process.poll() 
+            line = process.stdout.readline()
+            output = output + line
+            print(line, end = '')
+            #yield line
+            if retcode is not None:
+                break
+        return output
+    if stream == "false":    
+        result = subprocess.run(command,  shell=True, capture_output=True)
+        #subprocess.run(['ls', '-l'])stdout=subprocess.PIPE,
+        print((result.stdout.decode('utf-8')))
+        print((result.stderr.decode('utf-8')))
+        return result.stdout.decode('utf-8')
 
 def delete_reports():
-    if reporttype == "directory":
-        folder = report
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                print(('Failed to delete %s. Reason: %s' % (file_path, e)))
-    if reporttype == "file":
-        os.remove(report)
+    try:
+        if reporttype == "directory":
+            folder = report
+            for filename in os.listdir(folder):
+                file_path = os.path.join(folder, filename)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                except Exception as e:
+                    print(('Failed to delete %s. Reason: %s' % (file_path, e)))
+        if reporttype == "file":
+            os.remove(report)
+    except Exception as exp:
+        print(('Failed to delete. Reason: %s' % (exp)))
 
 
 def execute_tests(testlist, testset):
@@ -376,7 +400,7 @@ def execute_tests(testlist, testset):
             command = startrunspecific + startrunpostfix + endrunprefix + endrunspecific + endrunpostfix
 
     echo("run command = " + command)
-    runcommand(command)
+    runcommand(command, pipeoutput)
     echo(os.getcwd())
     push_results()
 
@@ -451,7 +475,7 @@ def get_tests(testpriority):
     print((response.status_code))
 
     if response.status_code >= 500:
-        print(('[!] [{0}] Server Error'.format(response.status_code)))
+        print(('[!] [{0}] Server Error {1}'.format(response.status_code, response.content.decode('utf-8'))))
         return None
     elif response.status_code == 404:
         print(('[!] [{0}] URL not found: [{1}]'.format(response.status_code,api_url)))
@@ -558,7 +582,7 @@ def getresults():
     print("result request sent")
     resultset = ""
     if response.status_code >= 500:
-        print(('[!] [{0}] Server Error'.format(response.status_code)))
+        print(('[!] [{0}] Server Error {1}'.format(response.status_code, response.content.decode('utf-8'))))
         return None
     elif response.status_code == 404:
         print(('[!] [{0}] URL not found: [{1}]'.format(response.status_code,api_url)))
@@ -595,17 +619,27 @@ def getresults():
         exit(1)    
 
 def push_results():
+    print("pushing results " + reporttype + " " + report)
     if trainer == "true":
         runcommand("trainer")
-    echo("pushing test results")
+    
     if reporttype == "directory":
         filetype = ".xml"
-        if importtype == "trx":
-            filetype = ".trx"
-        for file in os.listdir(report):
-            if file.endswith(filetype):
-                echo(file)
-                call_import(os.path.abspath(os.path.join(report, file)))
+        if recursive == "true":
+            if importtype == "trx":
+                filetype = ".trx"
+            for root, dirs, files in os.walk(report):
+                for file in files:
+                    if file.endswith(filetype):
+                        echo(file)
+                        call_import(os.path.abspath(os.path.join(report, file)))
+        if recursive == "false":
+            if importtype == "trx":
+                filetype = ".trx"
+            for file in os.listdir(report):
+                if file.endswith(filetype):
+                    echo(file)
+                    call_import(os.path.abspath(os.path.join(report, file)))
     if reporttype == "file":
         call_import(report)
 
@@ -662,10 +696,10 @@ def call_import(filepath):
 
 def runtestswithappsurify(*args):
     global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
-    global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecifi, endrunspecific
+    global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
-    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable
+    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
 
     tests=""
     testsrun=""
@@ -725,6 +759,12 @@ def runtestswithappsurify(*args):
     encodetests = "false"
     trainer = "false"
     azure_variable = "testtorun"
+    pipeoutput = "false"
+    bitrise = "false"
+    recursive = "false"
+    executioncommand = ""
+    githubactionsvariable = ""
+    printcommand = ""
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -787,7 +827,6 @@ def runtestswithappsurify(*args):
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
         
-
     if runtemplate == "all tests":
         teststorun="all"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
@@ -874,7 +913,7 @@ def runtestswithappsurify(*args):
         startrunall="gradle test"
         report="./build/test-results/"
         reporttype="directory"
-        deletereports="true"
+        deletereports="false"
 
     if testtemplate == "mvn":
         testseparator=","
@@ -885,7 +924,7 @@ def runtestswithappsurify(*args):
         startrunall="mvn test"
         report="./target/surefire-reports/"
         reporttype="directory"
-        deletereports="true"
+        deletereports="false"
 
     if testtemplate == "webdriverio mocha":
         testseparator="|"
@@ -896,6 +935,9 @@ def runtestswithappsurify(*args):
         postfixtest="$"
         prefixtest="^"
         startrunall="wdio test "
+
+#protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
+#https://github.com/angular/protractor/issues/164
 
 
     #mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
@@ -908,7 +950,7 @@ def runtestswithappsurify(*args):
         startrunall="mvn test"
         report="./target/surefire-reports/"
         reporttype="directory"
-        deletereports="true"
+        deletereports="false"
 
     if testtemplate == "rspec":
         testseparator=" "
@@ -996,7 +1038,7 @@ def runtestswithappsurify(*args):
     #cypress
     #https://github.com/bahmutov/cypress-select-tests
     #cypress run --reporter junit --reporter-options mochaFile=result.xml
-    if testtemplate == "cyprus":
+    if testtemplate == "cypress":
         testseparator="|"
         reporttype="file"
         report="results.xml"
@@ -1230,10 +1272,27 @@ def runtestswithappsurify(*args):
             if argv[k] == "--trainer":
                 trainer = "true"
             if argv[k] == "--azurevariable":
-                azure_variable = argv[k+1]    
+                azure_variable = argv[k+1]
+            if argv[k] == "--pipeoutput":
+                pipeoutput = "true"
+            if argv[k] == "--bitrise":
+                bitrise = "true"
+            if argv[k] == "--recursive":
+                recursive = "true"
+            if argv[k] == "--githubactionsvariable":
+                githubactionsvariable = argv[k+1]
+            if argv[k] == "--executioncommand":
+                executioncommand = argv[k+1]
+            if argv[k] == "--printcommand":
+                printcommand = argv[k+1]
+            printcommand
             if argv[k] == "--help":
-                echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCIScript")
+                echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCI")
 
+    if githubactionsvariable != "" and githubactionsvariable is not None:
+        executioncommand = "echo \"{githubactionsvariable}={[[teststorun]]}\" >> $GITHUB_ENV"
+        printcommand = "\"{githubactionsvariable}={[[teststorun]]}\" >> $GITHUB_ENV"
+    
     if "http://" in proxy:
         proxy = proxy.replace("http://","")
 
@@ -1295,6 +1354,12 @@ def runtestswithappsurify(*args):
     if runfrequency == "betweenexclusive" and fromcommit == "":
         echo("no from commit specified and runfrequency set to betweenexclusive")
         exit(1)
+    if runfrequency != "single" and branch == "":
+        echo("no branch specified")
+        exit(1)
+    if commit == "":
+        echo("no commit specified")
+        exit(1)
 
     if startrunspecific == "" and teststorun != "all":
         if teststorun != "none":
@@ -1323,6 +1388,7 @@ def runtestswithappsurify(*args):
     valuetests=""
     finalTestNames=""
     testsrun = ""
+    print("test to run = " + teststorun)
     if teststorun == "all":
         execute_tests("", 0)
         testsrun="all"
@@ -1346,11 +1412,11 @@ def runtestswithappsurify(*args):
 
     ####start loop
     for i in testtypes:
-        print(("testsrun1 = " + testsrun))
+        #print(("testsrun1 = " + testsrun))
         testsrun = get_and_run_tests(i) + testsrun
 
-    print("Tests to run")
-    print(testsrun)
+    #print("Tests to run")
+    #print(testsrun)
 
     #try:
     #    os.environ["TESTSTORUN"] = testsrun
@@ -1377,6 +1443,42 @@ def runtestswithappsurify(*args):
         print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
     #print("##vso[task.setvariable variable=BuildVersion;]998")
 
+    print("Execution command = " + executioncommand)
+
+    if executioncommand != "" and executioncommand is not None:
+        
+        #max_length = 28000
+        #variable_num = 1
+        #while len(testsrun) > max_length:
+        #    split_string = testsrun.find("|Name=",max_length)
+        #    setval = testsrun[:split_string]
+        #    testsrun = testsrun[split_string:]
+        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+        #    variable_num = variable_num + 1
+        #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+        executioncommand = executioncommand.replace("[[teststorun]]", testsrun)
+        print("Execution command is "+ executioncommand)
+        runcommand(executioncommand, True)
+
+    if printcommand != "" and printcommand is not None:
+        
+        #max_length = 28000
+        #variable_num = 1
+        #while len(testsrun) > max_length:
+        #    split_string = testsrun.find("|Name=",max_length)
+        #    setval = testsrun[:split_string]
+        #    testsrun = testsrun[split_string:]
+        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+        #    variable_num = variable_num + 1
+        #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+        printcommand = printcommand.replace("[[teststorun]]", testsrun)
+        print(printcommand)
+
+    #if githubactionsvariable != "" and githubactionsvariable is not None:
+    #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
+
+    if bitrise == "true":
+        print (f'envman add --key TESTS_TO_RUN --value \"{testsrun}\"')
 
 
     if failfast == "false" and rerun == "true" and teststorun != "none":

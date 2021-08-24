@@ -1,5 +1,20 @@
 Change Log
 ==========
+0.0.18
+-------------------
+- Added recursive search for reports
+
+0.0.17
+-------------------
+- Add integration with Bitrise using --bitrise flag saves tests to env variable TESTS_TO_RUN
+
+0.0.16
+-------------------
+- Update for pipe output
+
+0.0.12
+-------------------
+- Update for pipe output
 
 0.0.9
 -------------------
