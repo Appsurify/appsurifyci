@@ -624,22 +624,27 @@ def push_results():
         runcommand("trainer")
     
     if reporttype == "directory":
+        directoryToPushFrom = report
+        if os.path.isdir(report):
+            print("directory is correct")
+        else:
+            directoryToPushFrom = os.path.join(os.getcwd(), directoryToPushFrom.strip("\\").strip("/") )
+            print("using dir " + directoryToPushFrom)
         filetype = ".xml"
         if recursive == "true":
             if importtype == "trx":
                 filetype = ".trx"
-            for root, dirs, files in os.walk(report):
+            for root, dirs, files in os.walk(directoryToPushFrom):
                 for file in files:
                     if file.endswith(filetype):
-                        echo(file)
-                        call_import(os.path.abspath(os.path.join(report, file)))
+                        call_import(os.path.abspath(os.path.join(root, file)))
         if recursive == "false":
             if importtype == "trx":
                 filetype = ".trx"
-            for file in os.listdir(report):
+            for file in os.listdir(directoryToPushFrom):
                 if file.endswith(filetype):
                     echo(file)
-                    call_import(os.path.abspath(os.path.join(report, file)))
+                    call_import(os.path.abspath(os.path.join(directoryToPushFrom, file)))
     if reporttype == "file":
         call_import(report)
 
@@ -765,6 +770,8 @@ def runtestswithappsurify(*args):
     executioncommand = ""
     githubactionsvariable = ""
     printcommand = ""
+    testsuiteencoded=""
+    projectencoded=""
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -823,6 +830,10 @@ def runtestswithappsurify(*args):
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
 
+    if runtemplate == "notests":
+        teststorun="none"
+        fail="newdefects, reopeneddefects, failedtests, brokentests"
+
     if runtemplate == "none":
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
@@ -835,6 +846,9 @@ def runtestswithappsurify(*args):
         teststorun="all"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
 
+    if runtemplate == "alltests":
+        teststorun="all"
+        fail="newdefects, reopeneddefects, failedtests, brokentests"
 
     if runtemplate == "top20":
         teststorun="top20"
@@ -1038,11 +1052,13 @@ def runtestswithappsurify(*args):
     #cypress
     #https://github.com/bahmutov/cypress-select-tests
     #cypress run --reporter junit --reporter-options mochaFile=result.xml
+    #updated to https://github.com/cypress-io/cypress-grep
     if testtemplate == "cypress":
-        testseparator="|"
+        testseparator="; "
         reporttype="file"
         report="results.xml"
-        startrunspecific="cypress run --reporter junit --reporter-options mochaFile=result.xml grep="
+        startrunspecific="cypress run --reporter junit --reporter-options mochaFile=result.xml grep=\""
+        endrunspecific="\""
         postfixtest="'"
         prefixtest="'"
         startrunall="cypress run --reporter junit --reporter-options mochaFile=result.xml"
