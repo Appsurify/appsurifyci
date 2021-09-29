@@ -15,6 +15,7 @@ import subprocess
 import shutil
 import json
 import requests
+import re
 from requests.auth import HTTPProxyAuth
 import csv
 from shutil import copyfile
@@ -92,6 +93,8 @@ recursive = "false"
 executioncommand = ""
 printcommand = ""
 githubactionsvariable = ""
+azurefilter = ""
+replaceretry = "false"
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -649,6 +652,17 @@ def push_results():
         call_import(report)
 
 def call_import(filepath):
+    if importtype == "trx" and replaceretry == "true":
+        with open(filepath, 'r') as openfile :
+            filedata = openfile.read()
+
+            # Replace the target string
+        filedata = re.sub(r' retry #\d\"', '"', filedata)
+
+        # Write the file out again
+        with open(filepath, 'w') as openfile:
+            openfile.write(filedata)
+
     apiurl = url+"/api/external/import/"
 
     payload = {'type': importtype,
@@ -705,6 +719,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
+    global azurefilter, replaceretry
 
     tests=""
     testsrun=""
@@ -772,6 +787,8 @@ def runtestswithappsurify(*args):
     printcommand = ""
     testsuiteencoded=""
     projectencoded=""
+    azurefilter = ""
+    replaceretry = "false"
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -1295,13 +1312,16 @@ def runtestswithappsurify(*args):
                 bitrise = "true"
             if argv[k] == "--recursive":
                 recursive = "true"
+            if argv[k] == "--replaceretry":
+                replaceretry = "true"
             if argv[k] == "--githubactionsvariable":
                 githubactionsvariable = argv[k+1]
             if argv[k] == "--executioncommand":
                 executioncommand = argv[k+1]
             if argv[k] == "--printcommand":
                 printcommand = argv[k+1]
-            printcommand
+            if argv[k] == "--azurefilter":
+                azurefilter = argv[k+1]
             if argv[k] == "--help":
                 echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCI")
 
@@ -1441,25 +1461,34 @@ def runtestswithappsurify(*args):
     
 
     if testsrun == "":
+        if executetests != "false":
             print("executing all tests")
             execute_tests("", 0)
-            #os.environ["TESTSTORUN"] = "*"
+        #os.environ["TESTSTORUN"] = "*"
 
     #print("tests " + os.environ.get('TESTSTORUN'))
     #print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
     if testtemplate == "azure dotnet":
         max_length = 28000
         variable_num = 1
-        while len(testsrun) > max_length:
-            split_string = testsrun.find("|Name=",max_length)
-            setval = testsrun[:split_string]
-            testsrun = testsrun[split_string:]
-            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
-            variable_num = variable_num + 1
-        print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+        if len(testsrun) == 0:
+            print("no tests to set for azure")
+            if azurefilter == "":
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+            if azurefilter != "":
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+            #print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
+        else:
+            while len(testsrun) > max_length:
+                split_string = testsrun.find("|Name=",max_length)
+                setval = testsrun[:split_string]
+                testsrun = testsrun[split_string:]
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{setval}')
+                variable_num = variable_num + 1
+            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
     #print("##vso[task.setvariable variable=BuildVersion;]998")
 
-    print("Execution command = " + executioncommand)
+    #print("Execution command = " + executioncommand)
 
     if executioncommand != "" and executioncommand is not None:
         

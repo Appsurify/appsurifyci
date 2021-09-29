@@ -1,5 +1,18 @@
 Change Log
 ==========
+0.0.22
+-------------------
+- Include additional filter for Azure
+
+0.0.21
+-------------------
+- Change report to work for partial paths in Windows
+
+0.0.19
+-------------------
+- Update for Cypress
+
+
 0.0.18
 -------------------
 - Added recursive search for reports
