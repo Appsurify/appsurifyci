@@ -20,6 +20,7 @@ from requests.auth import HTTPProxyAuth
 import csv
 from shutil import copyfile
 from xml.etree.ElementTree import ElementTree
+import xml.etree.ElementTree as ET
 try:
    import yaml
 except ImportError:
@@ -95,6 +96,7 @@ printcommand = ""
 githubactionsvariable = ""
 azurefilter = ""
 replaceretry = "false"
+webdriverio = "false"
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -652,8 +654,10 @@ def push_results():
         call_import(report)
 
 def call_import(filepath):
+    print("importing ")
+    print(filepath)
     if importtype == "trx" and replaceretry == "true":
-        with open(filepath, 'r') as openfile :
+        with open(filepath, 'r', errors='ignore') as openfile :
             filedata = openfile.read()
 
             # Replace the target string
@@ -662,6 +666,69 @@ def call_import(filepath):
         # Write the file out again
         with open(filepath, 'w') as openfile:
             openfile.write(filedata)
+
+    sizeOfFile = os.path.getsize(filepath)
+    #if importtype == "trx" and sizeOfFile > 1000000:
+    #    ET.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
+    #    tree = ET.ElementTree()
+    #    tree.parse(filepath)
+    #    root = tree.getroot()
+    #    ns = re.match(r'{.*}', root.tag).group(0)
+    #    for test in root.findall(f"{ns}Results"):
+    #        for testresult in test.findall(f"{ns}UnitTestResult"):
+                #testName = (testresult.get("testName"))
+                #sep = ','
+                #testName = testName.split(sep, 1)[0]
+                #sep = ' '
+                #testName = testName.split(sep, 1)[0]
+                #testresult.set("testName", testName)
+    #            for output in testresult.findall(f"{ns}Output"):
+    #                for stderr in output.findall(f"{ns}StdOut"):
+    #                    stderr.text = stderr.text[:500]
+    #                for stderr in output.findall(f"{ns}StdErr"):
+    #                    stderr.text = stderr.text[:500]
+    #                for ErrorInfo in output.findall(f"{ns}ErrorInfo"):
+    #                    for stacktrace in ErrorInfo.findall(f"{ns}StackTrace"):
+    #                        stacktrace.text = stacktrace.text[:500]
+    #    tree.write(filepath)
+
+    if importtype == "trx" and sizeOfFile > 1000000:
+        ET.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
+        tree = ET.ElementTree()
+        with open(filepath, 'r', errors='replace',encoding="utf8") as f:
+            root = ET.fromstring(f.read())
+            tree = ET.ElementTree()
+            ns = re.match(r'{.*}', root.tag).group(0)
+            for test in root.findall(f"{ns}Results"):
+                for testresult in test.findall(f"{ns}UnitTestResult"):
+                    for output in testresult.findall(f"{ns}Output"):
+                        for stderr in output.findall(f"{ns}StdOut"):
+                            stderr.text = stderr.text[:500]
+                        for stderr in output.findall(f"{ns}StdErr"):
+                            stderr.text = stderr.text[:500]
+                        for ErrorInfo in output.findall(f"{ns}ErrorInfo"):
+                            for stacktrace in ErrorInfo.findall(f"{ns}StackTrace"):
+                                stacktrace.text = stacktrace.text[:500]
+            tree._setroot(root)
+            tree.write(filepath)
+
+    if webdriverio == "true":
+        tree = ElementTree()
+        tree.parse(filepath)
+        root = tree.getroot()
+
+        for test in root.iter('testcase'):
+            #print("found testcase")
+            #for sysout in test.findall('system-out'):
+            #    test.remove(sysout)
+            #for syserror in test.findall('system-err'):
+            #    test.remove(syserror)
+            for error in test.findall('error'):
+                message = error.get("message")
+            for failure in test.findall('failure'):
+                failure.set("message", message)
+        tree.write(filepath)
+      
 
     apiurl = url+"/api/external/import/"
 
@@ -719,7 +786,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry
+    global azurefilter, replaceretry, webdriverio
 
     tests=""
     testsrun=""
@@ -789,6 +856,7 @@ def runtestswithappsurify(*args):
     projectencoded=""
     azurefilter = ""
     replaceretry = "false"
+    webdriverio = "false"
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -966,6 +1034,7 @@ def runtestswithappsurify(*args):
         postfixtest="$"
         prefixtest="^"
         startrunall="wdio test "
+        webdriverio = "true"
 
 #protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
 #https://github.com/angular/protractor/issues/164
@@ -1122,6 +1191,20 @@ def runtestswithappsurify(*args):
         startrunall="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'"
         report=testtemplatearg1
         importtype="trx"
+
+    if testtemplate == "azure specflow":
+        encodetests = "true"
+        executetests = "false"
+        testseparator="|"
+        reporttype="file"
+        startrunspecific="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'" + "/TestCaseFilter:\""
+        endrunspecific="\""
+        postfixtest=""
+        prefixtest="Name="
+        startrunall="vstest.console.exe /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'"
+        report=testtemplatearg1
+        importtype="trx"
+        replaceretry = "true"
 
     #Jasmine3
     #npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
