@@ -97,6 +97,9 @@ githubactionsvariable = ""
 azurefilter = ""
 replaceretry = "false"
 webdriverio = "false"
+percentage = ""
+endspecificrun = ""
+runnewtests = "false"
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -463,6 +466,9 @@ def get_tests(testpriority):
         params["target_branch"] = branch
         params["from_commit"] = fromcommit
 
+    if percentage.isnumeric():
+        params["percentage"] = percentage
+    
     print(params)
 
     if proxy == "":
@@ -504,7 +510,6 @@ def get_tests(testpriority):
 def get_and_run_tests(type):
     testset = get_tests(type)
     count=0
-    
     tests = ""
     try:    
         for element in testset:
@@ -786,7 +791,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests
 
     tests=""
     testsrun=""
@@ -857,6 +862,9 @@ def runtestswithappsurify(*args):
     azurefilter = ""
     replaceretry = "false"
     webdriverio = "false"
+    percentage = ""
+    endspecificrun=""
+    runnewtests = "false"
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -1148,6 +1156,7 @@ def runtestswithappsurify(*args):
         postfixtest="'"
         prefixtest="'"
         startrunall="cypress run --reporter junit --reporter-options mochaFile=result.xml"
+        endspecificrun = " grep=\""
 
     #mstest
     #/Tests:TestMethod1,testMethod2
@@ -1161,6 +1170,7 @@ def runtestswithappsurify(*args):
         startrunall="mstest /resultsfile:'" + testtemplatearg1 + "' /testcontainer:'" + testtemplatearg2 + "'"
         report=testtemplatearg1
         importtype="trx"
+        
 
 
     #vstest
@@ -1405,6 +1415,15 @@ def runtestswithappsurify(*args):
                 printcommand = argv[k+1]
             if argv[k] == "--azurefilter":
                 azurefilter = argv[k+1]
+            if argv[k] == "--percentage":
+                percentage = argv[k+1]
+            if argv[k] == "--runcommand":
+                startrunall = argv[k+1]
+                startrunspecific = argv[k+1] + endspecificrun
+                print("fall back command = "+ startrunall)
+                print("prioritized run = "+ startrunspecific)
+            if argv[k] == "--runnewtests":
+                runnewtests = argv[k+1]
             if argv[k] == "--help":
                 echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCI")
 
@@ -1488,7 +1507,7 @@ def runtestswithappsurify(*args):
         echo("startrunall needs to be set in order to execute tests")
         exit(1)
     if startrunspecific == "" and teststorun == "all" and rerun == "true":
-        echo("startrunspecific needs to be set in order to rerun tests, either set rerun to false or set startrunaspecific")
+        echo("startrunspecific needs to be set in order to rerun tests, either set rerun to false or set startrunspecific")
         exit(1)
 
     #if [[ $teststorun == "" ]] ; then echo "no teststorun specified" ; exit 1 ; fi
@@ -1518,21 +1537,27 @@ def runtestswithappsurify(*args):
 
     testtypes=[]
 
-    if "high" in teststorun:
-        testtypes.append(1)
-    if "medium" in teststorun:
-        testtypes.append(2)
-    if "low" in teststorun:
-        testtypes.append(3)
-    if "unassigned" in teststorun:
-        testtypes.append(4)
-    if "top20" in teststorun:
-        testtypes.append(8)
+    if percentage.isnumeric():
+        testtypes.append(9)
+    else:
+        if "high" in teststorun:
+            testtypes.append(1)
+        if "medium" in teststorun:
+            testtypes.append(2)
+        if "low" in teststorun:
+            testtypes.append(3)
+        if "unassigned" in teststorun:
+            testtypes.append(4)
+        if "top20" in teststorun:
+            testtypes.append(8)
 
     ####start loop
     for i in testtypes:
         #print(("testsrun1 = " + testsrun))
-        testsrun = get_and_run_tests(i) + testsrun
+        try:
+            testsrun = get_and_run_tests(i) + testsrun
+        except Exception as e:
+            print("Error running tests in set "+ i)
 
     #print("Tests to run")
     #print(testsrun)
@@ -1554,6 +1579,37 @@ def runtestswithappsurify(*args):
     if testtemplate == "azure dotnet":
         max_length = 28000
         variable_num = 1
+
+        if runnewtests != "false":
+            old_percentage = percentage
+            percentage = "100"
+            testset = get_tests(9)
+            count=0
+            alltests = runcommand(runnewtests)
+            i = 0
+            for line in alltests.splitlines():
+                line = line.strip()
+                if i != 0:
+                    newtest = True
+                    for element in testset:
+                        testName = element["name"]
+                        if testName == line:
+                            newtest = False
+                    if newtest == True:
+                        testtoadd = line
+                        if encodetests == "true":
+                            testtoadd = testtoadd.replace("\\", "\\\\")
+                            testtoadd = testtoadd.replace("(", "\(")
+                            testtoadd = testtoadd.replace(")", "\)")
+                            testtoadd = testtoadd.replace("&", "\&")
+                            testtoadd = testtoadd.replace("|", "\|")
+                            testtoadd = testtoadd.replace("=", "\=")
+                            testtoadd = testtoadd.replace("!", "\!")
+                            testtoadd = testtoadd.replace("~", "\~")
+                        testsrun = testsrun+testseparator+prefixtest+testtoadd+postfixtest 
+                if line == "The following Tests are available:":
+                    i = i+1
+            percentage = old_percentage
         if len(testsrun) == 0:
             print("no tests to set for azure")
             if azurefilter == "":
