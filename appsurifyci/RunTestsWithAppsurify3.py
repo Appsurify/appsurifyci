@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 #requires python>3.6
 #Requires - pip install pyyaml
+#Proxy issue - pip install urllib3==1.25.11
 
 #upload - https://www.youtube.com/watch?v=zhpI6Yhz9_4&ab_channel=MakerBytes
 #python setup.py sdist
 #twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
 #github actions - https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+#https://stackoverflow.com/questions/66642705/why-requests-raise-this-exception-check-hostname-requires-server-hostname
 
 from urllib.parse import quote
 import os
@@ -333,25 +335,29 @@ def echo(stringtoprint):
 def runcommand(command, stream="false"):
     print("Running command "+ command)
     print("platform = " + sys.platform)
-    if stream == "true":
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf-8')
-        output = ""
-        while(True):
-            # returns None while subprocess is running
-            retcode = process.poll() 
-            line = process.stdout.readline()
-            output = output + line
-            print(line, end = '')
-            #yield line
-            if retcode is not None:
-                break
-        return output
-    if stream == "false":    
-        result = subprocess.run(command,  shell=True, capture_output=True)
-        #subprocess.run(['ls', '-l'])stdout=subprocess.PIPE,
-        print((result.stdout.decode('utf-8')))
-        print((result.stderr.decode('utf-8')))
-        return result.stdout.decode('utf-8')
+    try:
+        if stream == "true":
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf-8')
+            output = ""
+            while(True):
+                # returns None while subprocess is running
+                retcode = process.poll() 
+                line = process.stdout.readline()
+                output = output + line
+                print(line, end = '')
+                #yield line
+                if retcode is not None:
+                    break
+            return output
+        if stream == "false":    
+            result = subprocess.run(command,  shell=True, capture_output=True)
+            #subprocess.run(['ls', '-l'])stdout=subprocess.PIPE,
+            print((result.stdout.decode('utf-8')))
+            print((result.stderr.decode('utf-8')))
+            return result.stdout.decode('utf-8')
+    except Exception as ex:
+        print(ex)
+
 
 def delete_reports():
     try:
@@ -407,7 +413,7 @@ def execute_tests(testlist, testset):
         else:
             command = startrunspecific + startrunpostfix + endrunprefix + endrunspecific + endrunpostfix
 
-    echo("run command = " + command)
+    #echo("run command = " + command)
     runcommand(command, pipeoutput)
     echo(os.getcwd())
     push_results()
@@ -467,21 +473,31 @@ def get_tests(testpriority):
         params["from_commit"] = fromcommit
 
     if percentage.isnumeric():
-        params["percentage"] = percentage
+        params["percent"] = percentage
     
     print(params)
 
     if proxy == "":
         response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params)
     else:
-        httpproxy = "http://"+proxy
-        httpsproxy = "https://"+proxy
-        proxies = {"http": httpproxy,"https": httpsproxy}
-        if username == "":
-            response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies)
-        else:
-            auth = HTTPProxyAuth(username, password)
-            response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies, auth=auth)
+        try:
+            httpproxy = "http://"+proxy
+            httpsproxy = "https://"+proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies, auth=auth)
+        except:
+            httpproxy = proxy
+            httpsproxy = proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params, proxies=proxies, auth=auth)
     print("request sent to get tests")
     print((response.status_code))
 
@@ -511,6 +527,10 @@ def get_and_run_tests(type):
     testset = get_tests(type)
     count=0
     tests = ""
+    print(maxtests)
+    print("max tests")
+    #print(type(maxtests))
+    #print("type")
     try:    
         for element in testset:
             count = count + 1
@@ -530,10 +550,13 @@ def get_and_run_tests(type):
                 tests = tests+testseparator+prefixtest+testName+postfixtest
             
             if count == maxtests:
+                print("reached max tests")
                 execute_tests(tests, type)
                 count = 0
                 tests = ""
+                print("restarting test count")
                 failfast_tests()
+                
     except:
         print("No tests to run")
         
@@ -551,6 +574,7 @@ def get_and_run_tests(type):
 #def failfast_tests(tests):
 def failfast_tests():
     if failfast == "true":
+        print("failing fast")
         rerun_tests()
         getresults()
 
@@ -581,14 +605,24 @@ def getresults():
     if proxy == "":
         response = requests.get(url+'/api/external/output/', headers=headers, params=params)
     else:
-        httpproxy = "http://"+proxy
-        httpsproxy = "https://"+proxy
-        proxies = {"http": httpproxy,"https": httpsproxy}
-        if username == "":
-            response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies)
-        else:
-            auth = HTTPProxyAuth(username, password)
-            response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies, auth=auth)
+        try:
+            httpproxy = "http://"+proxy
+            httpsproxy = "https://"+proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies, auth=auth)
+        except:
+            httpproxy = proxy
+            httpsproxy = proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.get(url+'/api/external/output/', headers=headers, params=params, proxies=proxies, auth=auth)
     print("result request sent")
     resultset = ""
     if response.status_code >= 500:
@@ -656,7 +690,10 @@ def push_results():
                     echo(file)
                     call_import(os.path.abspath(os.path.join(directoryToPushFrom, file)))
     if reporttype == "file":
-        call_import(report)
+        try:
+            call_import(report)
+        except:
+            print("Import failed")
 
 def call_import(filepath):
     print("importing ")
@@ -754,15 +791,25 @@ def call_import(filepath):
     if proxy == "":
         response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
-        httpproxy = "http://"+proxy
-        httpsproxy = "https://"+proxy
-        proxies = {"http": httpproxy,"https": httpsproxy}
-        if username == "":
-            response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies)
-        else:
-            auth = HTTPProxyAuth(username, password)
-            response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies, auth=auth)
-    
+        try:
+            httpproxy = "http://"+proxy
+            httpsproxy = "https://"+proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies, auth=auth)
+        except:
+            httpproxy = proxy
+            httpsproxy = proxy
+            proxies = {"http": httpproxy,"https": httpsproxy}
+            if username == "":
+                response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies)
+            else:
+                auth = HTTPProxyAuth(username, password)
+                response = requests.post(apiurl, headers=headers, data=payload, files=files, proxies=proxies, auth=auth)
+
     print("file import sent")
     if response.status_code >= 500:
         print(('[!] [{0}] Server Error {1}'.format(response.status_code, response.content.decode('utf-8'))))
@@ -1151,12 +1198,12 @@ def runtestswithappsurify(*args):
         testseparator="; "
         reporttype="file"
         report="results.xml"
-        startrunspecific="cypress run --reporter junit --reporter-options mochaFile=result.xml grep=\""
+        startrunspecific="cypress run --reporter junit --reporter-options mochaFile=result.xml --env grep=\""
         endrunspecific="\""
-        postfixtest="'"
-        prefixtest="'"
+        postfixtest=""
+        prefixtest=""
         startrunall="cypress run --reporter junit --reporter-options mochaFile=result.xml"
-        endspecificrun = " grep=\""
+        endspecificrun = " --env grep=\""
 
     #mstest
     #/Tests:TestMethod1,testMethod2
@@ -1370,7 +1417,7 @@ def runtestswithappsurify(*args):
             if argv[k] == "--branch":
                 branch = argv[k+1]
             if argv[k] == "--maxtests":
-                maxtests = argv[k+1]
+                maxtests = int(argv[k+1])
             if argv[k] == "--scriptlocation":
                 scriptlocation = argv[k+1]
             if argv[k] == "--runfrequency":
@@ -1557,7 +1604,7 @@ def runtestswithappsurify(*args):
         try:
             testsrun = get_and_run_tests(i) + testsrun
         except Exception as e:
-            print("Error running tests in set "+ i)
+            print("Error running tests in set")
 
     #print("Tests to run")
     #print(testsrun)
@@ -1591,7 +1638,9 @@ def runtestswithappsurify(*args):
                 line = line.strip()
                 if i != 0:
                     newtest = True
+                    count = 0
                     for element in testset:
+                        count = count + 1
                         testName = element["name"]
                         if testName == line:
                             newtest = False
