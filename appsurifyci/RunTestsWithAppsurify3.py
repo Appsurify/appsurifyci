@@ -20,6 +20,7 @@ import requests
 import re
 from requests.auth import HTTPProxyAuth
 import csv
+import datetime
 from shutil import copyfile
 from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
@@ -102,6 +103,8 @@ webdriverio = "false"
 percentage = ""
 endspecificrun = ""
 runnewtests = "false"
+weekendrunall = "false"
+newdays = 14
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -472,8 +475,11 @@ def get_tests(testpriority):
         params["target_branch"] = branch
         params["from_commit"] = fromcommit
 
-    if percentage.isnumeric():
+    if percentage.isnumeric() and testpriority != 11 and testpriority != 10:
         params["percent"] = percentage
+
+    if testpriority == 11:
+        params["day"] = newdays
     
     print(params)
 
@@ -524,14 +530,17 @@ def get_tests(testpriority):
     return None
 
 def get_and_run_tests(type):
-    testset = get_tests(type)
     count=0
     tests = ""
-    print(maxtests)
-    print("max tests")
-    #print(type(maxtests))
-    #print("type")
+    testset = ""
     try:    
+        testset = get_tests(type)
+        count=0
+        tests = ""
+        print(maxtests)
+        print("max tests")
+        #print(type(maxtests))
+        #print("type")
         for element in testset:
             count = count + 1
             testName = element["name"]
@@ -838,7 +847,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays
 
     tests=""
     testsrun=""
@@ -912,6 +921,8 @@ def runtestswithappsurify(*args):
     percentage = ""
     endspecificrun=""
     runnewtests = "false"
+    weekendrunall = "false"
+    newdays = 14
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -969,14 +980,17 @@ def runtestswithappsurify(*args):
     if runtemplate == "no tests":
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
+        executetests = "false"
 
     if runtemplate == "notests":
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
+        executetests = "false"
 
     if runtemplate == "none":
         teststorun="none"
         fail="newdefects, reopeneddefects, failedtests, brokentests"
+        executetests = "false"
         
     if runtemplate == "all tests":
         teststorun="all"
@@ -1464,13 +1478,17 @@ def runtestswithappsurify(*args):
                 azurefilter = argv[k+1]
             if argv[k] == "--percentage":
                 percentage = argv[k+1]
+            if argv[k] == "--weekendrunall":
+                weekendrunall = "true"
+            if argv[k] == "--newdays":
+                newdays = argv[k+1]
             if argv[k] == "--runcommand":
                 startrunall = argv[k+1]
                 startrunspecific = argv[k+1] + endspecificrun
                 print("fall back command = "+ startrunall)
                 print("prioritized run = "+ startrunspecific)
-            if argv[k] == "--runnewtests":
-                runnewtests = argv[k+1]
+            #if argv[k] == "--runnewtests":
+            #    runnewtests = argv[k+1]
             if argv[k] == "--help":
                 echo("please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyCI")
 
@@ -1576,7 +1594,7 @@ def runtestswithappsurify(*args):
     print("test to run = " + teststorun)
     if teststorun == "all":
         execute_tests("", 0)
-        testsrun="all"
+        #testsrun="all"
 
     if teststorun == "none":
         testsrun="none"
@@ -1598,6 +1616,14 @@ def runtestswithappsurify(*args):
         if "top20" in teststorun:
             testtypes.append(8)
 
+    if runnewtests != "false":
+        testtypes.append(11)
+
+    weekno = datetime.datetime.today().weekday()
+    if teststorun != "all" and teststorun != "none" and weekendrunall == "true" and weekno >= 5:
+        testtypes=[]
+
+
     ####start loop
     for i in testtypes:
         #print(("testsrun1 = " + testsrun))
@@ -1606,8 +1632,9 @@ def runtestswithappsurify(*args):
         except Exception as e:
             print("Error running tests in set")
 
-    #print("Tests to run")
-    #print(testsrun)
+    if executetests == "false":
+        print("Tests to run")
+        print(testsrun)
 
     #try:
     #    os.environ["TESTSTORUN"] = testsrun
@@ -1616,7 +1643,7 @@ def runtestswithappsurify(*args):
     
 
     if testsrun == "":
-        if executetests != "false":
+        if executetests != "false" and teststorun != "all":
             print("executing all tests")
             execute_tests("", 0)
         #os.environ["TESTSTORUN"] = "*"
@@ -1627,13 +1654,14 @@ def runtestswithappsurify(*args):
         max_length = 28000
         variable_num = 1
 
-        if runnewtests != "false":
+        if runnewtests != "false" and runnewtests != "true":
             old_percentage = percentage
             percentage = "100"
             testset = get_tests(9)
             count=0
             alltests = runcommand(runnewtests)
             i = 0
+            newtestset = ""
             for line in alltests.splitlines():
                 line = line.strip()
                 if i != 0:
@@ -1656,10 +1684,12 @@ def runtestswithappsurify(*args):
                             testtoadd = testtoadd.replace("!", "\!")
                             testtoadd = testtoadd.replace("~", "\~")
                         testsrun = testsrun+testseparator+prefixtest+testtoadd+postfixtest 
+                        newtestset = newtestset+testseparator+prefixtest+testtoadd+postfixtest
                 if line == "The following Tests are available:":
                     i = i+1
             percentage = old_percentage
-        if len(testsrun) == 0:
+            execute_tests(newtestset,11)
+        if len(testsrun) == 0 or testsrun == "all":
             print("no tests to set for azure")
             if azurefilter == "":
                 print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
@@ -1671,6 +1701,8 @@ def runtestswithappsurify(*args):
                 split_string = testsrun.find("|Name=",max_length)
                 setval = testsrun[:split_string]
                 testsrun = testsrun[split_string:]
+                if variable_num == 1:
+                    print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{setval}')
                 print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{setval}')
                 variable_num = variable_num + 1
             print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
@@ -1718,7 +1750,6 @@ def runtestswithappsurify(*args):
         rerun_tests()
         
     getresults()
-
     exit()
 
 
