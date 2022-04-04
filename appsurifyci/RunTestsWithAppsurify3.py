@@ -98,6 +98,7 @@ executioncommand = ""
 printcommand = ""
 githubactionsvariable = ""
 azurefilter = ""
+azurefilteronall = "false"
 replaceretry = "false"
 webdriverio = "false"
 percentage = ""
@@ -328,6 +329,113 @@ def generate_sahi(teststocreate):
 ###############################################################################################################################
 ###############################################################################################################################
 #Main Script
+
+#created at 3/3 from below should be kept up to date.  Refactor to use the same method for both
+def setVariables():
+    if testtemplate == "azure dotnet":
+        max_length = 28000
+        variable_num = 1
+        #moved new test section to else statement as if we are running all tests then no need to check for new
+        
+        if len(testsrun) == 0 or testsrun == "all":
+            print("no tests to set for azure")
+            if azurefilteronall == "false":
+                azurefilter = ""
+            if azurefilter != "":
+                #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}')
+                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}')
+            if azurefilter == "":
+                #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+                print (f'##vso[task.setvariable variable={azure_variable}]')
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]')
+            #print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
+        else:
+            if runnewtests != "false" and runnewtests != "true":
+                old_percentage = percentage
+                percentage = "100"
+                testset = get_tests(9)
+                count=0
+                alltests = runcommand(runnewtests)
+                i = 0
+                newtestset = ""
+                for line in alltests.splitlines():
+                    line = line.strip()
+                    if i != 0:
+                        newtest = True
+                        count = 0
+                        for element in testset:
+                            count = count + 1
+                            testName = element["name"]
+                            if testName == line:
+                                newtest = False
+                        if newtest == True:
+                            testtoadd = line
+                            if encodetests == "true":
+                                testtoadd = testtoadd.replace("\\", "\\\\")
+                                testtoadd = testtoadd.replace("(", "\(")
+                                testtoadd = testtoadd.replace(")", "\)")
+                                testtoadd = testtoadd.replace("&", "\&")
+                                testtoadd = testtoadd.replace("|", "\|")
+                                testtoadd = testtoadd.replace("=", "\=")
+                                testtoadd = testtoadd.replace("!", "\!")
+                                testtoadd = testtoadd.replace("~", "\~")
+                            testsrun = testsrun+testseparator+prefixtest+testtoadd+postfixtest 
+                            newtestset = newtestset+testseparator+prefixtest+testtoadd+postfixtest
+                    if line == "The following Tests are available:":
+                        i = i+1
+                percentage = old_percentage
+                execute_tests(newtestset,11)
+            print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{testsrun}')
+            while len(testsrun) > max_length:
+                split_string = testsrun.find("|Name=",max_length)
+                setval = testsrun[:split_string]
+                testsrun = testsrun[split_string:]                   
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{setval}')
+                variable_num = variable_num + 1
+            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+    #print("##vso[task.setvariable variable=BuildVersion;]998")
+
+    #print("Execution command = " + executioncommand)
+
+    if executioncommand != "" and executioncommand is not None:
+        
+        #max_length = 28000
+        #variable_num = 1
+        #while len(testsrun) > max_length:
+        #    split_string = testsrun.find("|Name=",max_length)
+        #    setval = testsrun[:split_string]
+        #    testsrun = testsrun[split_string:]
+        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+        #    variable_num = variable_num + 1
+        #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+        executioncommand = executioncommand.replace("[[teststorun]]", testsrun)
+        print("Execution command is "+ executioncommand)
+        runcommand(executioncommand, True)
+
+    if printcommand != "" and printcommand is not None:
+        
+        #max_length = 28000
+        #variable_num = 1
+        #while len(testsrun) > max_length:
+        #    split_string = testsrun.find("|Name=",max_length)
+        #    setval = testsrun[:split_string]
+        #    testsrun = testsrun[split_string:]
+        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+        #    variable_num = variable_num + 1
+        #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+        printcommand = printcommand.replace("[[teststorun]]", testsrun)
+        print(printcommand)
+
+    #if githubactionsvariable != "" and githubactionsvariable is not None:
+    #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
+
+    if bitrise == "true":
+        print (f'envman add --key TESTS_TO_RUN --value \"{testsrun}\"')
+
+
+    if failfast == "false" and rerun == "true" and teststorun != "none":
+        rerun_tests()
 
 def urlencode(name):
     return quote(name, safe='')
@@ -847,7 +955,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall
 
     tests=""
     testsrun=""
@@ -916,6 +1024,7 @@ def runtestswithappsurify(*args):
     testsuiteencoded=""
     projectencoded=""
     azurefilter = ""
+    azurefilteronall = "false"
     replaceretry = "false"
     webdriverio = "false"
     percentage = ""
@@ -1476,6 +1585,8 @@ def runtestswithappsurify(*args):
                 printcommand = argv[k+1]
             if argv[k] == "--azurefilter":
                 azurefilter = argv[k+1]
+            if argv[k] == "--azurefilteronall":
+                azurefilteronall = "true"
             if argv[k] == "--percentage":
                 percentage = argv[k+1]
             if argv[k] == "--weekendrunall":
@@ -1524,7 +1635,7 @@ def runtestswithappsurify(*args):
     testsuiteencoded=testsuite
     projectencoded=project
 
-    if commit == "":
+    if commit == "" and repository == "git":
         commit=runcommand("git log -1 --pretty=\"%H\"")
         commit = commit.rstrip().rstrip("\n\r")
         print(("commit id = " + commit))
@@ -1533,7 +1644,7 @@ def runtestswithappsurify(*args):
     #git rev-parse --abbrev-ref HEAD
     #https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
 
-    if branch == "":
+    if branch == "" and repository == "git":
         branch=runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
         print(("branch = " + branch))
 
@@ -1561,6 +1672,7 @@ def runtestswithappsurify(*args):
         echo("no branch specified")
         exit(1)
     if commit == "":
+        setVariables()
         echo("no commit specified")
         exit(1)
 
@@ -1676,6 +1788,7 @@ def runtestswithappsurify(*args):
                         testtoadd = line
                         if encodetests == "true":
                             testtoadd = testtoadd.replace("\\", "\\\\")
+                            testtoadd = testtoadd.replace("\n", "\\n")
                             testtoadd = testtoadd.replace("(", "\(")
                             testtoadd = testtoadd.replace(")", "\)")
                             testtoadd = testtoadd.replace("&", "\&")
@@ -1691,18 +1804,23 @@ def runtestswithappsurify(*args):
             execute_tests(newtestset,11)
         if len(testsrun) == 0 or testsrun == "all":
             print("no tests to set for azure")
-            if azurefilter == "":
-                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+            if azurefilteronall == "false":
+                azurefilter = ""
             if azurefilter != "":
-                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+                #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}')
+                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}')
+            if azurefilter == "":
+                #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+                print (f'##vso[task.setvariable variable={azure_variable}]')
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]')
             #print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
         else:
+            print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{testsrun}')
             while len(testsrun) > max_length:
                 split_string = testsrun.find("|Name=",max_length)
                 setval = testsrun[:split_string]
-                testsrun = testsrun[split_string:]
-                if variable_num == 1:
-                    print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{setval}')
+                testsrun = testsrun[split_string:]                   
                 print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{setval}')
                 variable_num = variable_num + 1
             print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
