@@ -373,6 +373,7 @@ def setVariables():
                             testtoadd = line
                             if encodetests == "true":
                                 testtoadd = testtoadd.replace("\\", "\\\\")
+                                testtoadd = testtoadd.replace("\n", "\\n")
                                 testtoadd = testtoadd.replace("(", "\(")
                                 testtoadd = testtoadd.replace(")", "\)")
                                 testtoadd = testtoadd.replace("&", "\&")
@@ -654,6 +655,7 @@ def get_and_run_tests(type):
             testName = element["name"]
             if encodetests == "true":
                 testName = testName.replace("\\", "\\\\")
+                testName = testName.replace("\n", "\\n")
                 testName = testName.replace("(", "\(")
                 testName = testName.replace(")", "\)")
                 testName = testName.replace("&", "\&")
@@ -1211,6 +1213,19 @@ def runtestswithappsurify(*args):
         endrunspecific = "'"
         postfixtest="$"
         prefixtest="^"
+        startrunall="wdio test "
+        webdriverio = "true"
+
+#https://www.npmjs.com/package/jest-junit
+#https://jestjs.io/docs/cli#--testnamepatternregex
+    if testtemplate == "jest":
+        testseparator="|"
+        reporttype="file"
+        report="test-results.xml"
+        startrunspecific="wdio  -g '"
+        endrunspecific = "'"
+        postfixtest=""
+        prefixtest=""
         startrunall="wdio test "
         webdriverio = "true"
 
