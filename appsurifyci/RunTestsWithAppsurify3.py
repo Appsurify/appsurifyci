@@ -373,6 +373,7 @@ def setVariables():
                             testtoadd = line
                             if encodetests == "true":
                                 testtoadd = testtoadd.replace("\\", "\\\\")
+                                testtoadd = testtoadd.replace("ö", "")
                                 testtoadd = testtoadd.replace("\n", "\\n")
                                 testtoadd = testtoadd.replace("(", "\(")
                                 testtoadd = testtoadd.replace(")", "\)")
@@ -655,6 +656,7 @@ def get_and_run_tests(type):
             testName = element["name"]
             if encodetests == "true":
                 testName = testName.replace("\\", "\\\\")
+                testtoadd = testtoadd.replace("ö", "")
                 testName = testName.replace("\n", "\\n")
                 testName = testName.replace("(", "\(")
                 testName = testName.replace(")", "\)")
@@ -1803,6 +1805,7 @@ def runtestswithappsurify(*args):
                         testtoadd = line
                         if encodetests == "true":
                             testtoadd = testtoadd.replace("\\", "\\\\")
+                            testtoadd = testtoadd.replace("ö", "")
                             testtoadd = testtoadd.replace("\n", "\\n")
                             testtoadd = testtoadd.replace("(", "\(")
                             testtoadd = testtoadd.replace(")", "\)")
