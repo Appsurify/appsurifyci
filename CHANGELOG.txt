@@ -1,5 +1,16 @@
 Change Log
 ==========
+0.0.33
+-------------------
+- Improve azure functionality
+- Set tests to run for variable on failure
+
+0.0.31
+-------------------
+- Add ability to run new tests
+- Add ability to run all tests on weekend
+
+
 0.0.26
 -------------------
 - Add new runcommand param

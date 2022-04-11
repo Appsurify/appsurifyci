@@ -90,7 +90,7 @@ project =""
 testsuite =""
 report = ""
 trainer = "false"
-azure_variable = "testtorun"
+azure_variable = "appsurifytests"
 pipeoutput = "false"
 bitrise = "false"
 recursive = "false"
@@ -98,7 +98,7 @@ executioncommand = ""
 printcommand = ""
 githubactionsvariable = ""
 azurefilter = ""
-azurefilteronall = "false"
+azurefilteronall = "true"
 replaceretry = "false"
 webdriverio = "false"
 percentage = ""
@@ -106,6 +106,7 @@ endspecificrun = ""
 runnewtests = "false"
 weekendrunall = "false"
 newdays = 14
+azurevariablenum = 0
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -330,13 +331,17 @@ def generate_sahi(teststocreate):
 ###############################################################################################################################
 #Main Script
 
+def strip_non_ascii(string):
+    ''' Returns the string without non ASCII characters'''
+    stripped = (c for c in string if 0 < ord(c) < 127)
+    return ''.join(stripped)
+
 #created at 3/3 from below should be kept up to date.  Refactor to use the same method for both
 def setVariables():
     if testtemplate == "azure dotnet":
         max_length = 28000
         variable_num = 1
         #moved new test section to else statement as if we are running all tests then no need to check for new
-        
         if len(testsrun) == 0 or testsrun == "all":
             print("no tests to set for azure")
             if azurefilteronall == "false":
@@ -372,8 +377,10 @@ def setVariables():
                         if newtest == True:
                             testtoadd = line
                             if encodetests == "true":
+                                testtoadd = testtoadd.encode('unicode_escape').decode()
                                 testtoadd = testtoadd.replace("\\", "\\\\")
-                                testtoadd = testtoadd.replace("ö", "")
+                                testtoadd = strip_non_ascii(testtoadd)
+                                #testtoadd = testtoadd.replace("\\u00F6", "")
                                 testtoadd = testtoadd.replace("\n", "\\n")
                                 testtoadd = testtoadd.replace("(", "\(")
                                 testtoadd = testtoadd.replace(")", "\)")
@@ -655,8 +662,10 @@ def get_and_run_tests(type):
             count = count + 1
             testName = element["name"]
             if encodetests == "true":
+                testName = testName.encode('unicode_escape').decode()
                 testName = testName.replace("\\", "\\\\")
-                testtoadd = testtoadd.replace("ö", "")
+                testName = strip_non_ascii(testName)
+                #testtoadd = testtoadd.replace("\\u00F6", "")
                 testName = testName.replace("\n", "\\n")
                 testName = testName.replace("(", "\(")
                 testName = testName.replace(")", "\)")
@@ -959,7 +968,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum
 
     tests=""
     testsrun=""
@@ -1018,7 +1027,7 @@ def runtestswithappsurify(*args):
     executetests = "true"
     encodetests = "false"
     trainer = "false"
-    azure_variable = "testtorun"
+    azure_variable = "appsurifytests"
     pipeoutput = "false"
     bitrise = "false"
     recursive = "false"
@@ -1028,7 +1037,7 @@ def runtestswithappsurify(*args):
     testsuiteencoded=""
     projectencoded=""
     azurefilter = ""
-    azurefilteronall = "false"
+    azurefilteronall = "true"
     replaceretry = "false"
     webdriverio = "false"
     percentage = ""
@@ -1036,6 +1045,7 @@ def runtestswithappsurify(*args):
     runnewtests = "false"
     weekendrunall = "false"
     newdays = 14
+    azurevariablenum = 0
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -1603,13 +1613,15 @@ def runtestswithappsurify(*args):
             if argv[k] == "--azurefilter":
                 azurefilter = argv[k+1]
             if argv[k] == "--azurefilteronall":
-                azurefilteronall = "true"
+                azurefilteronall = "false"
             if argv[k] == "--percentage":
                 percentage = argv[k+1]
             if argv[k] == "--weekendrunall":
                 weekendrunall = "true"
             if argv[k] == "--newdays":
                 newdays = argv[k+1]
+            if argv[k] == "--azurevariablenum":
+                azurevariablenum = argv[k+1]
             if argv[k] == "--runcommand":
                 startrunall = argv[k+1]
                 startrunspecific = argv[k+1] + endspecificrun
@@ -1750,6 +1762,7 @@ def runtestswithappsurify(*args):
 
     weekno = datetime.datetime.today().weekday()
     if teststorun != "all" and teststorun != "none" and weekendrunall == "true" and weekno >= 5:
+        print("Weekend running all tests")
         testtypes=[]
 
 
@@ -1804,8 +1817,10 @@ def runtestswithappsurify(*args):
                     if newtest == True:
                         testtoadd = line
                         if encodetests == "true":
+                            testtoadd = testtoadd.encode('unicode_escape').decode()
                             testtoadd = testtoadd.replace("\\", "\\\\")
-                            testtoadd = testtoadd.replace("ö", "")
+                            testtoadd = strip_non_ascii(testtoadd)
+                            #testtoadd = testtoadd.replace("\\u00F6", "")
                             testtoadd = testtoadd.replace("\n", "\\n")
                             testtoadd = testtoadd.replace("(", "\(")
                             testtoadd = testtoadd.replace(")", "\)")
@@ -1826,22 +1841,46 @@ def runtestswithappsurify(*args):
                 azurefilter = ""
             if azurefilter != "":
                 #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+                if azurefilter.endswith('&') is True:
+                    azurefilter = azurefilter[:-1]
+                if azurefilter.endswith('|') is True:
+                    azurefilter = azurefilter[:-1]
+                print ("running all tests")
                 print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}')
                 print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}')
             if azurefilter == "":
+                print ("running all tests")
                 #print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
                 print (f'##vso[task.setvariable variable={azure_variable}]')
                 print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]')
-            #print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
+            #print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}') 
         else:
-            print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{testsrun}')
+            if azurefilter != "":
+                if azurefilter.endswith('&') is False and azurefilter.endswith('|') is False:
+                    azurefilter = azurefilter + "&"
+            if azurevariablenum == 0:
+                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}({testsrun})')
+            azuresets = []
             while len(testsrun) > max_length:
                 split_string = testsrun.find("|Name=",max_length)
                 setval = testsrun[:split_string]
-                testsrun = testsrun[split_string:]                   
-                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{setval}')
+                if setval.startswith("|"):
+                    setval = setval[1:]
+                testsrun = testsrun[split_string:]
+                print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({setval})')
+                testsettoappend = azurefilter+"("+setval+")"
+                azuresets.append(testsettoappend)
                 variable_num = variable_num + 1
-            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+            if testsrun.startswith("|"):
+                testsrun = testsrun[1:]
+            print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({testsrun})')
+            testsettoappend = azurefilter+"("+testsrun+")"
+            azuresets.append(testsettoappend)
+            print("Number of variable sets = "+ str(variable_num))
+            if azurevariablenum != 0:
+                print(f"Setting main variable to varialbe num {azurevariablenum}")
+                azurefilter = azuresets[int(azurevariablenum)-1]
+                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}({azurefilter})')
     #print("##vso[task.setvariable variable=BuildVersion;]998")
 
     #print("Execution command = " + executioncommand)
