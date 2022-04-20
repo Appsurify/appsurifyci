@@ -337,6 +337,8 @@ def strip_non_ascii(string):
     return ''.join(stripped)
 
 #created at 3/3 from below should be kept up to date.  Refactor to use the same method for both
+#https://youtrack.jetbrains.com/issue/TW-70205
+#potential option for long filters
 def setVariables():
     if testtemplate == "azure dotnet":
         max_length = 28000
@@ -580,6 +582,7 @@ def get_tests(testpriority):
 
     if runfrequency == "single":
         params["commit_type"] = "Single"
+        params["target_branch"] = branch
     if runfrequency == "multiple":
         params["commit_type"] = "LastRun"
         params["target_branch"] = branch
@@ -1697,7 +1700,8 @@ def runtestswithappsurify(*args):
     if runfrequency == "betweenexclusive" and fromcommit == "":
         echo("no from commit specified and runfrequency set to betweenexclusive")
         exit(1)
-    if runfrequency != "single" and branch == "":
+    #if runfrequency != "single" and branch == "":
+    if branch == "":
         echo("no branch specified")
         exit(1)
     if commit == "":
@@ -1880,7 +1884,7 @@ def runtestswithappsurify(*args):
             if azurevariablenum != 0:
                 print(f"Setting main variable to varialbe num {azurevariablenum}")
                 azurefilter = azuresets[int(azurevariablenum)-1]
-                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}({azurefilter})')
+                print (f'##vso[task.setvariable variable={azure_variable}]{azurefilter}{azurefilter}')
     #print("##vso[task.setvariable variable=BuildVersion;]998")
 
     #print("Execution command = " + executioncommand)
