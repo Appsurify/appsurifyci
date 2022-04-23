@@ -107,6 +107,7 @@ runnewtests = "false"
 weekendrunall = "false"
 newdays = 14
 azurevariablenum = 0
+time = ""
 
 def find(name):
     currentdir = os.getcwd() # using current dir, could change this to work with full computer search
@@ -602,7 +603,7 @@ def get_tests(testpriority):
         params["day"] = newdays
     
     print(params)
-
+    api_url = url+'/api/external/prioritized-tests/'
     if proxy == "":
         response = requests.get(url+'/api/external/prioritized-tests/', headers=headers, params=params)
     else:
@@ -729,7 +730,7 @@ def getresults():
     headers = {
     'token': apikey,
     }
-
+    api_url = url+'/api/external/output/'
     params = (
         ('test_run', run_id),
     )
@@ -971,7 +972,7 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time
 
     tests=""
     testsrun=""
@@ -1049,6 +1050,7 @@ def runtestswithappsurify(*args):
     weekendrunall = "false"
     newdays = 14
     azurevariablenum = 0
+    time = ""
     #--testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
 
@@ -1179,8 +1181,8 @@ def runtestswithappsurify(*args):
     #https://stackoverflow.com/questions/35166214/running-individual-xctest-ui-unit-test-cases-for-ios-apps-from-the-command-li
     if testtemplate == "kif":
         testseparator=" "
-        addtestsuitename="true"
-        testsuitesnameseparator="/"
+        addtestsuitename="false"
+        #testsuitesnameseparator="/"
         prefixtest = "-only-testing:"
         startrunall="xcodebuild test "+testtemplatearg1
         startrunspecific="xcodebuild test "+testtemplatearg1
@@ -1188,7 +1190,7 @@ def runtestswithappsurify(*args):
         trainer = "true"
 
 
-    #set endrun to being final command for test runner i.e. browser etc
+    #set endrun to being final command for test runner i.e. browser etccls
     if testtemplate == "sahi testrunner":
         testseparator=",,"
         addtestsuitename="true"
@@ -1466,6 +1468,7 @@ def runtestswithappsurify(*args):
         testseparator=",,"
         reporttype="file"
         report = testtemplatearg1
+        source = testtemplatearg2
         full_path = os.path.realpath(source)
         destination = os.path.join(os.path.dirname(full_path),"temp.yaml")
         startrunspecific="opentest session create --out '"+testtemplatearg1+ "' --template '" + destination + "' "
@@ -1625,6 +1628,8 @@ def runtestswithappsurify(*args):
                 newdays = argv[k+1]
             if argv[k] == "--azurevariablenum":
                 azurevariablenum = argv[k+1]
+            if argv[k] == "--time":
+                time = argv[k+1]
             if argv[k] == "--runcommand":
                 startrunall = argv[k+1]
                 startrunspecific = argv[k+1] + endspecificrun
