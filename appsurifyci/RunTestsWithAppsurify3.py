@@ -628,7 +628,6 @@ def get_always_tests_azure():
     print("getting azure tests set to always run")
     count = 0
     tests = ""
-    print(azurealwaysrunset)
     for testName in azurealwaysrunset:
         print("here")
         print(testName)
@@ -2281,7 +2280,6 @@ def runtestswithappsurify(*args):
                     )
                 azuresets = []
                 
-                print(azurealwaysruntestsformatted)
                 while len(testsrun) > max_length:
                     split_string = testsrun.find("|Name=", max_length)
                     setval = testsrun[:split_string]
