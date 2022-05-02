@@ -110,6 +110,10 @@ newdays = 14
 azurevariablenum = 0
 time = ""
 commandset = ""
+alwaysrun = ""
+alwaysrunset = []
+azurealwaysrun = ""
+azurealwaysrunset = []
 
 def find(name):
     currentdir = (
@@ -620,6 +624,35 @@ def execute_tests(testlist, testset):
     echo(os.getcwd())
     push_results()
 
+def get_always_tests_azure():
+    print("getting azure tests set to always run")
+    count = 0
+    tests = ""
+    print(azurealwaysrunset)
+    for testName in azurealwaysrunset:
+        print("here")
+        print(testName)
+        count = count + 1
+        if encodetests == "true":
+            testName = testName.encode("unicode_escape").decode()
+            testName = testName.replace("\\", "\\\\")
+            testName = strip_non_ascii(testName)
+            # testtoadd = testtoadd.replace("\\u00F6", "")
+            testName = testName.replace("\n", "\\n")
+            testName = testName.replace("(", "\(")
+            testName = testName.replace(")", "\)")
+            testName = testName.replace("&", "\&")
+            testName = testName.replace("|", "\|")
+            testName = testName.replace("=", "\=")
+            testName = testName.replace("!", "\!")
+            testName = testName.replace("~", "\~")
+            print(testName)
+        print("here2")
+        tests = tests + testseparator + prefixtest + testName + postfixtest
+        print(tests)
+        print("here3")
+    return tests
+
 
 def get_tests(testpriority):
     echo("getting test set " + str(testpriority))
@@ -778,9 +811,16 @@ def get_and_run_tests(type):
         print("max tests")
         # print(type(maxtests))
         # print("type")
+        testrunset = []
         for element in testset:
-            count = count + 1
             testName = element["name"]
+            testrunset.append(testName)
+
+        if type == 9:
+            testrunset = list(set(testrunset + alwaysrunset))
+
+        for testName in testrunset:
+            count = count + 1
             if encodetests == "true":
                 testName = testName.encode("unicode_escape").decode()
                 testName = testName.replace("\\", "\\\\")
@@ -807,7 +847,8 @@ def get_and_run_tests(type):
                 print("restarting test count")
                 failfast_tests()
 
-    except:
+    except Exception as e:
+        #print(e)
         print("No tests to run")
 
     if tests != "":
@@ -827,7 +868,10 @@ def failfast_tests():
     if failfast == "true":
         print("failing fast")
         rerun_tests()
-        getresults()
+        try:
+            getresults()
+        except:
+            print("unable to find results")
 
 
 def rerun_tests_execute():
@@ -844,8 +888,10 @@ def rerun_tests():
 
 
 def getresults():
+    print(run_id)
     if run_id == "":
-        exit()
+        print("no resuults")
+        os._exit(0)
     echo("getting results")
     headers = {
         "token": apikey,
@@ -971,16 +1017,22 @@ def push_results():
             for root, dirs, files in os.walk(directoryToPushFrom):
                 for file in files:
                     if file.endswith(filetype):
-                        call_import(os.path.abspath(os.path.join(root, file)))
+                        try:
+                            call_import(os.path.abspath(os.path.join(root, file)))
+                        except:
+                            print("import failed")
         if recursive == "false":
             if importtype == "trx":
                 filetype = ".trx"
             for file in os.listdir(directoryToPushFrom):
                 if file.endswith(filetype):
                     echo(file)
-                    call_import(
-                        os.path.abspath(os.path.join(directoryToPushFrom, file))
-                    )
+                    try:
+                        call_import(
+                            os.path.abspath(os.path.join(directoryToPushFrom, file))
+                        )
+                    except:
+                        print("import failed")
     if reporttype == "file":
         try:
             call_import(report)
@@ -992,15 +1044,18 @@ def call_import(filepath):
     print("importing ")
     print(filepath)
     if importtype == "trx" and replaceretry == "true":
-        with open(filepath, "r", errors="ignore") as openfile:
-            filedata = openfile.read()
+        try:
+            with open(filepath, "r", errors="ignore") as openfile:
+                filedata = openfile.read()
 
-            # Replace the target string
-        filedata = re.sub(r" retry #\d\"", '"', filedata)
+                # Replace the target string
+            filedata = re.sub(r" retry #\d\"", '"', filedata)
 
-        # Write the file out again
-        with open(filepath, "w") as openfile:
-            openfile.write(filedata)
+            # Write the file out again
+            with open(filepath, "w") as openfile:
+                openfile.write(filedata)
+        except:
+            print("unable to strip retries from file")
 
     sizeOfFile = os.path.getsize(filepath)
     # if importtype == "trx" and sizeOfFile > 1000000:
@@ -1159,1128 +1214,1161 @@ def call_import(filepath):
 
 
 def runtestswithappsurify(*args):
-    global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
-    global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
-    global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
-    global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
-    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset
+    try:    
+        global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
+        global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
+        global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
+        global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
+        global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
+        global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
+        global azurealwaysrun, azurealwaysrunset
 
-    tests = ""
-    testsrun = ""
-    run_id = ""
-    proxy = ""
-    username = ""
-    password = ""
-    url = ""
-    apikey = ""
-    project = ""
-    testsuite = ""
-    report = ""
-    maxtests = 1000000  # default 10000000
-    fail = "newdefects, reopeneddefects"  # default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
-    additionalargs = ""  # default ''
-    testseparator = ""  # default ' '
-    postfixtest = ""  # default ''
-    prefixtest = ""  # default ''
-    fullnameseparator = ""  # default ''
-    fullname = "false"  # default false
-    failfast = "false"  # defult false
-    maxrerun = 3  # default 3
-    rerun = "false"  # default false
-    importtype = "junit"  # default junit
-    reporttype = "directory"  # default directory other option file, when directory needs to end with /
-    teststorun = (
-        "all"  # options include - high, medium, low, unassigned, ready, open, none
-    )
-    deletereports = "false"  # options true or false, BE CAREFUL THIS WILL DELETE THE SPECIFIC FILE OR ALL XML FILES IN THE DIRECTORY
-    startrunall = ""  # startrun needs to end with a space sometimes
-    endrunall = ""  # endrun needs to start with a space sometimes
-    startrunspecific = ""  # startrun needs to end with a space sometimes
-    endrunspecific = ""  # endrun needs to start with a space sometimes
-    commit = ""
-    scriptlocation = "./"
-    branch = ""
-    # runfrequency="single" #options single for single commits, lastrun for all commits since the last run, betweeninclusive or betweenexclusive for all commits between two commits either inclusive or exclusive
-    runfrequency = "multiple"  # options single for ['Single', 'LastRun', 'BetweenInclusive', 'BetweenExclusive']
-    fromcommit = ""
-    repository = "git"
-    scriptlocation = "./"
-    generatefile = "false"
-    template = "none"
-    addtestsuitename = "false"
-    addclassname = "false"
-    runtemplate = ""
-    testsuitesnameseparator = ""
-    testtemplate = ""
-    classnameseparator = ""
-    testseparatorend = ""
-    testtemplatearg1 = ""
-    testtemplatearg2 = ""
-    testtemplatearg3 = ""
-    testtemplatearg4 = ""
-    startrunpostfix = ""
-    endrunprefix = ""
-    endrunpostfix = ""
-    executetests = "true"
-    encodetests = "false"
-    trainer = "false"
-    azure_variable = "appsurifytests"
-    pipeoutput = "false"
-    bitrise = "false"
-    recursive = "false"
-    executioncommand = ""
-    githubactionsvariable = ""
-    printcommand = ""
-    testsuiteencoded = ""
-    projectencoded = ""
-    azurefilter = ""
-    azurefilteronall = "true"
-    replaceretry = "false"
-    webdriverio = "false"
-    percentage = ""
-    endspecificrun = ""
-    runnewtests = "false"
-    weekendrunall = "false"
-    newdays = 14
-    azurevariablenum = 0
-    time = ""
-    commandset = ""
-    # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
-
-    # Templates
-    argv = args
-    print(argv)
-    print(type(argv))
-    try:
-        argv = args[0]
-        if type(argv) == tuple:
-            argv = argv[0]
-    except Exception as e:
-        print(e)
-    c = 0
-    print("===================================")
-    if len(argv) > 1:
-        c = len(argv)
-        for k in range(1, c):
-            if argv[k] == "--runtemplate":
-                runtemplate = argv[k + 1]
-            if argv[k] == "--testtemplate":
-                testtemplate = argv[k + 1]
-            if argv[k] == "--testtemplatearg1":
-                testtemplatearg1 = argv[k + 1]
-            if argv[k] == "--testtemplatearg2":
-                testtemplatearg2 = argv[k + 1]
-            if argv[k] == "--testtemplatearg3":
-                testtemplatearg3 = argv[k + 1]
-            if argv[k] == "--testtemplatearg4":
-                testtemplatearg4 = argv[k + 1]
-
-    #####Test Run Templates######
-
-    if runtemplate == "prioritized tests with unassigned":
-        teststorun = "high,medium,unassigned"
-
-    if runtemplate == "prioritized tests":
-        teststorun = "high,medium,unassigned"
-
-    if runtemplate == "prioritized tests without unassigned":
-        teststorun = "high,medium"
-
-    if runtemplate == "prioritized tests with unassigned no execution":
-        teststorun = "high,medium,unassigned"
-        executetests = "false"
-
-    if runtemplate == "prioritized tests no execution":
-        teststorun = "high,medium,unassigned"
-        executetests = "false"
-
-    if runtemplate == "prioritized tests without unassigned no execution":
-        teststorun = "high,medium"
-        executetests = "false"
-
-    if runtemplate == "no tests":
-        teststorun = "none"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-        executetests = "false"
-
-    if runtemplate == "notests":
-        teststorun = "none"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-        executetests = "false"
-
-    if runtemplate == "none":
-        teststorun = "none"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-        executetests = "false"
-
-    if runtemplate == "all tests":
-        teststorun = "all"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-
-    if runtemplate == "all":
-        teststorun = "all"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-
-    if runtemplate == "alltests":
-        teststorun = "all"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-
-    if runtemplate == "top20":
-        teststorun = "top20"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-
-    if runtemplate == "top20 no execution":
-        teststorun = "top20"
-        fail = "newdefects, reopeneddefects, failedtests, brokentests"
-        executetests = "false"
-
-    if len(argv) > 1:
-        for k in range(1, c):
-            if argv[k] == "--teststorun":
-                teststorun = argv[k + 1]
-
-    # Template Sahi
-    # testsuitename#testname
-    # addtestsuitename=true
-    # testsuitesnameseparator=%23
-    # Sahi Setup
-    # testrunner.bat demo/demo.suite http://sahitest.com/demo/ firefox
-    # startrun testrunner.bat temp.dd.csv
-    # endrun as per setup
-    # SET LOGS_INFO=junit:<LOCATION>
-    # https://sahipro.com/docs/using-sahi/playback-commandline.html
-
-    # Sahi Ant
-    # https://sahipro.com/docs/using-sahi/playback-desktop.html#Playback%20via%20ANT
-    # startrun ant -f demo.xml
-    # <property name="scriptName" value="demo/ddcsv/temp.dd.csv"/>
-    # <report type="junit" logdir="<LOCATION>"/>
-
-    # To run tests with sahi
-    # edit testrunner.bat or .sh - add line "SET LOGS_INFO=junit:<Directory of your choice>"
-    # startrun = 'testrunner.bat or .sh temp.dd.csv'
-    # endrun = ' <additional arguments>'
-    # report = directory set when editing the testrunner/index.xml - we only want the index file
-
-    if testtemplate == "sahi ant":
-        testseparator = ",,"
-        addtestsuitename = "true"
-        testsuitesnameseparator = "#"
-        generatefile = "sahi"
-        startrunall = "ant -f " + testtemplatearg2
-        startrunspecific = "ant -f " + testtemplatearg3
-        report = testtemplatearg1
-
-    # https://stackoverflow.com/questions/35166214/running-individual-xctest-ui-unit-test-cases-for-ios-apps-from-the-command-li
-    if testtemplate == "kif":
-        testseparator = " "
+        tests = ""
+        testsrun = ""
+        run_id = ""
+        proxy = ""
+        username = ""
+        password = ""
+        url = ""
+        apikey = ""
+        project = ""
+        testsuite = ""
+        report = ""
+        maxtests = 1000000  # default 10000000
+        fail = "newdefects, reopeneddefects"  # default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
+        additionalargs = ""  # default ''
+        testseparator = ""  # default ' '
+        postfixtest = ""  # default ''
+        prefixtest = ""  # default ''
+        fullnameseparator = ""  # default ''
+        fullname = "false"  # default false
+        failfast = "false"  # defult false
+        maxrerun = 3  # default 3
+        rerun = "false"  # default false
+        importtype = "junit"  # default junit
+        reporttype = "directory"  # default directory other option file, when directory needs to end with /
+        teststorun = (
+            "all"  # options include - high, medium, low, unassigned, ready, open, none
+        )
+        deletereports = "false"  # options true or false, BE CAREFUL THIS WILL DELETE THE SPECIFIC FILE OR ALL XML FILES IN THE DIRECTORY
+        startrunall = ""  # startrun needs to end with a space sometimes
+        endrunall = ""  # endrun needs to start with a space sometimes
+        startrunspecific = ""  # startrun needs to end with a space sometimes
+        endrunspecific = ""  # endrun needs to start with a space sometimes
+        commit = ""
+        scriptlocation = "./"
+        branch = ""
+        # runfrequency="single" #options single for single commits, lastrun for all commits since the last run, betweeninclusive or betweenexclusive for all commits between two commits either inclusive or exclusive
+        runfrequency = "multiple"  # options single for ['Single', 'LastRun', 'BetweenInclusive', 'BetweenExclusive']
+        fromcommit = ""
+        repository = "git"
+        scriptlocation = "./"
+        generatefile = "false"
+        template = "none"
         addtestsuitename = "false"
-        # testsuitesnameseparator="/"
-        prefixtest = "-only-testing:"
-        startrunall = "xcodebuild test " + testtemplatearg1
-        startrunspecific = "xcodebuild test " + testtemplatearg1
-        report = "Test.xml"
-        trainer = "true"
+        addclassname = "false"
+        runtemplate = ""
+        testsuitesnameseparator = ""
+        testtemplate = ""
+        classnameseparator = ""
+        testseparatorend = ""
+        testtemplatearg1 = ""
+        testtemplatearg2 = ""
+        testtemplatearg3 = ""
+        testtemplatearg4 = ""
+        startrunpostfix = ""
+        endrunprefix = ""
+        endrunpostfix = ""
+        executetests = "true"
+        encodetests = "false"
+        trainer = "false"
+        azure_variable = "appsurifytests"
+        pipeoutput = "false"
+        bitrise = "false"
+        recursive = "false"
+        executioncommand = ""
+        githubactionsvariable = ""
+        printcommand = ""
+        testsuiteencoded = ""
+        projectencoded = ""
+        azurefilter = ""
+        azurefilteronall = "true"
+        replaceretry = "false"
+        webdriverio = "false"
+        percentage = ""
+        endspecificrun = ""
+        runnewtests = "false"
+        weekendrunall = "false"
+        newdays = 14
+        azurevariablenum = 0
+        time = ""
+        commandset = ""
+        alwaysrun = ""
+        alwaysrunset = []
+        azurealwaysrun = ""
+        azurealwaysrunset = []
+        # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
-    # set endrun to being final command for test runner i.e. browser etccls
-    if testtemplate == "sahi testrunner":
-        testseparator = ",,"
-        addtestsuitename = "true"
-        testsuitesnameseparator = "#"
-        generatefile = "sahi"
-        startrunspecific = "testrunner temp.dd.csv"
-        startrunall = "testrunner " + testtemplatearg2
-        report = testtemplatearg1
-    
-    # https://stackoverflow.com/questions/22505533/how-to-run-only-one-unit-test-class-using-gradle
-    if testtemplate == "gradle":
-        testseparator = "--test "
-        addtestsuitename = "true"
-        testsuitesnameseparator = "."
-       # startrunspecific = "gradle test --test '"
-        startrunspecific = "gradle test"
-        prefixtest = " --test '"
-        postfixtest = "'"
-        #endrunspecific = "'"
-        startrunall = "gradle test"
-        report = "./build/test-results/"
-        reporttype = "directory"
-        deletereports = "false"
+        # Templates
+        argv = args
+        print(argv)
+        print(type(argv))
+        try:
+            argv = args[0]
+            if type(argv) == tuple:
+                argv = argv[0]
+        except Exception as e:
+            print(e)
+        c = 0
+        print("===================================")
+        if len(argv) > 1:
+            c = len(argv)
+            for k in range(1, c):
+                if argv[k] == "--runtemplate":
+                    runtemplate = argv[k + 1]
+                if argv[k] == "--testtemplate":
+                    testtemplate = argv[k + 1]
+                if argv[k] == "--testtemplatearg1":
+                    testtemplatearg1 = argv[k + 1]
+                if argv[k] == "--testtemplatearg2":
+                    testtemplatearg2 = argv[k + 1]
+                if argv[k] == "--testtemplatearg3":
+                    testtemplatearg3 = argv[k + 1]
+                if argv[k] == "--testtemplatearg4":
+                    testtemplatearg4 = argv[k + 1]
 
-    if testtemplate == "mvn":
-        testseparator = ","
-        addtestsuitename = "true"
-        testsuitesnameseparator = "#"
-        startrunspecific = "mvn"
-        endrunspecific = " test"
-        startrunall = "mvn test"
-        report = "./target/surefire-reports/"
-        reporttype = "directory"
-        deletereports = "false"
-        endspecificrun = " -Dtest="
+        #####Test Run Templates######
 
-    if testtemplate == "webdriverio mocha":
-        testseparator = "|"
-        reporttype = "file"
-        report = "test-results.xml"
-        startrunspecific = "wdio"
-        endrunspecific = "'"
-        postfixtest = "$"
-        prefixtest = "^"
-        startrunall = "wdio test "
-        webdriverio = "true"
-        endspecificrun = " -g '"
+        if runtemplate == "prioritized tests with unassigned":
+            teststorun = "high,medium,unassigned"
 
-    # https://www.npmjs.com/package/jest-junit
-    # https://jestjs.io/docs/cli#--testnamepatternregex
-    if testtemplate == "jest":
-        testseparator = "|"
-        reporttype = "file"
-        report = "test-results.xml"
-        startrunspecific = "wdio  -g '"
-        endrunspecific = "'"
-        postfixtest = ""
-        prefixtest = ""
-        startrunall = "wdio test "
-        webdriverio = "true"
-        endspecificrun = " -g '"
+        if runtemplate == "prioritized tests":
+            teststorun = "high,medium,unassigned"
 
-    # protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
-    # https://github.com/angular/protractor/issues/164
+        if runtemplate == "prioritized tests without unassigned":
+            teststorun = "high,medium"
 
-    # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
-    if testtemplate == "cucmber mvn":
-        testseparator = " "
-        startrunspecific = 'mvn test '
-        endrunspecific = '" '
-        postfixtest = "$'"
-        prefixtest = "--name '^"
-        startrunall = "mvn test"
-        report = "./target/surefire-reports/"
-        reporttype = "directory"
-        deletereports = "false"
-        endspecificrun = ' -Dcucumber.options="'
+        if runtemplate == "prioritized tests with unassigned no execution":
+            teststorun = "high,medium,unassigned"
+            executetests = "false"
 
-    if testtemplate == "rspec":
-        testseparator = " "
-        startrunspecific = "rspec --format RspecJunitFormatter --out rspec.xml "
-        prefixtest = "-e '"
-        postfixtest = "'"
-        startrunall = "rspec --format RspecJunitFormatter --out rspec.xml"
-        reporttype = "file"
-        report = "rspec.xml"
-        endspecificrun = " "
+        if runtemplate == "prioritized tests no execution":
+            teststorun = "high,medium,unassigned"
+            executetests = "false"
 
-    # startrun should be how your tests are executed i.e. java -jar robotframework.jar or robot
-    # then -x robot.xml to create the output file
-    # then --test ' if you are running specific tests
-    # endrun should be the location of your tests
-    if testtemplate == "robotframework":
-        prefixtest = " --test '"
-        postfixtest = "'"
-        testseparator = " "
-        reporttype = "file"
-        report = testtemplatearg3
-        startrunall = testtemplatearg1 + " -x " + testtemplatearg3 + " "
-        endrunall = testtemplatearg2
-        startrunspecific = testtemplatearg1 + " -x " + testtemplatearg3 + " "
-        endrunall = testtemplatearg2
-        endspecificrun = " "
+        if runtemplate == "prioritized tests without unassigned no execution":
+            teststorun = "high,medium"
+            executetests = "false"
+
+        if runtemplate == "no tests":
+            teststorun = "none"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+            executetests = "false"
+
+        if runtemplate == "notests":
+            teststorun = "none"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+            executetests = "false"
+
+        if runtemplate == "none":
+            teststorun = "none"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+            executetests = "false"
+
+        if runtemplate == "all tests":
+            teststorun = "all"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+
+        if runtemplate == "all":
+            teststorun = "all"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+
+        if runtemplate == "alltests":
+            teststorun = "all"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+
+        if runtemplate == "top20":
+            teststorun = "top20"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+
+        if runtemplate == "top20 no execution":
+            teststorun = "top20"
+            fail = "newdefects, reopeneddefects, failedtests, brokentests"
+            executetests = "false"
+
+        if len(argv) > 1:
+            for k in range(1, c):
+                if argv[k] == "--teststorun":
+                    teststorun = argv[k + 1]
+
+        # Template Sahi
+        # testsuitename#testname
+        # addtestsuitename=true
+        # testsuitesnameseparator=%23
+        # Sahi Setup
+        # testrunner.bat demo/demo.suite http://sahitest.com/demo/ firefox
+        # startrun testrunner.bat temp.dd.csv
+        # endrun as per setup
+        # SET LOGS_INFO=junit:<LOCATION>
+        # https://sahipro.com/docs/using-sahi/playback-commandline.html
+
+        # Sahi Ant
+        # https://sahipro.com/docs/using-sahi/playback-desktop.html#Playback%20via%20ANT
+        # startrun ant -f demo.xml
+        # <property name="scriptName" value="demo/ddcsv/temp.dd.csv"/>
+        # <report type="junit" logdir="<LOCATION>"/>
+
+        # To run tests with sahi
+        # edit testrunner.bat or .sh - add line "SET LOGS_INFO=junit:<Directory of your choice>"
+        # startrun = 'testrunner.bat or .sh temp.dd.csv'
+        # endrun = ' <additional arguments>'
+        # report = directory set when editing the testrunner/index.xml - we only want the index file
+
+        if testtemplate == "sahi ant":
+            testseparator = ",,"
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            generatefile = "sahi"
+            startrunall = "ant -f " + testtemplatearg2
+            startrunspecific = "ant -f " + testtemplatearg3
+            report = testtemplatearg1
+
+        # https://stackoverflow.com/questions/35166214/running-individual-xctest-ui-unit-test-cases-for-ios-apps-from-the-command-li
+        if testtemplate == "kif":
+            testseparator = " "
+            addtestsuitename = "false"
+            # testsuitesnameseparator="/"
+            prefixtest = "-only-testing:"
+            startrunall = "xcodebuild test " + testtemplatearg1
+            startrunspecific = "xcodebuild test " + testtemplatearg1
+            report = "Test.xml"
+            trainer = "true"
+
+        # set endrun to being final command for test runner i.e. browser etccls
+        if testtemplate == "sahi testrunner":
+            testseparator = ",,"
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            generatefile = "sahi"
+            startrunspecific = "testrunner temp.dd.csv"
+            startrunall = "testrunner " + testtemplatearg2
+            report = testtemplatearg1
         
+        # https://stackoverflow.com/questions/22505533/how-to-run-only-one-unit-test-class-using-gradle
+        if testtemplate == "gradle":
+            testseparator = "--test "
+            addtestsuitename = "true"
+            testsuitesnameseparator = "."
+        # startrunspecific = "gradle test --test '"
+            startrunspecific = "gradle test"
+            prefixtest = " --test '"
+            postfixtest = "'"
+            #endrunspecific = "'"
+            startrunall = "gradle test"
+            report = "./build/test-results/"
+            reporttype = "directory"
+            deletereports = "false"
 
-    # mocha
-    # install https://www.npmjs.com/package/mocha-junit-reporter
-    # https://github.com/mochajs/mocha/issues/1565
-    if testtemplate == "mocha":
-        testseparator = "|"
-        reporttype = "file"
-        report = "test-results.xml"
-        startrunspecific = "mocha test --reporter mocha-junit-reporter"
-        endrunspecific = "'"
-        postfixtest = "$"
-        prefixtest = "^"
-        startrunall = "mocha test --reporter mocha-junit-reporter "
-        endspecificrun = " -g '"
+        if testtemplate == "mvn":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn"
+            endrunspecific = " test"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dtest="
 
-    # pytest
-    # https://stackoverflow.com/questions/36456920/is-there-a-way-to-specify-which-pytest-tests-to-run-from-a-file
-    if testtemplate == "pytest":
-        testseparator = " or "
-        reporttype = "file"
-        report = "test-results.xml"
-        startrunspecific = "python -m pytest --junitxml=test-results.xml"
-        endrunspecific = "'"
-        startrunall = "python -m pytest --junitxml=test-results.xml"
-        endspecificrun = " -k '"
+        if testtemplate == "webdriverio mocha":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "wdio"
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "wdio test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
 
-    # testim
-    # https://help.testim.io/docs/the-command-line-cli
-    if testtemplate == "testim":
-        testseparator = " --name '"
-        reporttype = "file"
-        report = "test-results.xml"
-        startrunspecific = "testim --report-file test-results.xml"
-        postfixtest = "'"
-        startrunall = "testim --report-file test-results.xml"
-        endspecificrun = " --name '"
+        # https://www.npmjs.com/package/jest-junit
+        # https://jestjs.io/docs/cli#--testnamepatternregex
+        if testtemplate == "jest":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "wdio  -g '"
+            endrunspecific = "'"
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = "wdio test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
 
-    # testcomplete
-    # TestComplete.exe "C:\My Projects\MySuite.pjs" /run /p:MyProj /ExportSummary:"C:\TestLogs\report.xml"
-    # /test""ProjectTestItem1"
-    # https://support.smartbear.com/testcomplete/docs/working-with/automating/command-line-and-exit-codes/command-line.html
-    if testtemplate == "testcomplete":
-        testseparator = "|"
-        reporttype = "file"
-        report = testtemplatearg2
-        startrunspecific = "TestComplete.exe " + testtemplatearg1 + " "
-        endrunspecific = testtemplatearg2
-        startrunall = "TestComplete.exe " + testtemplatearg1 + " "
-        endrunall = +" /ExportSummary:" + testtemplatearg2
-        endspecificrun = " "
-        prefixtest = '/test"'
-        postfixtest = '"'
+        # protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
+        # https://github.com/angular/protractor/issues/164
 
-    # ranorex webtestit
-    # https://discourse.webtestit.com/t/running-ranorex-webtestit-in-cli-mode/152
-    if testtemplate == "ranorex webtestit":
-        testseparator = "|"
-        reporttype = "file"
-        report = testtemplatearg2
-        startrunspecific = "TestComplete.exe " + testtemplatearg1 + " "
-        endrunspecific = testtemplatearg2
-        startrunall = "TestComplete.exe " + testtemplatearg1 + " "
-        endrunall = +" /ExportSummary:" + testtemplatearg2
+        # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
+        if testtemplate == "cucmber mvn":
+            testseparator = " "
+            startrunspecific = 'mvn test '
+            endrunspecific = '" '
+            postfixtest = "$'"
+            prefixtest = "--name '^"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = ' -Dcucumber.options="'
 
-    # cypress
-    # https://github.com/bahmutov/cypress-select-tests
-    # cypress run --reporter junit --reporter-options mochaFile=result.xml
-    # updated to https://github.com/cypress-io/cypress-grep
-    if testtemplate == "cypress":
-        testseparator = "; "
-        reporttype = "file"
-        report = "results.xml"
-        startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
-        endrunspecific = '"'
-        postfixtest = ""
-        prefixtest = ""
-        startrunall = (
-            "cypress run --reporter junit --reporter-options mochaFile=result.xml"
-        )
-        endspecificrun = ' --env grep="'
+        if testtemplate == "rspec":
+            testseparator = " "
+            startrunspecific = "rspec --format RspecJunitFormatter --out rspec.xml "
+            prefixtest = "-e '"
+            postfixtest = "'"
+            startrunall = "rspec --format RspecJunitFormatter --out rspec.xml"
+            reporttype = "file"
+            report = "rspec.xml"
+            endspecificrun = " "
 
-    # mstest
-    # /Tests:TestMethod1,testMethod2
-    # mstest.exe"  /testcontainer:"%WORKSPACE%\MYPROJECT\bin\debug\MYTEST.dll" /test:"ABC" /resultsfile:"%WORKSPACE%\result_%BUILD_NUMBER%.xml"
-    if testtemplate == "mstest":
-        testseparator = ","
-        reporttype = "file"
-        startrunspecific = (
-            "mstest /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-            + "/tests:"
-        )
-        postfixtest = "'"
-        prefixtest = "'"
-        startrunall = (
-            "mstest /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-        )
-        report = testtemplatearg1
-        importtype = "trx"
-        endspecificrun = " /tests:"
-
-    # vstest
-    # /Tests:TestMethod1,testMethod2
-    # vstest.console.exe"  /testcontainer:"%WORKSPACE%\MYPROJECT\bin\debug\MYTEST.dll" /test:"ABC" /resultsfile:"%WORKSPACE%\result_%BUILD_NUMBER%.xml"
-    if testtemplate == "vstest":
-        testseparator = ","
-        reporttype = "file"
-        startrunspecific = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-            + "/tests:"
-        )
-        postfixtest = "'"
-        prefixtest = "'"
-        startrunall = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-        )
-        report = testtemplatearg1
-        importtype = "trx"
-        endspecificrun = " /tests:"
-
-    # Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,True,True\)|Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,False,False\)
-    # https://github.com/microsoft/vstest-docs/blob/master/docs/filter.md
-    # https://stackoverflow.com/questions/38139803/using-vstest-console-exe-testcategory-with-equals-and-not-equals
-    if testtemplate == "azure dotnet":
-        encodetests = "true"
-        executetests = "false"
-        testseparator = "|"
-        reporttype = "file"
-        startrunspecific = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-            + '/TestCaseFilter:"'
-        )
-        endrunspecific = '"'
-        postfixtest = ""
-        prefixtest = "Name="
-        startrunall = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-        )
-        report = testtemplatearg1
-        importtype = "trx"
-        endspecificrun = " /tests:"
-
-    if testtemplate == "azure specflow":
-        encodetests = "true"
-        executetests = "false"
-        testseparator = "|"
-        reporttype = "file"
-        startrunspecific = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-            + '/TestCaseFilter:"'
-        )
-        endrunspecific = '"'
-        postfixtest = ""
-        prefixtest = "Name="
-        startrunall = (
-            "vstest.console.exe /resultsfile:'"
-            + testtemplatearg1
-            + "' /testcontainer:'"
-            + testtemplatearg2
-            + "'"
-        )
-        report = testtemplatearg1
-        importtype = "trx"
-        replaceretry = "true"
-        endspecificrun = " /tests:"
-
-    # Jasmine3
-    # npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
-    # npm install -g jasmine-junit-reporter requires jasmine --reporter=jasmine-junit-reporter creates file junit_report
-    if testtemplate == "jasmine":
-        testseparator = "|"
-        reporttype = "file"
-        report = "junit_report.xml"
-        startrunspecific = "jasmine --reporter=jasmine-junit-reporter"
-        endrunspecific = "'"
-        postfixtest = "$"
-        prefixtest = "^"
-        startrunall = "jasmine test --reporter=jasmine-junit-reporter "
-        endspecificrun = "  --filter='"
-
-    # tosca
-    # https://support.tricentis.com/community/article.do?number=KB0013693
-    # https://documentation.tricentis.com/en/1000/content/continuous_integration/execution.htm
-    # https://documentation.tricentis.com/en/1030/content/continuous_integration/configuration.htm
-    # testset = https://documentation.tricentis.com/en/1010/content/tchb/tosca_executor.htm
-
-    # katalon
-    # katalonc -noSplash -runMode=console -projectPath="C:\Katalon\Test\Test Project\Test Project.prj" -retry=0 -testSuitePath="Test Suites/New Test Suite"
-    # -executionProfile="default" -browserType="Chrome" -apiKey="ee04de44-b3c7-4c9e-b8cd-741157fd4324" -reportFolder="c:\katalon" -reportFileName="report"
-    # JUnit_Report.xml gets generated
-    # Has apiKey - https://forum.katalon.com/t/how-to-use-katalon-plugin-for-jenkins-on-windows/20326/3
-    # -projectPath=<path>	Specify the project location (include .prj file). The absolute path must be used in this case.	Y
-    # -testSuitePath=<path>	Specify the test suite file (without extension .ts). The relative path (root being project folder) must be used in this case.
-    # -reportFolder=<path>	Specify the destination folder for saving report files. Can use absolute path or relative path (root being project folder).	N
-    # -reportFileName=<name>	Specify the name for report files (.html, .csv, .log). If not provide, system uses the name "report" (report.html, report.csv, report.log). This option is only taken into account when being used with "-reportFolder" option.
-    if testtemplate == "katalon":
-        testseparator = ",,"
-        reporttype = "file"
-        report = testtemplatearg1
-        head_tail = os.path.split(testtemplatearg1)
-        report_folder = head_tail[0]
-        report_file = head_tail[1]
-        head_tail = os.path.split(testtemplatearg3)
-        startrunspecific = (
-            "katalonc -noSplash -runMode=console -projectPath='"
-            + testtemplatearg2
-            + "' -testSuitePath='"
-            + "'"
-            + os.path.join(head_tail[0], "temp.ts")
-            + "' -apiKey='"
-            + testtemplatearg4
-            + "' -reportFolder='"
-            + report_folder
-            + " -reportFileName='"
-            + report_file
-            + "'"
-        )
-        startrunall = (
-            "katalonc -noSplash -runMode=console -projectPath='"
-            + testtemplatearg2
-            + "' -testSuitePath='"
-            + "'"
-            + testtemplatearg3
-            + "' -apiKey='"
-            + testtemplatearg4
-            + "' -reportFolder='"
-            + report_folder
-            + " -reportFileName='"
-            + report_file
-            + "'"
-        )
-        #endspecificrun = "  --filter='"
-        generatefile = "katalon"
-
-    # opentest
-    # testtemplatearg1 = report
-    # testtemplatearg2 = template of template with no tests
-    # testtemplatearg3 = template with all tests
-    if testtemplate == "opentest":
-        testseparator = ",,"
-        reporttype = "file"
-        report = testtemplatearg1
-        source = testtemplatearg2
-        full_path = os.path.realpath(source)
-        destination = os.path.join(os.path.dirname(full_path), "temp.yaml")
-        startrunspecific = (
-            "opentest session create --out '"
-            + testtemplatearg1
-            + "' --template '"
-            + destination
-            + "' "
-        )
-        startrunall = (
-            "opentest session create --out '"
-            + testtemplatearg1
-            + "' --template '"
-            + testtemplatearg3
-            + "' "
-        )
-        generatefile = "opentest"
-
-    # Todo
-    # mstest
-    # nunit
-    # xunit
-    # gradle/ant?
-    # c?
-    # c++
-    # clojure
-    # eunit
-    # go
-    # haskell
-    # javascript
-    # objective c
-    # perl
-    # php
-    # scala
-    # swift
-    # htmlunit
-    # ranorex
-    # qmetry
-    # leapwork
-    # experitest
-    # katalon
-    # testsigma - currently not possible
-    # lambdatest
-    # smartbear crossbrowsertesting
-    # uft
-    # telerik test studio
-    # perfecto
-    # tosca test suite
-    # mabl - currently not possible
-    # test craft
-    # squish
-    # test cafe
-
-    if len(argv) > 1:
-        for k in range(1, c):
-            if argv[k] == "--url":
-                url = argv[k + 1]
-            if argv[k] == "--apikey":
-                apikey = argv[k + 1]
-            if argv[k] == "--project":
-                project = argv[k + 1]
-            if argv[k] == "--testsuite":
-                testsuite = argv[k + 1]
-            if argv[k] == "--report":
-                report = argv[k + 1]
-            if argv[k] == "--reporttype":
-                reporttype = argv[k + 1]
-            if argv[k] == "--teststorun":
-                teststorun = argv[k + 1]
-            if argv[k] == "--importtype":
-                importtype = argv[k + 1]
-            if argv[k] == "--addtestsuitename":
-                addtestsuitename = argv[k + 1]
-            if argv[k] == "--testsuitesnameseparator":
-                testsuitesnameseparator = argv[k + 1]
-            if argv[k] == "--addclassname":
-                addclassname = argv[k + 1]
-            if argv[k] == "--classnameseparator":
-                classnameseparator = argv[k + 1]
-            if argv[k] == "--rerun":
-                rerun = argv[k + 1]
-            if argv[k] == "--maxrerun":
-                maxrerun = argv[k + 1]
-            if argv[k] == "--failfast":
-                failfast = argv[k + 1]
-            if argv[k] == "--fullname":
-                fullname = argv[k + 1]
-            if argv[k] == "--fullnameseparator":
-                fullnameseparator = argv[k + 1]
-            if argv[k] == "--startrunall":
-                startrunall = argv[k + 1]
-            if argv[k] == "--startrunspecific":
-                startrunspecific = argv[k + 1]
-            if argv[k] == "--prefixtest":
-                prefixtest = argv[k + 1]
-            if argv[k] == "--postfixtest":
-                postfixtest = argv[k + 1]
-            if argv[k] == "--testseparator":
-                testseparator = argv[k + 1]
-            if argv[k] == "--testseparatorend":
-                testseparatorend = argv[k + 1]
-            if argv[k] == "--endrunspecific":
-                endrunspecific = argv[k + 1]
-            if argv[k] == "--endrunall":
-                endrunall = argv[k + 1]
-            if argv[k] == "--additionalargs":
-                additionalargs = argv[k + 1]
-            if argv[k] == "--fail":
-                fail = argv[k + 1]
-            if argv[k] == "--commit":
-                commit = argv[k + 1]
-            if argv[k] == "--branch":
-                branch = argv[k + 1]
-            if argv[k] == "--maxtests":
-                maxtests = int(argv[k + 1])
-            if argv[k] == "--scriptlocation":
-                scriptlocation = argv[k + 1]
-            if argv[k] == "--runfrequency":
-                runfrequency = argv[k + 1]
-            if argv[k] == "--fromcommit":
-                fromcommit = argv[k + 1]
-            if argv[k] == "--repository":
-                repository = argv[k + 1]
-            if argv[k] == "--generatefile":
-                generatefile = argv[k + 1]
-            if argv[k] == "--startrunpostfix":
-                startrunpostfix = argv[k + 1]
-            if argv[k] == "--endrunprefix":
-                endrunprefix = argv[k + 1]
-            if argv[k] == "--endrunpostfix":
-                endrunpostfix = argv[k + 1]
-            if argv[k] == "--proxy":
-                proxy = argv[k + 1]
-            if argv[k] == "--username":
-                username = argv[k + 1]
-            if argv[k] == "--password":
-                password = argv[k + 1]
-            if argv[k] == "--executetests":
-                executetests = argv[k + 1]
-            if argv[k] == "--trainer":
-                trainer = "true"
-            if argv[k] == "--azurevariable":
-                azure_variable = argv[k + 1]
-            if argv[k] == "--pipeoutput":
-                pipeoutput = "true"
-            if argv[k] == "--bitrise":
-                bitrise = "true"
-            if argv[k] == "--recursive":
-                recursive = "true"
-            if argv[k] == "--replaceretry":
-                replaceretry = "true"
-            if argv[k] == "--githubactionsvariable":
-                githubactionsvariable = argv[k + 1]
-            if argv[k] == "--executioncommand":
-                executioncommand = argv[k + 1]
-            if argv[k] == "--printcommand":
-                printcommand = argv[k + 1]
-            if argv[k] == "--azurefilter":
-                azurefilter = argv[k + 1]
-            if argv[k] == "--azurefilteronall":
-                azurefilteronall = "false"
-            if argv[k] == "--percentage":
-                percentage = argv[k + 1]
-            if argv[k] == "--weekendrunall":
-                weekendrunall = "true"
-            if argv[k] == "--newdays":
-                newdays = argv[k + 1]
-            if argv[k] == "--azurevariablenum":
-                azurevariablenum = argv[k + 1]
-            if argv[k] == "--time":
-                time = argv[k + 1]
-            if argv[k] == "--runcommand":
-                commandset = argv[k + 1]
-                startrunall = argv[k + 1]
-                startrunspecific = argv[k + 1] + endspecificrun
-                print("fall back command = " + startrunall)
-                print("prioritized run = " + startrunspecific)
-            # if argv[k] == "--runnewtests":
-            #    runnewtests = argv[k+1]
-            if argv[k] == "--help":
-                echo(
-                    "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
-                )
+        # startrun should be how your tests are executed i.e. java -jar robotframework.jar or robot
+        # then -x robot.xml to create the output file
+        # then --test ' if you are running specific tests
+        # endrun should be the location of your tests
+        if testtemplate == "robotframework":
+            prefixtest = " --test '"
+            postfixtest = "'"
+            testseparator = " "
+            reporttype = "file"
+            report = testtemplatearg3
+            startrunall = testtemplatearg1 + " -x " + testtemplatearg3 + " "
+            endrunall = testtemplatearg2
+            startrunspecific = testtemplatearg1 + " -x " + testtemplatearg3 + " "
+            endrunall = testtemplatearg2
+            endspecificrun = " "
             
 
-    if commandset == "":
-        startrunspecific = startrunspecific + endspecificrun
-        print("################################################")
-        print("prioritized run = " + startrunspecific)
-    
-    if githubactionsvariable != "" and githubactionsvariable is not None:
-        executioncommand = (
-            'echo "{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
-        )
-        printcommand = '"{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
+        # mocha
+        # install https://www.npmjs.com/package/mocha-junit-reporter
+        # https://github.com/mochajs/mocha/issues/1565
+        if testtemplate == "mocha":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "mocha test --reporter mocha-junit-reporter"
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "mocha test --reporter mocha-junit-reporter "
+            endspecificrun = " -g '"
 
-    if "http://" in proxy:
-        proxy = proxy.replace("http://", "")
+        # pytest
+        # https://stackoverflow.com/questions/36456920/is-there-a-way-to-specify-which-pytest-tests-to-run-from-a-file
+        if testtemplate == "pytest":
+            testseparator = " or "
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "python -m pytest --junitxml=test-results.xml"
+            endrunspecific = "'"
+            startrunall = "python -m pytest --junitxml=test-results.xml"
+            endspecificrun = " -k '"
 
-    if "https://" in proxy:
-        proxy = proxy.replace("https://", "")
+        # testim
+        # https://help.testim.io/docs/the-command-line-cli
+        if testtemplate == "testim":
+            testseparator = " --name '"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "testim --report-file test-results.xml"
+            postfixtest = "'"
+            startrunall = "testim --report-file test-results.xml"
+            endspecificrun = " --name '"
 
-    if url[-1:] == "/":
-        url = url[:-1]
-        echo("url = " + url)
+        # testcomplete
+        # TestComplete.exe "C:\My Projects\MySuite.pjs" /run /p:MyProj /ExportSummary:"C:\TestLogs\report.xml"
+        # /test""ProjectTestItem1"
+        # https://support.smartbear.com/testcomplete/docs/working-with/automating/command-line-and-exit-codes/command-line.html
+        if testtemplate == "testcomplete":
+            testseparator = "|"
+            reporttype = "file"
+            report = testtemplatearg2
+            startrunspecific = "TestComplete.exe " + testtemplatearg1 + " "
+            endrunspecific = testtemplatearg2
+            startrunall = "TestComplete.exe " + testtemplatearg1 + " "
+            endrunall = +" /ExportSummary:" + testtemplatearg2
+            endspecificrun = " "
+            prefixtest = '/test"'
+            postfixtest = '"'
 
-    if repository == "p4":
-        repository = "perforce"
+        # ranorex webtestit
+        # https://discourse.webtestit.com/t/running-ranorex-webtestit-in-cli-mode/152
+        if testtemplate == "ranorex webtestit":
+            testseparator = "|"
+            reporttype = "file"
+            report = testtemplatearg2
+            startrunspecific = "TestComplete.exe " + testtemplatearg1 + " "
+            endrunspecific = testtemplatearg2
+            startrunall = "TestComplete.exe " + testtemplatearg1 + " "
+            endrunall = +" /ExportSummary:" + testtemplatearg2
 
-    if report[-4:].find(".") >= 0:
-        reporttype = "file"
-    else:
-        reporttype = "directory"
+        # cypress
+        # https://github.com/bahmutov/cypress-select-tests
+        # cypress run --reporter junit --reporter-options mochaFile=result.xml
+        # updated to https://github.com/cypress-io/cypress-grep
+        if testtemplate == "cypress":
+            testseparator = "; "
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' --env grep="'
 
-    if len(argv) > 1:
-        for k in range(1, c):
-            if argv[k] == "--reporttype":
-                reporttype = argv[k + 1]
+        # mstest
+        # /Tests:TestMethod1,testMethod2
+        # mstest.exe"  /testcontainer:"%WORKSPACE%\MYPROJECT\bin\debug\MYTEST.dll" /test:"ABC" /resultsfile:"%WORKSPACE%\result_%BUILD_NUMBER%.xml"
+        if testtemplate == "mstest":
+            testseparator = ","
+            reporttype = "file"
+            startrunspecific = (
+                "mstest /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + "/tests:"
+            )
+            postfixtest = "'"
+            prefixtest = "'"
+            startrunall = (
+                "mstest /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            importtype = "trx"
+            endspecificrun = " /tests:"
 
-    testsuiteencoded = urlencode(testsuite)
-    projectencoded = urlencode(project)
-    testsuiteencoded = testsuite
-    projectencoded = project
+        # vstest
+        # /Tests:TestMethod1,testMethod2
+        # vstest.console.exe"  /testcontainer:"%WORKSPACE%\MYPROJECT\bin\debug\MYTEST.dll" /test:"ABC" /resultsfile:"%WORKSPACE%\result_%BUILD_NUMBER%.xml"
+        if testtemplate == "vstest":
+            testseparator = ","
+            reporttype = "file"
+            startrunspecific = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + "/tests:"
+            )
+            postfixtest = "'"
+            prefixtest = "'"
+            startrunall = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            importtype = "trx"
+            endspecificrun = " /tests:"
 
-    if commit == "" and repository == "git":
-        commit = runcommand('git log -1 --pretty="%H"')
-        commit = commit.rstrip().rstrip("\n\r")
-        print(("commit id = " + commit))
+        # Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,True,True\)|Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,False,False\)
+        # https://github.com/microsoft/vstest-docs/blob/master/docs/filter.md
+        # https://stackoverflow.com/questions/38139803/using-vstest-console-exe-testcategory-with-equals-and-not-equals
+        if testtemplate == "azure dotnet":
+            encodetests = "true"
+            executetests = "false"
+            testseparator = "|"
+            reporttype = "file"
+            startrunspecific = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + '/TestCaseFilter:"'
+            )
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = "Name="
+            startrunall = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            importtype = "trx"
+            endspecificrun = " /tests:"
 
-    # git branch | grep \* | cut -d ' ' -f2
-    # git rev-parse --abbrev-ref HEAD
-    # https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
+        if testtemplate == "azure specflow":
+            encodetests = "true"
+            executetests = "false"
+            testseparator = "|"
+            reporttype = "file"
+            startrunspecific = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + '/TestCaseFilter:"'
+            )
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = "Name="
+            startrunall = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            importtype = "trx"
+            replaceretry = "true"
+            endspecificrun = " /tests:"
 
-    if branch == "" and repository == "git":
-        branch = runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
-        print(("branch = " + branch))
+        # Jasmine3
+        # npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
+        # npm install -g jasmine-junit-reporter requires jasmine --reporter=jasmine-junit-reporter creates file junit_report
+        if testtemplate == "jasmine":
+            testseparator = "|"
+            reporttype = "file"
+            report = "junit_report.xml"
+            startrunspecific = "jasmine --reporter=jasmine-junit-reporter"
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "jasmine test --reporter=jasmine-junit-reporter "
+            endspecificrun = "  --filter='"
 
-    if url == "":
-        echo("no url specified")
-        exit(1)
-    if apikey == "":
-        echo("no apikey specified")
-    if project == "":
-        echo("no project specified")
-        exit(1)
-    if testsuite == "":
-        echo("no testsuite specified")
-        exit(1)
-    if report == "":
-        echo("no report specified")
-        exit(1)
-    if runfrequency == "betweeninclusive" and fromcommit == "":
-        echo("no from commit specified and runfrequency set to betweeninclusive")
-        exit(1)
-    if runfrequency == "betweenexclusive" and fromcommit == "":
-        echo("no from commit specified and runfrequency set to betweenexclusive")
-        exit(1)
-    # if runfrequency != "single" and branch == "":
-    if branch == "":
-        echo("no branch specified")
-        exit(1)
-    if commit == "":
-        setVariables()
-        echo("no commit specified")
-        exit(1)
+        # tosca
+        # https://support.tricentis.com/community/article.do?number=KB0013693
+        # https://documentation.tricentis.com/en/1000/content/continuous_integration/execution.htm
+        # https://documentation.tricentis.com/en/1030/content/continuous_integration/configuration.htm
+        # testset = https://documentation.tricentis.com/en/1010/content/tchb/tosca_executor.htm
 
-    if startrunspecific == "" and teststorun != "all":
-        if teststorun != "none":
-            echo("startrunspecific needs to be set in order to execute tests")
+        # katalon
+        # katalonc -noSplash -runMode=console -projectPath="C:\Katalon\Test\Test Project\Test Project.prj" -retry=0 -testSuitePath="Test Suites/New Test Suite"
+        # -executionProfile="default" -browserType="Chrome" -apiKey="ee04de44-b3c7-4c9e-b8cd-741157fd4324" -reportFolder="c:\katalon" -reportFileName="report"
+        # JUnit_Report.xml gets generated
+        # Has apiKey - https://forum.katalon.com/t/how-to-use-katalon-plugin-for-jenkins-on-windows/20326/3
+        # -projectPath=<path>	Specify the project location (include .prj file). The absolute path must be used in this case.	Y
+        # -testSuitePath=<path>	Specify the test suite file (without extension .ts). The relative path (root being project folder) must be used in this case.
+        # -reportFolder=<path>	Specify the destination folder for saving report files. Can use absolute path or relative path (root being project folder).	N
+        # -reportFileName=<name>	Specify the name for report files (.html, .csv, .log). If not provide, system uses the name "report" (report.html, report.csv, report.log). This option is only taken into account when being used with "-reportFolder" option.
+        if testtemplate == "katalon":
+            testseparator = ",,"
+            reporttype = "file"
+            report = testtemplatearg1
+            head_tail = os.path.split(testtemplatearg1)
+            report_folder = head_tail[0]
+            report_file = head_tail[1]
+            head_tail = os.path.split(testtemplatearg3)
+            startrunspecific = (
+                "katalonc -noSplash -runMode=console -projectPath='"
+                + testtemplatearg2
+                + "' -testSuitePath='"
+                + "'"
+                + os.path.join(head_tail[0], "temp.ts")
+                + "' -apiKey='"
+                + testtemplatearg4
+                + "' -reportFolder='"
+                + report_folder
+                + " -reportFileName='"
+                + report_file
+                + "'"
+            )
+            startrunall = (
+                "katalonc -noSplash -runMode=console -projectPath='"
+                + testtemplatearg2
+                + "' -testSuitePath='"
+                + "'"
+                + testtemplatearg3
+                + "' -apiKey='"
+                + testtemplatearg4
+                + "' -reportFolder='"
+                + report_folder
+                + " -reportFileName='"
+                + report_file
+                + "'"
+            )
+            #endspecificrun = "  --filter='"
+            generatefile = "katalon"
+
+        # opentest
+        # testtemplatearg1 = report
+        # testtemplatearg2 = template of template with no tests
+        # testtemplatearg3 = template with all tests
+        if testtemplate == "opentest":
+            testseparator = ",,"
+            reporttype = "file"
+            report = testtemplatearg1
+            source = testtemplatearg2
+            full_path = os.path.realpath(source)
+            destination = os.path.join(os.path.dirname(full_path), "temp.yaml")
+            startrunspecific = (
+                "opentest session create --out '"
+                + testtemplatearg1
+                + "' --template '"
+                + destination
+                + "' "
+            )
+            startrunall = (
+                "opentest session create --out '"
+                + testtemplatearg1
+                + "' --template '"
+                + testtemplatearg3
+                + "' "
+            )
+            generatefile = "opentest"
+
+        # Todo
+        # mstest
+        # nunit
+        # xunit
+        # gradle/ant?
+        # c?
+        # c++
+        # clojure
+        # eunit
+        # go
+        # haskell
+        # javascript
+        # objective c
+        # perl
+        # php
+        # scala
+        # swift
+        # htmlunit
+        # ranorex
+        # qmetry
+        # leapwork
+        # experitest
+        # katalon
+        # testsigma - currently not possible
+        # lambdatest
+        # smartbear crossbrowsertesting
+        # uft
+        # telerik test studio
+        # perfecto
+        # tosca test suite
+        # mabl - currently not possible
+        # test craft
+        # squish
+        # test cafe
+
+        if len(argv) > 1:
+            for k in range(1, c):
+                if argv[k] == "--url":
+                    url = argv[k + 1]
+                if argv[k] == "--apikey":
+                    apikey = argv[k + 1]
+                if argv[k] == "--project":
+                    project = argv[k + 1]
+                if argv[k] == "--testsuite":
+                    testsuite = argv[k + 1]
+                if argv[k] == "--report":
+                    report = argv[k + 1]
+                if argv[k] == "--reporttype":
+                    reporttype = argv[k + 1]
+                if argv[k] == "--teststorun":
+                    teststorun = argv[k + 1]
+                if argv[k] == "--importtype":
+                    importtype = argv[k + 1]
+                if argv[k] == "--addtestsuitename":
+                    addtestsuitename = argv[k + 1]
+                if argv[k] == "--testsuitesnameseparator":
+                    testsuitesnameseparator = argv[k + 1]
+                if argv[k] == "--addclassname":
+                    addclassname = argv[k + 1]
+                if argv[k] == "--classnameseparator":
+                    classnameseparator = argv[k + 1]
+                if argv[k] == "--rerun":
+                    rerun = argv[k + 1]
+                if argv[k] == "--maxrerun":
+                    maxrerun = argv[k + 1]
+                if argv[k] == "--failfast":
+                    failfast = argv[k + 1]
+                if argv[k] == "--fullname":
+                    fullname = argv[k + 1]
+                if argv[k] == "--fullnameseparator":
+                    fullnameseparator = argv[k + 1]
+                if argv[k] == "--startrunall":
+                    startrunall = argv[k + 1]
+                if argv[k] == "--startrunspecific":
+                    startrunspecific = argv[k + 1]
+                if argv[k] == "--prefixtest":
+                    prefixtest = argv[k + 1]
+                if argv[k] == "--postfixtest":
+                    postfixtest = argv[k + 1]
+                if argv[k] == "--testseparator":
+                    testseparator = argv[k + 1]
+                if argv[k] == "--testseparatorend":
+                    testseparatorend = argv[k + 1]
+                if argv[k] == "--endrunspecific":
+                    endrunspecific = argv[k + 1]
+                if argv[k] == "--endrunall":
+                    endrunall = argv[k + 1]
+                if argv[k] == "--additionalargs":
+                    additionalargs = argv[k + 1]
+                if argv[k] == "--fail":
+                    fail = argv[k + 1]
+                if argv[k] == "--commit":
+                    commit = argv[k + 1]
+                if argv[k] == "--branch":
+                    branch = argv[k + 1]
+                if argv[k] == "--maxtests":
+                    maxtests = int(argv[k + 1])
+                if argv[k] == "--scriptlocation":
+                    scriptlocation = argv[k + 1]
+                if argv[k] == "--runfrequency":
+                    runfrequency = argv[k + 1]
+                if argv[k] == "--fromcommit":
+                    fromcommit = argv[k + 1]
+                if argv[k] == "--repository":
+                    repository = argv[k + 1]
+                if argv[k] == "--generatefile":
+                    generatefile = argv[k + 1]
+                if argv[k] == "--startrunpostfix":
+                    startrunpostfix = argv[k + 1]
+                if argv[k] == "--endrunprefix":
+                    endrunprefix = argv[k + 1]
+                if argv[k] == "--endrunpostfix":
+                    endrunpostfix = argv[k + 1]
+                if argv[k] == "--proxy":
+                    proxy = argv[k + 1]
+                if argv[k] == "--username":
+                    username = argv[k + 1]
+                if argv[k] == "--password":
+                    password = argv[k + 1]
+                if argv[k] == "--executetests":
+                    executetests = argv[k + 1]
+                if argv[k] == "--trainer":
+                    trainer = "true"
+                if argv[k] == "--azurevariable":
+                    azure_variable = argv[k + 1]
+                if argv[k] == "--pipeoutput":
+                    pipeoutput = "true"
+                if argv[k] == "--bitrise":
+                    bitrise = "true"
+                if argv[k] == "--recursive":
+                    recursive = "true"
+                if argv[k] == "--replaceretry":
+                    replaceretry = "true"
+                if argv[k] == "--githubactionsvariable":
+                    githubactionsvariable = argv[k + 1]
+                if argv[k] == "--executioncommand":
+                    executioncommand = argv[k + 1]
+                if argv[k] == "--printcommand":
+                    printcommand = argv[k + 1]
+                if argv[k] == "--azurefilter":
+                    azurefilter = argv[k + 1]
+                if argv[k] == "--azurefilteronall":
+                    azurefilteronall = "false"
+                if argv[k] == "--percentage":
+                    percentage = argv[k + 1]
+                if argv[k] == "--weekendrunall":
+                    weekendrunall = "true"
+                if argv[k] == "--newdays":
+                    newdays = argv[k + 1]
+                if argv[k] == "--azurevariablenum":
+                    azurevariablenum = argv[k + 1]
+                if argv[k] == "--time":
+                    time = argv[k + 1]
+                if argv[k] == "--alwaysrun":
+                    alwaysrun = argv[k + 1]
+                    if alwaysrun.lower() != "none":
+                        alwaysrunset = [x.strip() for x in alwaysrun.split(',')]
+                if argv[k] == "--azurealwaysrun":
+                    azurealwaysrun = argv[k + 1]
+                    print("setting azurealwaysrun")
+                    if azurealwaysrun.lower() != "none":
+                        azurealwaysrunset = [x.strip() for x in azurealwaysrun.split(',')]
+                        print(azurealwaysrunset)
+                if argv[k] == "--runcommand":
+                    commandset = argv[k + 1]
+                    startrunall = argv[k + 1]
+                    startrunspecific = argv[k + 1] + endspecificrun
+                    print("fall back command = " + startrunall)
+                    print("prioritized run = " + startrunspecific)
+                # if argv[k] == "--runnewtests":
+                #    runnewtests = argv[k+1]
+                if argv[k] == "--help":
+                    echo(
+                        "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
+                    )
+                
+
+        if commandset == "":
+            startrunspecific = startrunspecific + endspecificrun
+            print("################################################")
+            print("prioritized run = " + startrunspecific)
+        
+        if githubactionsvariable != "" and githubactionsvariable is not None:
+            executioncommand = (
+                'echo "{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
+            )
+            printcommand = '"{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
+
+        if "http://" in proxy:
+            proxy = proxy.replace("http://", "")
+
+        if "https://" in proxy:
+            proxy = proxy.replace("https://", "")
+
+        if url[-1:] == "/":
+            url = url[:-1]
+            echo("url = " + url)
+
+        if repository == "p4":
+            repository = "perforce"
+
+        if report[-4:].find(".") >= 0:
+            reporttype = "file"
+        else:
+            reporttype = "directory"
+
+        if len(argv) > 1:
+            for k in range(1, c):
+                if argv[k] == "--reporttype":
+                    reporttype = argv[k + 1]
+
+        testsuiteencoded = urlencode(testsuite)
+        projectencoded = urlencode(project)
+        testsuiteencoded = testsuite
+        projectencoded = project
+
+        if commit == "" and repository == "git":
+            commit = runcommand('git log -1 --pretty="%H"')
+            commit = commit.rstrip().rstrip("\n\r")
+            print(("commit id = " + commit))
+
+        # git branch | grep \* | cut -d ' ' -f2
+        # git rev-parse --abbrev-ref HEAD
+        # https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
+
+        if branch == "" and repository == "git":
+            branch = runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
+            print(("branch = " + branch))
+
+        if url == "":
+            echo("no url specified")
             exit(1)
-    if startrunall == "" and teststorun == "all":
-        echo("startrunall needs to be set in order to execute tests")
-        exit(1)
-    if startrunspecific == "" and teststorun == "all" and rerun == "true":
-        echo(
-            "startrunspecific needs to be set in order to rerun tests, either set rerun to false or set startrunspecific"
-        )
-        exit(1)
+        if apikey == "":
+            echo("no apikey specified")
+        if project == "":
+            echo("no project specified")
+            exit(1)
+        if testsuite == "":
+            echo("no testsuite specified")
+            exit(1)
+        if report == "":
+            echo("no report specified")
+            exit(1)
+        if runfrequency == "betweeninclusive" and fromcommit == "":
+            echo("no from commit specified and runfrequency set to betweeninclusive")
+            exit(1)
+        if runfrequency == "betweenexclusive" and fromcommit == "":
+            echo("no from commit specified and runfrequency set to betweenexclusive")
+            exit(1)
+        # if runfrequency != "single" and branch == "":
+        if branch == "":
+            echo("no branch specified")
+            exit(1)
+        if commit == "":
+            setVariables()
+            echo("no commit specified")
+            exit(1)
 
-    # if [[ $teststorun == "" ]] ; then echo "no teststorun specified" ; exit 1 ; fi
-    # if [[ $startrun == "" ]] ; then echo "no command used to start running tests specified" ; exit 1 ; fi
+        if startrunspecific == "" and teststorun != "all":
+            if teststorun != "none":
+                echo("startrunspecific needs to be set in order to execute tests")
+                exit(1)
+        if startrunall == "" and teststorun == "all":
+            echo("startrunall needs to be set in order to execute tests")
+            exit(1)
+        if startrunspecific == "" and teststorun == "all" and rerun == "true":
+            echo(
+                "startrunspecific needs to be set in order to rerun tests, either set rerun to false or set startrunspecific"
+            )
+            exit(1)
 
-    ####example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "mvn -tests"
-    # example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "C:\apache\apache-maven-3.5.0\bin\mvn tests "
-    # ./RunTestsWithAppsurify.sh --url "https://demo.appsurify.com" --apikey "MTU6a3Q1LUlTU3ZEcktFSTFhQUNoYy1DU3pidkdz" --project "Spirent Demo" --testsuite "Unit" --report "c:\testresults\GroupedTests1.xml" --teststorun "all" --commit "44e9b51296e41e044e45b81e0ef65e9dc4c3bc23"
-    # python3 RunTestsWithAppsurify3.py --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --runtemplate "no tests" --testtemplate "mvn"
+        # if [[ $teststorun == "" ]] ; then echo "no teststorun specified" ; exit 1 ; fi
+        # if [[ $startrun == "" ]] ; then echo "no command used to start running tests specified" ; exit 1 ; fi
 
-    # run_id=""
+        ####example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "mvn -tests"
+        # example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "C:\apache\apache-maven-3.5.0\bin\mvn tests "
+        # ./RunTestsWithAppsurify.sh --url "https://demo.appsurify.com" --apikey "MTU6a3Q1LUlTU3ZEcktFSTFhQUNoYy1DU3pidkdz" --project "Spirent Demo" --testsuite "Unit" --report "c:\testresults\GroupedTests1.xml" --teststorun "all" --commit "44e9b51296e41e044e45b81e0ef65e9dc4c3bc23"
+        # python3 RunTestsWithAppsurify3.py --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --runtemplate "no tests" --testtemplate "mvn"
 
-    # $url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commit $run_id
-    echo("Getting tests to run")
+        # run_id=""
 
-    valuetests = ""
-    finalTestNames = ""
-    testsrun = ""
-    print("test to run = " + teststorun)
-    if teststorun == "all":
-        execute_tests("", 0)
-        # testsrun="all"
+        # $url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commit $run_id
+        echo("Getting tests to run")
 
-    if teststorun == "none":
-        testsrun = "none"
-        push_results()
+        valuetests = ""
+        finalTestNames = ""
+        testsrun = ""
+        print("test to run = " + teststorun)
+        if teststorun == "all":
+            execute_tests("", 0)
+            # testsrun="all"
 
-    testtypes = []
+        if teststorun == "none":
+            testsrun = "none"
+            push_results()
 
-    if percentage.isnumeric():
-        testtypes.append(9)
-    else:
-        if "high" in teststorun:
-            testtypes.append(1)
-        if "medium" in teststorun:
-            testtypes.append(2)
-        if "low" in teststorun:
-            testtypes.append(3)
-        if "unassigned" in teststorun:
-            testtypes.append(4)
-        if "top20" in teststorun:
-            testtypes.append(8)
-
-    if runnewtests != "false":
-        testtypes.append(11)
-
-    weekno = datetime.datetime.today().weekday()
-    if (
-        teststorun != "all"
-        and teststorun != "none"
-        and weekendrunall == "true"
-        and weekno >= 5
-    ):
-        print("Weekend running all tests")
         testtypes = []
 
-    ####start loop
-    for i in testtypes:
-        # print(("testsrun1 = " + testsrun))
-        try:
-            testsrun = get_and_run_tests(i) + testsrun
-        except Exception as e:
-            print("Error running tests in set")
-
-    if executetests == "false":
-        print("Tests to run")
-        print(testsrun)
-
-    # try:
-    #    os.environ["TESTSTORUN"] = testsrun
-    # except Exception as e:
-    #    print(e)
-
-    if testsrun == "":
-        if executetests != "false" and teststorun != "all":
-            print("executing all tests")
-            execute_tests("", 0)
-        # os.environ["TESTSTORUN"] = "*"
-
-    # print("tests " + os.environ.get('TESTSTORUN'))
-    # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
-    if testtemplate == "azure dotnet":
-        max_length = 28000
-        variable_num = 1
-
-        if runnewtests != "false" and runnewtests != "true":
-            old_percentage = percentage
-            percentage = "100"
-            testset = get_tests(9)
-            count = 0
-            alltests = runcommand(runnewtests)
-            i = 0
-            newtestset = ""
-            for line in alltests.splitlines():
-                line = line.strip()
-                if i != 0:
-                    newtest = True
-                    count = 0
-                    for element in testset:
-                        count = count + 1
-                        testName = element["name"]
-                        if testName == line:
-                            newtest = False
-                    if newtest == True:
-                        testtoadd = line
-                        if encodetests == "true":
-                            testtoadd = testtoadd.encode("unicode_escape").decode()
-                            testtoadd = testtoadd.replace("\\", "\\\\")
-                            testtoadd = strip_non_ascii(testtoadd)
-                            # testtoadd = testtoadd.replace("\\u00F6", "")
-                            testtoadd = testtoadd.replace("\n", "\\n")
-                            testtoadd = testtoadd.replace("(", "\(")
-                            testtoadd = testtoadd.replace(")", "\)")
-                            testtoadd = testtoadd.replace("&", "\&")
-                            testtoadd = testtoadd.replace("|", "\|")
-                            testtoadd = testtoadd.replace("=", "\=")
-                            testtoadd = testtoadd.replace("!", "\!")
-                            testtoadd = testtoadd.replace("~", "\~")
-                        testsrun = (
-                            testsrun
-                            + testseparator
-                            + prefixtest
-                            + testtoadd
-                            + postfixtest
-                        )
-                        newtestset = (
-                            newtestset
-                            + testseparator
-                            + prefixtest
-                            + testtoadd
-                            + postfixtest
-                        )
-                if line == "The following Tests are available:":
-                    i = i + 1
-            percentage = old_percentage
-            execute_tests(newtestset, 11)
-        if len(testsrun) == 0 or testsrun == "all":
-            print("no tests to set for azure")
-            if azurefilteronall == "false":
-                azurefilter = ""
-            if azurefilter != "":
-                # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
-                if azurefilter.endswith("&") is True:
-                    azurefilter = azurefilter[:-1]
-                if azurefilter.endswith("|") is True:
-                    azurefilter = azurefilter[:-1]
-                print("running all tests")
-                print(
-                    f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}"
-                )
-                print(f"##vso[task.setvariable variable={azure_variable}]{azurefilter}")
-            if azurefilter == "":
-                print("running all tests")
-                # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
-                print(f"##vso[task.setvariable variable={azure_variable}]")
-                print(
-                    f"##vso[task.setvariable variable={azure_variable}{variable_num}]"
-                )
-            # print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
+        if percentage.isnumeric():
+            testtypes.append(9)
         else:
-            if azurefilter != "":
-                if (
-                    azurefilter.endswith("&") is False
-                    and azurefilter.endswith("|") is False
-                ):
-                    azurefilter = azurefilter + "&"
-            if azurevariablenum == 0:
+            if "high" in teststorun:
+                testtypes.append(1)
+            if "medium" in teststorun:
+                testtypes.append(2)
+            if "low" in teststorun:
+                testtypes.append(3)
+            if "unassigned" in teststorun:
+                testtypes.append(4)
+            if "top20" in teststorun:
+                testtypes.append(8)
+
+        if runnewtests != "false":
+            testtypes.append(11)
+
+        weekno = datetime.datetime.today().weekday()
+        if (
+            teststorun != "all"
+            and teststorun != "none"
+            and weekendrunall == "true"
+            and weekno >= 5
+        ):
+            print("Weekend running all tests")
+            testtypes = []
+
+        ####start loop
+        for i in testtypes:
+            # print(("testsrun1 = " + testsrun))
+            try:
+                testsrun = get_and_run_tests(i) + testsrun
+            except Exception as e:
+                print("Error running tests in set")
+
+        if executetests == "false":
+            print("Tests to run")
+            print(testsrun)
+
+        # try:
+        #    os.environ["TESTSTORUN"] = testsrun
+        # except Exception as e:
+        #    print(e)
+
+        if testsrun == "":
+            if executetests != "false" and teststorun != "all":
+                print("executing all tests")
+                execute_tests("", 0)
+            # os.environ["TESTSTORUN"] = "*"
+
+
+
+        # print("tests " + os.environ.get('TESTSTORUN'))
+        # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
+        if testtemplate == "azure dotnet":
+            max_length = 28000
+            variable_num = 1
+
+            if runnewtests != "false" and runnewtests != "true":
+                old_percentage = percentage
+                percentage = "100"
+                testset = get_tests(9)
+                count = 0
+                alltests = runcommand(runnewtests)
+                i = 0
+                newtestset = ""
+                for line in alltests.splitlines():
+                    line = line.strip()
+                    if i != 0:
+                        newtest = True
+                        count = 0
+                        for element in testset:
+                            count = count + 1
+                            testName = element["name"]
+                            if testName == line:
+                                newtest = False
+                        if newtest == True:
+                            testtoadd = line
+                            if encodetests == "true":
+                                testtoadd = testtoadd.encode("unicode_escape").decode()
+                                testtoadd = testtoadd.replace("\\", "\\\\")
+                                testtoadd = strip_non_ascii(testtoadd)
+                                # testtoadd = testtoadd.replace("\\u00F6", "")
+                                testtoadd = testtoadd.replace("\n", "\\n")
+                                testtoadd = testtoadd.replace("(", "\(")
+                                testtoadd = testtoadd.replace(")", "\)")
+                                testtoadd = testtoadd.replace("&", "\&")
+                                testtoadd = testtoadd.replace("|", "\|")
+                                testtoadd = testtoadd.replace("=", "\=")
+                                testtoadd = testtoadd.replace("!", "\!")
+                                testtoadd = testtoadd.replace("~", "\~")
+                            testsrun = (
+                                testsrun
+                                + testseparator
+                                + prefixtest
+                                + testtoadd
+                                + postfixtest
+                            )
+                            newtestset = (
+                                newtestset
+                                + testseparator
+                                + prefixtest
+                                + testtoadd
+                                + postfixtest
+                            )
+                    if line == "The following Tests are available:":
+                        i = i + 1
+                percentage = old_percentage
+                execute_tests(newtestset, 11)
+            if len(testsrun) == 0 or testsrun == "all":
+                print("no tests to set for azure")
+                if azurefilteronall == "false":
+                    azurefilter = ""
+                if azurefilter != "":
+                    # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}{testsrun}')
+                    if azurefilter.endswith("&") is True:
+                        azurefilter = azurefilter[:-1]
+                    if azurefilter.endswith("|") is True:
+                        azurefilter = azurefilter[:-1]
+                    print("running all tests")
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}"
+                    )
+                    print(f"##vso[task.setvariable variable={azure_variable}]{azurefilter}")
+                if azurefilter == "":
+                    print("running all tests")
+                    # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+                    print(f"##vso[task.setvariable variable={azure_variable}]")
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}{variable_num}]"
+                    )
+                # print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
+            else:
+                azurealwaysruntestsformatted = get_always_tests_azure()
+                if azurefilter != "":
+                    if (
+                        azurefilter.endswith("&") is False
+                        and azurefilter.endswith("|") is False
+                    ):
+                        azurefilter = azurefilter + "&"
+                if azurevariablenum == 0:
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}]{azurefilter}({testsrun}){azurealwaysruntestsformatted}"
+                    )
+                azuresets = []
+                
+                print(azurealwaysruntestsformatted)
+                while len(testsrun) > max_length:
+                    split_string = testsrun.find("|Name=", max_length)
+                    setval = testsrun[:split_string]
+                    if setval.startswith("|"):
+                        setval = setval[1:]
+                    testsrun = testsrun[split_string:]
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({setval})"
+                    )
+                    testsettoappend = azurefilter + "(" + setval + ")"
+                    azuresets.append(testsettoappend)
+                    variable_num = variable_num + 1
+                if testsrun.startswith("|"):
+                    testsrun = testsrun[1:]
                 print(
-                    f"##vso[task.setvariable variable={azure_variable}]{azurefilter}({testsrun})"
+                    f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({testsrun})"
                 )
-            azuresets = []
-            while len(testsrun) > max_length:
-                split_string = testsrun.find("|Name=", max_length)
-                setval = testsrun[:split_string]
-                if setval.startswith("|"):
-                    setval = setval[1:]
-                testsrun = testsrun[split_string:]
-                print(
-                    f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({setval})"
-                )
-                testsettoappend = azurefilter + "(" + setval + ")"
+                testsettoappend = azurefilter + "(" + testsrun + ")"
                 azuresets.append(testsettoappend)
-                variable_num = variable_num + 1
-            if testsrun.startswith("|"):
-                testsrun = testsrun[1:]
-            print(
-                f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}({testsrun})"
-            )
-            testsettoappend = azurefilter + "(" + testsrun + ")"
-            azuresets.append(testsettoappend)
-            print("Number of variable sets = " + str(variable_num))
-            if azurevariablenum != 0:
-                print(f"Setting main variable to varialbe num {azurevariablenum}")
-                azurefilter = azuresets[int(azurevariablenum) - 1]
-                print(
-                    f"##vso[task.setvariable variable={azure_variable}]{azurefilter}{azurefilter}"
-                )
-    # print("##vso[task.setvariable variable=BuildVersion;]998")
+                print("Number of variable sets = " + str(variable_num))
+                if azurevariablenum != 0:
+                    print(f"Setting main variable to varialbe num {azurevariablenum}")
+                    azurefilter = azuresets[int(azurevariablenum) - 1]
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}]{azurefilter}{azurealwaysruntestsformatted}"
+                    )
+        # print("##vso[task.setvariable variable=BuildVersion;]998")
 
-    # print("Execution command = " + executioncommand)
+        # print("Execution command = " + executioncommand)
 
-    if executioncommand != "" and executioncommand is not None:
+        if executioncommand != "" and executioncommand is not None:
+            # max_length = 28000
+            # variable_num = 1
+            # while len(testsrun) > max_length:
+            #    split_string = testsrun.find("|Name=",max_length)
+            #    setval = testsrun[:split_string]
+            #    testsrun = testsrun[split_string:]
+            #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+            #    variable_num = variable_num + 1
+            # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+            executioncommand = executioncommand.replace("[[teststorun]]", testsrun)
+            print("Execution command is " + executioncommand)
+            runcommand(executioncommand, True)
+        
+        if printcommand != "" and printcommand is not None:
+            # max_length = 28000
+            # variable_num = 1
+            # while len(testsrun) > max_length:
+            #    split_string = testsrun.find("|Name=",max_length)
+            #    setval = testsrun[:split_string]
+            #    testsrun = testsrun[split_string:]
+            #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
+            #    variable_num = variable_num + 1
+            # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
+            printcommand = printcommand.replace("[[teststorun]]", testsrun)
+            print(printcommand)
+            
 
-        # max_length = 28000
-        # variable_num = 1
-        # while len(testsrun) > max_length:
-        #    split_string = testsrun.find("|Name=",max_length)
-        #    setval = testsrun[:split_string]
-        #    testsrun = testsrun[split_string:]
-        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
-        #    variable_num = variable_num + 1
-        # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
-        executioncommand = executioncommand.replace("[[teststorun]]", testsrun)
-        print("Execution command is " + executioncommand)
-        runcommand(executioncommand, True)
+        # if githubactionsvariable != "" and githubactionsvariable is not None:
+        #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
 
-    if printcommand != "" and printcommand is not None:
+        if bitrise == "true":
+            print(f'envman add --key TESTS_TO_RUN --value "{testsrun}"')
 
-        # max_length = 28000
-        # variable_num = 1
-        # while len(testsrun) > max_length:
-        #    split_string = testsrun.find("|Name=",max_length)
-        #    setval = testsrun[:split_string]
-        #    testsrun = testsrun[split_string:]
-        #    print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{setval}')
-        #    variable_num = variable_num + 1
-        # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
-        printcommand = printcommand.replace("[[teststorun]]", testsrun)
-        print(printcommand)
+        if failfast == "false" and rerun == "true" and teststorun != "none":
+            rerun_tests()
 
-    # if githubactionsvariable != "" and githubactionsvariable is not None:
-    #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
-
-    if bitrise == "true":
-        print(f'envman add --key TESTS_TO_RUN --value "{testsrun}"')
-
-    if failfast == "false" and rerun == "true" and teststorun != "none":
-        rerun_tests()
-
-    getresults()
+        try:
+            getresults()
+        #except Exception as e:
+            #print(e)
+        except:
+            print("unable to find results")
+        os._exit(0)
+    except:
+        print("Command execution failed runtestswithappsurify")
+        os._exit(0)
     exit()
 
 
 def main(*argv):
     # print(argv)
-    runtestswithappsurify(argv)
-
+    try:
+        runtestswithappsurify(argv)
+    except:
+        print("Command execution failed")
+        os._exit(0)
+    exit()
 
 main(sys.argv)
