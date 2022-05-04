@@ -30,7 +30,17 @@ try:
 except ImportError:
     print("Error, yaml is required, please run pip install pyyaml")
 
-
+tests = ""
+testsrun = ""
+run_id = ""
+proxy = ""
+username = ""
+password = ""
+url = ""
+apikey = ""
+project = ""
+testsuite = ""
+report = ""
 maxtests = 1000000  # default 10000000
 fail = "newdefects, reopeneddefects"  # default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
 additionalargs = ""  # default ''
@@ -44,7 +54,9 @@ maxrerun = 3  # default 3
 rerun = "false"  # default false
 importtype = "junit"  # default junit
 reporttype = "directory"  # default directory other option file, when directory needs to end with /
-teststorun = "all"  # options include - high, medium, low, unassigned, ready, open, none
+teststorun = (
+    "all"  # options include - high, medium, low, unassigned, ready, open, none
+)
 deletereports = "false"  # options true or false, BE CAREFUL THIS WILL DELETE THE SPECIFIC FILE OR ALL XML FILES IN THE DIRECTORY
 startrunall = ""  # startrun needs to end with a space sometimes
 endrunall = ""  # endrun needs to start with a space sometimes
@@ -76,28 +88,16 @@ endrunprefix = ""
 endrunpostfix = ""
 executetests = "true"
 encodetests = "false"
-testsuiteencoded = ""
-projectencoded = ""
-
-tests = ""
-testsrun = ""
-run_id = ""
-proxy = ""
-username = ""
-password = ""
-url = ""
-apikey = ""
-project = ""
-testsuite = ""
-report = ""
 trainer = "false"
 azure_variable = "appsurifytests"
 pipeoutput = "false"
 bitrise = "false"
 recursive = "false"
 executioncommand = ""
-printcommand = ""
 githubactionsvariable = ""
+printcommand = ""
+testsuiteencoded = ""
+projectencoded = ""
 azurefilter = ""
 azurefilteronall = "true"
 replaceretry = "false"
@@ -114,6 +114,7 @@ alwaysrun = ""
 alwaysrunset = []
 azurealwaysrun = ""
 azurealwaysrunset = []
+upload = "true"
 
 def find(name):
     currentdir = (
@@ -481,7 +482,7 @@ def setVariables():
 
     if bitrise == "true":
         print(f'envman add --key TESTS_TO_RUN --value "{testsrun}"')
-
+    #envman add --key MY_RELEASE_NOTE --value "This is the release note"
     if failfast == "false" and rerun == "true" and teststorun != "none":
         rerun_tests()
 
@@ -625,12 +626,9 @@ def execute_tests(testlist, testset):
     push_results()
 
 def get_always_tests_azure():
-    print("getting azure tests set to always run")
     count = 0
     tests = ""
     for testName in azurealwaysrunset:
-        print("here")
-        print(testName)
         count = count + 1
         if encodetests == "true":
             testName = testName.encode("unicode_escape").decode()
@@ -645,11 +643,7 @@ def get_always_tests_azure():
             testName = testName.replace("=", "\=")
             testName = testName.replace("!", "\!")
             testName = testName.replace("~", "\~")
-            print(testName)
-        print("here2")
         tests = tests + testseparator + prefixtest + testName + postfixtest
-        print(tests)
-        print("here3")
     return tests
 
 
@@ -806,8 +800,8 @@ def get_and_run_tests(type):
         testset = get_tests(type)
         count = 0
         tests = ""
-        print(maxtests)
-        print("max tests")
+        #print(maxtests)
+        #print("max tests")
         # print(type(maxtests))
         # print("type")
         testrunset = []
@@ -889,8 +883,9 @@ def rerun_tests():
 def getresults():
     print(run_id)
     if run_id == "":
-        print("no resuults")
-        os._exit(0)
+        print("no results")
+        #os._exit(0)
+        return
     echo("getting results")
     headers = {
         "token": apikey,
@@ -1200,7 +1195,6 @@ def call_import(filepath):
         echo(resultset)
         echo("report url = " + resultset["report_url"])
         echo("run url = " + str(resultset["test_run_id"]))
-        global run_id
         run_id = str(resultset["test_run_id"])
     else:
         print(
@@ -1213,15 +1207,16 @@ def call_import(filepath):
 
 
 def runtestswithappsurify(*args):
+    global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
+    global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
+    global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
+    global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
+    global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
+    global azurealwaysrun, azurealwaysrunset, upload
     try:    
-        global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
-        global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
-        global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
-        global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
-        global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-        global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-        global azurealwaysrun, azurealwaysrunset
 
+        
         tests = ""
         testsrun = ""
         run_id = ""
@@ -1306,35 +1301,36 @@ def runtestswithappsurify(*args):
         alwaysrunset = []
         azurealwaysrun = ""
         azurealwaysrunset = []
+        upload = "true"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
-        argv = args
-        print(argv)
-        print(type(argv))
+        #sys.argv = args
+        #print(sys.argv)
+        #print(type(sys.argv))
         try:
-            argv = args[0]
-            if type(argv) == tuple:
-                argv = argv[0]
+            sys.argv = args[0]
+            if type(sys.argv) == tuple:
+                sys.argv = sys.argv[0]
         except Exception as e:
             print(e)
         c = 0
         print("===================================")
-        if len(argv) > 1:
-            c = len(argv)
+        if len(sys.argv) > 1:
+            c = len(sys.argv)
             for k in range(1, c):
-                if argv[k] == "--runtemplate":
-                    runtemplate = argv[k + 1]
-                if argv[k] == "--testtemplate":
-                    testtemplate = argv[k + 1]
-                if argv[k] == "--testtemplatearg1":
-                    testtemplatearg1 = argv[k + 1]
-                if argv[k] == "--testtemplatearg2":
-                    testtemplatearg2 = argv[k + 1]
-                if argv[k] == "--testtemplatearg3":
-                    testtemplatearg3 = argv[k + 1]
-                if argv[k] == "--testtemplatearg4":
-                    testtemplatearg4 = argv[k + 1]
+                if sys.argv[k] == "--runtemplate":
+                    runtemplate = sys.argv[k + 1]
+                if sys.argv[k] == "--testtemplate":
+                    testtemplate = sys.argv[k + 1]
+                if sys.argv[k] == "--testtemplatearg1":
+                    testtemplatearg1 = sys.argv[k + 1]
+                if sys.argv[k] == "--testtemplatearg2":
+                    testtemplatearg2 = sys.argv[k + 1]
+                if sys.argv[k] == "--testtemplatearg3":
+                    testtemplatearg3 = sys.argv[k + 1]
+                if sys.argv[k] == "--testtemplatearg4":
+                    testtemplatearg4 = sys.argv[k + 1]
 
         #####Test Run Templates######
 
@@ -1395,10 +1391,10 @@ def runtestswithappsurify(*args):
             fail = "newdefects, reopeneddefects, failedtests, brokentests"
             executetests = "false"
 
-        if len(argv) > 1:
+        if len(sys.argv) > 1:
             for k in range(1, c):
-                if argv[k] == "--teststorun":
-                    teststorun = argv[k + 1]
+                if sys.argv[k] == "--teststorun":
+                    teststorun = sys.argv[k + 1]
 
         # Template Sahi
         # testsuitename#testname
@@ -1871,143 +1867,145 @@ def runtestswithappsurify(*args):
         # squish
         # test cafe
 
-        if len(argv) > 1:
+        if len(sys.argv) > 1:
             for k in range(1, c):
-                if argv[k] == "--url":
-                    url = argv[k + 1]
-                if argv[k] == "--apikey":
-                    apikey = argv[k + 1]
-                if argv[k] == "--project":
-                    project = argv[k + 1]
-                if argv[k] == "--testsuite":
-                    testsuite = argv[k + 1]
-                if argv[k] == "--report":
-                    report = argv[k + 1]
-                if argv[k] == "--reporttype":
-                    reporttype = argv[k + 1]
-                if argv[k] == "--teststorun":
-                    teststorun = argv[k + 1]
-                if argv[k] == "--importtype":
-                    importtype = argv[k + 1]
-                if argv[k] == "--addtestsuitename":
-                    addtestsuitename = argv[k + 1]
-                if argv[k] == "--testsuitesnameseparator":
-                    testsuitesnameseparator = argv[k + 1]
-                if argv[k] == "--addclassname":
-                    addclassname = argv[k + 1]
-                if argv[k] == "--classnameseparator":
-                    classnameseparator = argv[k + 1]
-                if argv[k] == "--rerun":
-                    rerun = argv[k + 1]
-                if argv[k] == "--maxrerun":
-                    maxrerun = argv[k + 1]
-                if argv[k] == "--failfast":
-                    failfast = argv[k + 1]
-                if argv[k] == "--fullname":
-                    fullname = argv[k + 1]
-                if argv[k] == "--fullnameseparator":
-                    fullnameseparator = argv[k + 1]
-                if argv[k] == "--startrunall":
-                    startrunall = argv[k + 1]
-                if argv[k] == "--startrunspecific":
-                    startrunspecific = argv[k + 1]
-                if argv[k] == "--prefixtest":
-                    prefixtest = argv[k + 1]
-                if argv[k] == "--postfixtest":
-                    postfixtest = argv[k + 1]
-                if argv[k] == "--testseparator":
-                    testseparator = argv[k + 1]
-                if argv[k] == "--testseparatorend":
-                    testseparatorend = argv[k + 1]
-                if argv[k] == "--endrunspecific":
-                    endrunspecific = argv[k + 1]
-                if argv[k] == "--endrunall":
-                    endrunall = argv[k + 1]
-                if argv[k] == "--additionalargs":
-                    additionalargs = argv[k + 1]
-                if argv[k] == "--fail":
-                    fail = argv[k + 1]
-                if argv[k] == "--commit":
-                    commit = argv[k + 1]
-                if argv[k] == "--branch":
-                    branch = argv[k + 1]
-                if argv[k] == "--maxtests":
-                    maxtests = int(argv[k + 1])
-                if argv[k] == "--scriptlocation":
-                    scriptlocation = argv[k + 1]
-                if argv[k] == "--runfrequency":
-                    runfrequency = argv[k + 1]
-                if argv[k] == "--fromcommit":
-                    fromcommit = argv[k + 1]
-                if argv[k] == "--repository":
-                    repository = argv[k + 1]
-                if argv[k] == "--generatefile":
-                    generatefile = argv[k + 1]
-                if argv[k] == "--startrunpostfix":
-                    startrunpostfix = argv[k + 1]
-                if argv[k] == "--endrunprefix":
-                    endrunprefix = argv[k + 1]
-                if argv[k] == "--endrunpostfix":
-                    endrunpostfix = argv[k + 1]
-                if argv[k] == "--proxy":
-                    proxy = argv[k + 1]
-                if argv[k] == "--username":
-                    username = argv[k + 1]
-                if argv[k] == "--password":
-                    password = argv[k + 1]
-                if argv[k] == "--executetests":
-                    executetests = argv[k + 1]
-                if argv[k] == "--trainer":
+                if sys.argv[k] == "--url":
+                    url = sys.argv[k + 1]
+                if sys.argv[k] == "--apikey":
+                    apikey = sys.argv[k + 1]
+                if sys.argv[k] == "--project":
+                    project = sys.argv[k + 1]
+                if sys.argv[k] == "--testsuite":
+                    testsuite = sys.argv[k + 1]
+                if sys.argv[k] == "--report":
+                    report = sys.argv[k + 1]
+                if sys.argv[k] == "--reporttype":
+                    reporttype = sys.argv[k + 1]
+                if sys.argv[k] == "--teststorun":
+                    teststorun = sys.argv[k + 1]
+                if sys.argv[k] == "--importtype":
+                    importtype = sys.argv[k + 1]
+                if sys.argv[k] == "--addtestsuitename":
+                    addtestsuitename = sys.argv[k + 1]
+                if sys.argv[k] == "--testsuitesnameseparator":
+                    testsuitesnameseparator = sys.argv[k + 1]
+                if sys.argv[k] == "--addclassname":
+                    addclassname = sys.argv[k + 1]
+                if sys.argv[k] == "--classnameseparator":
+                    classnameseparator = sys.argv[k + 1]
+                if sys.argv[k] == "--rerun":
+                    rerun = sys.argv[k + 1]
+                if sys.argv[k] == "--maxrerun":
+                    maxrerun = sys.argv[k + 1]
+                if sys.argv[k] == "--failfast":
+                    failfast = sys.argv[k + 1]
+                if sys.argv[k] == "--fullname":
+                    fullname = sys.argv[k + 1]
+                if sys.argv[k] == "--fullnameseparator":
+                    fullnameseparator = sys.argv[k + 1]
+                if sys.argv[k] == "--startrunall":
+                    startrunall = sys.argv[k + 1]
+                if sys.argv[k] == "--startrunspecific":
+                    startrunspecific = sys.argv[k + 1]
+                if sys.argv[k] == "--prefixtest":
+                    prefixtest = sys.argv[k + 1]
+                if sys.argv[k] == "--postfixtest":
+                    postfixtest = sys.argv[k + 1]
+                if sys.argv[k] == "--testseparator":
+                    testseparator = sys.argv[k + 1]
+                if sys.argv[k] == "--testseparatorend":
+                    testseparatorend = sys.argv[k + 1]
+                if sys.argv[k] == "--endrunspecific":
+                    endrunspecific = sys.argv[k + 1]
+                if sys.argv[k] == "--endrunall":
+                    endrunall = sys.argv[k + 1]
+                if sys.argv[k] == "--additionalargs":
+                    additionalargs = sys.argv[k + 1]
+                if sys.argv[k] == "--fail":
+                    fail = sys.argv[k + 1]
+                if sys.argv[k] == "--commit":
+                    commit = sys.argv[k + 1]
+                if sys.argv[k] == "--branch":
+                    branch = sys.argv[k + 1]
+                if sys.argv[k] == "--maxtests":
+                    maxtests = int(sys.argv[k + 1])
+                if sys.argv[k] == "--scriptlocation":
+                    scriptlocation = sys.argv[k + 1]
+                if sys.argv[k] == "--runfrequency":
+                    runfrequency = sys.argv[k + 1]
+                if sys.argv[k] == "--fromcommit":
+                    fromcommit = sys.argv[k + 1]
+                if sys.argv[k] == "--repository":
+                    repository = sys.argv[k + 1]
+                if sys.argv[k] == "--generatefile":
+                    generatefile = sys.argv[k + 1]
+                if sys.argv[k] == "--startrunpostfix":
+                    startrunpostfix = sys.argv[k + 1]
+                if sys.argv[k] == "--endrunprefix":
+                    endrunprefix = sys.argv[k + 1]
+                if sys.argv[k] == "--endrunpostfix":
+                    endrunpostfix = sys.argv[k + 1]
+                if sys.argv[k] == "--proxy":
+                    proxy = sys.argv[k + 1]
+                if sys.argv[k] == "--username":
+                    username = sys.argv[k + 1]
+                if sys.argv[k] == "--password":
+                    password = sys.argv[k + 1]
+                if sys.argv[k] == "--executetests":
+                    executetests = sys.argv[k + 1]
+                if sys.argv[k] == "--trainer":
                     trainer = "true"
-                if argv[k] == "--azurevariable":
-                    azure_variable = argv[k + 1]
-                if argv[k] == "--pipeoutput":
+                if sys.argv[k] == "--azurevariable":
+                    azure_variable = sys.argv[k + 1]
+                if sys.argv[k] == "--pipeoutput":
                     pipeoutput = "true"
-                if argv[k] == "--bitrise":
+                if sys.argv[k] == "--bitrise":
                     bitrise = "true"
-                if argv[k] == "--recursive":
+                if sys.argv[k] == "--recursive":
                     recursive = "true"
-                if argv[k] == "--replaceretry":
+                if sys.argv[k] == "--replaceretry":
                     replaceretry = "true"
-                if argv[k] == "--githubactionsvariable":
-                    githubactionsvariable = argv[k + 1]
-                if argv[k] == "--executioncommand":
-                    executioncommand = argv[k + 1]
-                if argv[k] == "--printcommand":
-                    printcommand = argv[k + 1]
-                if argv[k] == "--azurefilter":
-                    azurefilter = argv[k + 1]
-                if argv[k] == "--azurefilteronall":
+                if sys.argv[k] == "--githubactionsvariable":
+                    githubactionsvariable = sys.argv[k + 1]
+                if sys.argv[k] == "--executioncommand":
+                    executioncommand = sys.argv[k + 1]
+                if sys.argv[k] == "--printcommand":
+                    printcommand = sys.argv[k + 1]
+                if sys.argv[k] == "--azurefilter":
+                    azurefilter = sys.argv[k + 1]
+                if sys.argv[k] == "--azurefilteronall":
                     azurefilteronall = "false"
-                if argv[k] == "--percentage":
-                    percentage = argv[k + 1]
-                if argv[k] == "--weekendrunall":
+                if sys.argv[k] == "--percentage":
+                    percentage = sys.argv[k + 1]
+                if sys.argv[k] == "--weekendrunall":
                     weekendrunall = "true"
-                if argv[k] == "--newdays":
-                    newdays = argv[k + 1]
-                if argv[k] == "--azurevariablenum":
-                    azurevariablenum = argv[k + 1]
-                if argv[k] == "--time":
-                    time = argv[k + 1]
-                if argv[k] == "--alwaysrun":
-                    alwaysrun = argv[k + 1]
+                if sys.argv[k] == "--newdays":
+                    newdays = sys.argv[k + 1]
+                if sys.argv[k] == "--azurevariablenum":
+                    azurevariablenum = sys.argv[k + 1]
+                if sys.argv[k] == "--time":
+                    time = sys.argv[k + 1]
+                if sys.argv[k] == "--alwaysrun":
+                    alwaysrun = sys.argv[k + 1]
                     if alwaysrun.lower() != "none":
                         alwaysrunset = [x.strip() for x in alwaysrun.split(',')]
-                if argv[k] == "--azurealwaysrun":
-                    azurealwaysrun = argv[k + 1]
+                if sys.argv[k] == "--azurealwaysrun":
+                    azurealwaysrun = sys.argv[k + 1]
                     print("setting azurealwaysrun")
                     if azurealwaysrun.lower() != "none":
                         azurealwaysrunset = [x.strip() for x in azurealwaysrun.split(',')]
                         print(azurealwaysrunset)
-                if argv[k] == "--runcommand":
-                    commandset = argv[k + 1]
-                    startrunall = argv[k + 1]
-                    startrunspecific = argv[k + 1] + endspecificrun
+                if sys.argv[k] == "--runcommand":
+                    commandset = sys.argv[k + 1]
+                    startrunall = sys.argv[k + 1]
+                    startrunspecific = sys.argv[k + 1] + endspecificrun
                     print("fall back command = " + startrunall)
                     print("prioritized run = " + startrunspecific)
-                # if argv[k] == "--runnewtests":
-                #    runnewtests = argv[k+1]
-                if argv[k] == "--help":
+                # if sys.argv[k] == "--runnewtests":
+                #    runnewtests = sys.argv[k+1]
+                if sys.argv[k] == "--noupload":
+                    upload = "false"
+                if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
                     )
@@ -2042,10 +2040,10 @@ def runtestswithappsurify(*args):
         else:
             reporttype = "directory"
 
-        if len(argv) > 1:
+        if len(sys.argv) > 1:
             for k in range(1, c):
-                if argv[k] == "--reporttype":
-                    reporttype = argv[k + 1]
+                if sys.argv[k] == "--reporttype":
+                    reporttype = sys.argv[k + 1]
 
         testsuiteencoded = urlencode(testsuite)
         projectencoded = urlencode(project)
@@ -2123,7 +2121,7 @@ def runtestswithappsurify(*args):
         valuetests = ""
         finalTestNames = ""
         testsrun = ""
-        print("test to run = " + teststorun)
+        #print("test to run = " + teststorun)
         if teststorun == "all":
             execute_tests("", 0)
             # testsrun="all"
@@ -2347,26 +2345,24 @@ def runtestswithappsurify(*args):
         if failfast == "false" and rerun == "true" and teststorun != "none":
             rerun_tests()
 
-        try:
+        #try:
+        if upload == "true":
             getresults()
         #except Exception as e:
             #print(e)
-        except:
-            print("unable to find results")
-        os._exit(0)
+        #except:
+        #    print("unable to find results")
     except:
         print("Command execution failed runtestswithappsurify")
-        os._exit(0)
     exit()
 
+if __name__ == "__main__":
+    runtestswithappsurify(sys.argv)
 
-def main(*argv):
-    # print(argv)
-    try:
-        runtestswithappsurify(argv)
-    except:
-        print("Command execution failed")
-        os._exit(0)
-    exit()
+#def main(*sys.argv):
+    # print(sys.argv)
+#    runtestswithappsurify(sys.argv)
 
-main(sys.argv)
+#    exit()
+
+#main(sys.sys.argv)
