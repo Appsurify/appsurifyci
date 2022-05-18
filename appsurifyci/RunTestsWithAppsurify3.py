@@ -1035,7 +1035,7 @@ def push_results():
 
 
 def call_import(filepath):
-    print("importing ")
+    print("importing results")
     print(filepath)
     if importtype == "trx" and replaceretry == "true":
         try:
@@ -1313,7 +1313,7 @@ def runtestswithappsurify(*args):
             if type(sys.argv) == tuple:
                 sys.argv = sys.argv[0]
         except Exception as e:
-            print(e)
+            print("Starting script execution")
         c = 0
         print("===================================")
         if len(sys.argv) > 1:
@@ -1487,6 +1487,9 @@ def runtestswithappsurify(*args):
             startrunall = "wdio test "
             webdriverio = "true"
             endspecificrun = " -g '"
+
+        #behave
+        #https://behave.readthedocs.io/en/latest/behave.html?highlight=command#command-line-arguments
 
         # https://www.npmjs.com/package/jest-junit
         # https://jestjs.io/docs/cli#--testnamepatternregex
@@ -2050,18 +2053,18 @@ def runtestswithappsurify(*args):
         testsuiteencoded = testsuite
         projectencoded = project
 
-        if commit == "" and repository == "git":
-            commit = runcommand('git log -1 --pretty="%H"')
-            commit = commit.rstrip().rstrip("\n\r")
-            print(("commit id = " + commit))
+        #if commit == "" and repository == "git":
+        #    commit = runcommand('git log -1 --pretty="%H"')
+        #    commit = commit.rstrip().rstrip("\n\r")
+        #    print(("commit id = " + commit))
 
         # git branch | grep \* | cut -d ' ' -f2
         # git rev-parse --abbrev-ref HEAD
         # https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
 
-        if branch == "" and repository == "git":
-            branch = runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
-            print(("branch = " + branch))
+        #if branch == "" and repository == "git":
+        #    branch = runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
+        #    print(("branch = " + branch))
 
         if url == "":
             echo("no url specified")
@@ -2352,6 +2355,7 @@ def runtestswithappsurify(*args):
             #print(e)
         #except:
         #    print("unable to find results")
+        print("Command executed successfully")
     except:
         print("Command execution failed runtestswithappsurify")
     exit()

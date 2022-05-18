@@ -1,5 +1,9 @@
 Change Log
 ==========
+0.0.56
+-------------------
+- Add Git script
+
 0.0.33
 -------------------
 - Improve azure functionality
