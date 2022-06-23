@@ -357,7 +357,7 @@ def strip_non_ascii(string):
 # https://youtrack.jetbrains.com/issue/TW-70205
 # potential option for long filters
 def setVariables():
-    if testtemplate == "azure dotnet":
+    if "azure" in testtemplate:
         max_length = 28000
         variable_num = 1
         # moved new test section to else statement as if we are running all tests then no need to check for new
@@ -1008,16 +1008,21 @@ def push_results():
         if recursive == "true":
             if importtype == "trx":
                 filetype = ".trx"
+            pushedfile = False
             for root, dirs, files in os.walk(directoryToPushFrom):
                 for file in files:
                     if file.endswith(filetype):
                         try:
                             call_import(os.path.abspath(os.path.join(root, file)))
+                            pushedfile = True
                         except:
                             print("import failed")
+            if pushedfile == False:
+                print("No files pushed")
         if recursive == "false":
             if importtype == "trx":
                 filetype = ".trx"
+            pushedfile = False
             for file in os.listdir(directoryToPushFrom):
                 if file.endswith(filetype):
                     echo(file)
@@ -1025,8 +1030,11 @@ def push_results():
                         call_import(
                             os.path.abspath(os.path.join(directoryToPushFrom, file))
                         )
+                        pushedfile = True
                     except:
                         print("import failed")
+            if pushedfile == False:
+                print("No files pushed")
     if reporttype == "file":
         try:
             call_import(report)
@@ -1712,6 +1720,7 @@ def runtestswithappsurify(*args):
             importtype = "trx"
             endspecificrun = " /tests:"
 
+
         if testtemplate == "azure specflow":
             encodetests = "true"
             executetests = "false"
@@ -1739,6 +1748,36 @@ def runtestswithappsurify(*args):
             importtype = "trx"
             replaceretry = "true"
             endspecificrun = " /tests:"
+            azurevariablenum = 1
+
+        if testtemplate == "azure xunit":
+            encodetests = "true"
+            executetests = "false"
+            testseparator = "|"
+            reporttype = "file"
+            startrunspecific = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + '/TestCaseFilter:"'
+            )
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = "DisplayName="
+            startrunall = (
+                "vstest.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            importtype = "trx"
+            replaceretry = "true"
+            endspecificrun = " /tests:"
+            azurevariablenum = 1
 
         # Jasmine3
         # npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
@@ -1753,6 +1792,58 @@ def runtestswithappsurify(*args):
             prefixtest = "^"
             startrunall = "jasmine test --reporter=jasmine-junit-reporter "
             endspecificrun = "  --filter='"
+
+        #add reporter - https://playwright.dev/docs/test-reporters
+        if testtemplate == "playwright net":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "playwright test "
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "playwright test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
+
+                #add reporter - https://playwright.dev/docs/test-reporters
+        if testtemplate == "playwright node":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "playwright test "
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "playwright test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
+
+                #add reporter - https://playwright.dev/docs/test-reporters
+        if testtemplate == "playwright java":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "playwright test "
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "playwright test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
+
+                #add reporter - https://playwright.dev/docs/test-reporters
+        if testtemplate == "playwright python":
+            testseparator = "|"
+            reporttype = "file"
+            report = "test-results.xml"
+            startrunspecific = "playwright test "
+            endrunspecific = "'"
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "playwright test "
+            webdriverio = "true"
+            endspecificrun = " -g '"
 
         # tosca
         # https://support.tricentis.com/community/article.do?number=KB0013693
@@ -2002,8 +2093,8 @@ def runtestswithappsurify(*args):
                     commandset = sys.argv[k + 1]
                     startrunall = sys.argv[k + 1]
                     startrunspecific = sys.argv[k + 1] + endspecificrun
-                    print("fall back command = " + startrunall)
-                    print("prioritized run = " + startrunspecific)
+                    #print("fall back command = " + startrunall)
+                    #print("prioritized run = " + startrunspecific)
                 # if sys.argv[k] == "--runnewtests":
                 #    runnewtests = sys.argv[k+1]
                 if sys.argv[k] == "--noupload":
@@ -2017,7 +2108,7 @@ def runtestswithappsurify(*args):
         if commandset == "":
             startrunspecific = startrunspecific + endspecificrun
             print("################################################")
-            print("prioritized run = " + startrunspecific)
+            #print("prioritized run = " + startrunspecific)
         
         if githubactionsvariable != "" and githubactionsvariable is not None:
             executioncommand = (
@@ -2189,7 +2280,7 @@ def runtestswithappsurify(*args):
 
         # print("tests " + os.environ.get('TESTSTORUN'))
         # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
-        if testtemplate == "azure dotnet":
+        if "azure" in testtemplate:
             max_length = 28000
             variable_num = 1
 

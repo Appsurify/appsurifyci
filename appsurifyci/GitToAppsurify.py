@@ -9,6 +9,7 @@ import re
 import logging
 import os
 import threading
+import urllib3
 
 
 try:
@@ -21,6 +22,7 @@ except ImportError:
                   "Then run the command again.")
     sys.exit(1)
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Syntax sugar.
 _ver = sys.version_info
 
@@ -391,7 +393,7 @@ def get_parent_commit(sha_parent, blame=False):
 
     commit_cmd = COMMAND_COMMIT.format(sha_parent)
     if is_windows:
-        commit_cmd = commit_cmd.replace('\'', '')
+        commit_cmd = commit_cmd.replace('\'', '\"')
 
     output = execute(commit_cmd)
 
@@ -583,7 +585,7 @@ def get_commit(sha, blame=False):
     
     commit_cmd = COMMAND_COMMIT.format(sha)
     if is_windows:
-        commit_cmd = commit_cmd.replace('\'', '')
+        commit_cmd = commit_cmd.replace('\'', '\"')
         commit_cmd = commit_cmd.replace('\t', '%x09')
 
     output = execute(commit_cmd)
@@ -759,7 +761,7 @@ project_id = json.loads(get_project_id(base_url=base_url, project_name=project, 
 url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
 
 
-def gittoappsurify(url, token, start, number, branch, blame):
+def performPush(url, token, start, number, branch, blame):
     sha_list = get_commits_sha(start=start, number=number, branch=branch)
     commits = list()
     for sha in sha_list:
@@ -771,5 +773,10 @@ def gittoappsurify(url, token, start, number, branch, blame):
     #     f.write(data)
     status_code, content = request(url, token, data, event='push')
 
+def gittoappsurify():
+    performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame)
+    
 #example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript" --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA" --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
-gittoappsurify(url=url, token=token, start=start, number=number, branch=branch, blame=blame)
+
+if __name__ == '__main__':
+    gittoappsurify()
