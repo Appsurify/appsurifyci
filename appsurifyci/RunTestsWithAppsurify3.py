@@ -115,6 +115,8 @@ alwaysrunset = []
 azurealwaysrun = ""
 azurealwaysrunset = []
 upload = "true"
+createfile = "false"
+createpropertiesfile = "false"
 
 def find(name):
     currentdir = (
@@ -434,7 +436,8 @@ def setVariables():
                 f"##vso[task.setvariable variable={azure_variable}]{azurefilter}{testsrun}"
             )
             while len(testsrun) > max_length:
-                split_string = testsrun.find("|Name=", max_length)
+                stringtosplit = "|"+prefixtest
+                split_string = testsrun.find(stringtosplit, max_length)
                 setval = testsrun[:split_string]
                 testsrun = testsrun[split_string:]
                 print(
@@ -1221,7 +1224,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile
     try:    
 
         
@@ -1310,6 +1313,8 @@ def runtestswithappsurify(*args):
         azurealwaysrun = ""
         azurealwaysrunset = []
         upload = "true"
+        createfile = "false"
+        createpropertiesfile = "false"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1472,6 +1477,23 @@ def runtestswithappsurify(*args):
             reporttype = "directory"
             deletereports = "false"
 
+        # need to set system property in gradle file for test
+        # systemProperty("cucumber.filter.name", findProperty("appsurifytests"))
+        # command sets appsurifytests which then gets run
+        # to rungradlew test -Pappsurifytests=".*another.*"
+        if testtemplate == "gradle cucumber":
+            testseparator = "|"
+            startrunspecific = "gradle test "
+            prefixtest = ""
+            postfixtest = ""
+            #endrunspecific = "'"
+            startrunall = "gradle test "
+            report = "./build/test-results/"
+            reporttype = "directory"
+            deletereports = "false"
+            endrunspecific = "\""
+            endspecificrun = " -Pappsurifytests=\""
+
         if testtemplate == "mvn":
             testseparator = ","
             addtestsuitename = "true"
@@ -1510,7 +1532,6 @@ def runtestswithappsurify(*args):
             postfixtest = ""
             prefixtest = ""
             startrunall = "wdio test "
-            webdriverio = "true"
             endspecificrun = " -g '"
 
         # protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
@@ -1803,10 +1824,9 @@ def runtestswithappsurify(*args):
             postfixtest = "$"
             prefixtest = "^"
             startrunall = "playwright test "
-            webdriverio = "true"
             endspecificrun = " -g '"
 
-                #add reporter - https://playwright.dev/docs/test-reporters
+        #add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright node":
             testseparator = "|"
             reporttype = "file"
@@ -1816,10 +1836,9 @@ def runtestswithappsurify(*args):
             postfixtest = "$"
             prefixtest = "^"
             startrunall = "playwright test "
-            webdriverio = "true"
             endspecificrun = " -g '"
 
-                #add reporter - https://playwright.dev/docs/test-reporters
+        #add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright java":
             testseparator = "|"
             reporttype = "file"
@@ -1829,10 +1848,9 @@ def runtestswithappsurify(*args):
             postfixtest = "$"
             prefixtest = "^"
             startrunall = "playwright test "
-            webdriverio = "true"
             endspecificrun = " -g '"
 
-                #add reporter - https://playwright.dev/docs/test-reporters
+        #add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright python":
             testseparator = "|"
             reporttype = "file"
@@ -1842,7 +1860,6 @@ def runtestswithappsurify(*args):
             postfixtest = "$"
             prefixtest = "^"
             startrunall = "playwright test "
-            webdriverio = "true"
             endspecificrun = " -g '"
 
         # tosca
@@ -2099,6 +2116,10 @@ def runtestswithappsurify(*args):
                 #    runnewtests = sys.argv[k+1]
                 if sys.argv[k] == "--noupload":
                     upload = "false"
+                if sys.argv[k] == "--createpropertiesfile":
+                    createpropertiesfile = "true"
+                if sys.argv[k] == "--createfile":
+                    createfile = "true"
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -2360,6 +2381,7 @@ def runtestswithappsurify(*args):
                 # print (f'##vso[task.setvariable variable={azurefilter}{azure_variable}{variable_num}]{testsrun}')
             else:
                 azurealwaysruntestsformatted = get_always_tests_azure()
+                print("running subset of azure tests")
                 if azurefilter != "":
                     if (
                         azurefilter.endswith("&") is False
@@ -2371,9 +2393,9 @@ def runtestswithappsurify(*args):
                         f"##vso[task.setvariable variable={azure_variable}]{azurefilter}({testsrun}){azurealwaysruntestsformatted}"
                     )
                 azuresets = []
-                
                 while len(testsrun) > max_length:
-                    split_string = testsrun.find("|Name=", max_length)
+                    stringtosplit = "|"+prefixtest
+                    split_string = testsrun.find(stringtosplit, max_length)
                     setval = testsrun[:split_string]
                     if setval.startswith("|"):
                         setval = setval[1:]
@@ -2429,7 +2451,15 @@ def runtestswithappsurify(*args):
             printcommand = printcommand.replace("[[teststorun]]", testsrun)
             print(printcommand)
             
+        if createfile:
+            f= open("appsurifytests.txt","w+")
+            f.write(testsrun)
+            f.close()
 
+        if createpropertiesfile:
+            f= open("appsurifytests.properties","w+")
+            f.write(f"appsurifytests={testsrun}")
+            f.close()
         # if githubactionsvariable != "" and githubactionsvariable is not None:
         #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
 

@@ -1,5 +1,9 @@
 Change Log
 ==========
+0.0.62
+-------------------
+- Add support for Gradle cucumber and playwright
+
 0.0.56
 -------------------
 - Add Git script

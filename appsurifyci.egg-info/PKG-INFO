@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: appsurifyci
-Version: 0.0.59
+Version: 0.0.64
 Summary: Package used to run tests using Appsurify
 Home-page: https://appsurify.com
 Author: James Farrier
@@ -90,6 +90,10 @@ For CI specific integrations please contact Appsurify
 
 Change Log
 ==========
+0.0.62
+-------------------
+- Add support for Gradle cucumber and playwright
+
 0.0.56
 -------------------
 - Add Git script
