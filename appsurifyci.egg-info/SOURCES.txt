@@ -7,6 +7,8 @@ setup.py
 appsurifyci/GitToAppsurify.py
 appsurifyci/RunTestsWithAppsurify3.py
 appsurifyci/__init__.py
+appsurifyci/appsurifytests.txt
+appsurifyci/trxcpnvert.py
 appsurifyci.egg-info/PKG-INFO
 appsurifyci.egg-info/SOURCES.txt
 appsurifyci.egg-info/dependency_links.txt

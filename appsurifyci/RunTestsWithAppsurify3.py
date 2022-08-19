@@ -117,6 +117,8 @@ azurealwaysrunset = []
 upload = "true"
 createfile = "false"
 createpropertiesfile = "false"
+spliton = "false"
+nopush = "false"
 
 def find(name):
     currentdir = (
@@ -626,7 +628,8 @@ def execute_tests(testlist, testset):
     # echo("run command = " + command)
     runcommand(command, pipeoutput)
     echo(os.getcwd())
-    push_results()
+    if nopush == "false":
+        push_results()
 
 def get_always_tests_azure():
     count = 0
@@ -830,6 +833,8 @@ def get_and_run_tests(type):
                 testName = testName.replace("=", "\=")
                 testName = testName.replace("!", "\!")
                 testName = testName.replace("~", "\~")
+            if spliton != "false" and spliton != "":
+                testName = testName.split(spliton)[0]
             if count == 1:
                 tests = prefixtest + testName + postfixtest
             else:
@@ -1224,7 +1229,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush
     try:    
 
         
@@ -1315,6 +1320,8 @@ def runtestswithappsurify(*args):
         upload = "true"
         createfile = "false"
         createpropertiesfile = "false"
+        spliton = "false"
+        nopush = "false"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1494,6 +1501,20 @@ def runtestswithappsurify(*args):
             endrunspecific = "\""
             endspecificrun = " -Pappsurifytests=\""
 
+        #https://stackoverflow.com/questions/48098352/how-to-run-single-cucumber-scenario-by-name
+        if testtemplate == "gradle cucumber old":
+            testseparator = "|"
+            startrunspecific = "gradle test "
+            prefixtest = ""
+            postfixtest = ""
+            #endrunspecific = "'"
+            startrunall = "gradle test "
+            report = "./build/test-results/"
+            reporttype = "directory"
+            deletereports = "false"
+            endrunspecific = "\""
+            endspecificrun = " -Pappsurifytests=\""
+
         if testtemplate == "mvn":
             testseparator = ","
             addtestsuitename = "true"
@@ -1510,7 +1531,7 @@ def runtestswithappsurify(*args):
             testseparator = "|"
             reporttype = "file"
             report = "test-results.xml"
-            startrunspecific = "wdio"
+            startrunspecific = "wdio "
             endrunspecific = "'"
             postfixtest = "$"
             prefixtest = "^"
@@ -1799,6 +1820,8 @@ def runtestswithappsurify(*args):
             replaceretry = "true"
             endspecificrun = " /tests:"
             azurevariablenum = 1
+            spliton = ","
+            
 
         # Jasmine3
         # npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
@@ -2120,6 +2143,10 @@ def runtestswithappsurify(*args):
                     createpropertiesfile = "true"
                 if sys.argv[k] == "--createfile":
                     createfile = "true"
+                if sys.argv[k] == "--nopush":
+                    nopush = "true"
+                if sys.argv[k] == "--spliton":
+                    spliton = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -2243,7 +2270,8 @@ def runtestswithappsurify(*args):
 
         if teststorun == "none":
             testsrun = "none"
-            push_results()
+            if nopush == "false":
+                push_results()
 
         testtypes = []
 
@@ -2297,7 +2325,15 @@ def runtestswithappsurify(*args):
                 execute_tests("", 0)
             # os.environ["TESTSTORUN"] = "*"
 
+        if createfile == "true":
+            f= open("appsurifytests.txt","w+")
+            f.write(testsrun)
+            f.close()
 
+        if createpropertiesfile == "true":
+            f= open("appsurifytests.properties","w+")
+            f.write(f"appsurifytests={testsrun}")
+            f.close()
 
         # print("tests " + os.environ.get('TESTSTORUN'))
         # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
@@ -2451,15 +2487,7 @@ def runtestswithappsurify(*args):
             printcommand = printcommand.replace("[[teststorun]]", testsrun)
             print(printcommand)
             
-        if createfile:
-            f= open("appsurifytests.txt","w+")
-            f.write(testsrun)
-            f.close()
 
-        if createpropertiesfile:
-            f= open("appsurifytests.properties","w+")
-            f.write(f"appsurifytests={testsrun}")
-            f.close()
         # if githubactionsvariable != "" and githubactionsvariable is not None:
         #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
 

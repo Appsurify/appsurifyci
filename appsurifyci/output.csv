@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites xmlns:a="http://microsoft.com/schemas/VisualStudio/TeamTest/2006" xmlns:b="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <testsuite name="MSTestSuite" tests="36" time="0" failures="0" errors="0" skipped="2">
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_50D7D442_99Ca_4367_83Ea_Bbbe590B6B6EFeature" name="EvergreenJnr_DevicesList_Search_CheckThatRowCountIsNotDisplayedWhenNoObjectsAreFoundAfterUsingAgGrid" time="101.1845627">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (6.7s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (7.9s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Example        |              |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.1s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_C4Dcbfc0_D162_4Cdb_B908_91703Ab89A42Feature" name="EvergreenJnr_DevicesList_Search_ChecksThatRowCountIsResetBackToTheFullRowCountAfterClickingTheSearchCrossButton" time="105.4927334">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.1s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (2.9s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (26.6s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+And '17,317' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("17,317") (5.8s)&#13;
+When User perform search by "00K"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("00K") (4.3s)&#13;
+Then '8' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("8") (6.4s)&#13;
+When User clicks 'Close' button on 'BaseGridPage' panel&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonOnPanel("Close", "BaseGridPage") (0.1s)&#13;
+When User clicks 'Run List' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Run List") (0.0s)&#13;
+Then '17,317' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("17,317") (6.4s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_716Cfe91_3993_4416_A5C5_5A9Bfe8E67DdFeature" name="EvergreenJnr_AllLists_Search_CheckThatTableSearchIsWorkingCorrectly(iterator: &quot;2&quot;, pageName: &quot;Devices&quot;, columnName: &quot;WaaS: Readiness&quot;, searchCriteria: &quot;OUT OF SCOPE&quot;, numberOfRows: &quot;5,116&quot;, exampleTags: [])" time="40.4566563">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.7s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName      |&#13;
+  | WaaS: Readiness |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (11.7s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | OUT OF SCOPE   | 5,116        |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.7s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Ce3Fce07_3326_46B2_8608_Cc2827Ece207Feature" name="EvergreenJnr_ApplicationsList_Search_ChecksThatRowCountIsResetBackToTheFullRowCountAfterClickingTheFilterButtonAfterRunningASearch" time="182.9447744">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.6s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (7.0s)&#13;
+When User clicks 'Applications' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Applications") (9.2s)&#13;
+Then Page with 'All Applications' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Applications") (3.0s)&#13;
+Then '2,192' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("2,192") (5.8s)&#13;
+When User clicks 'Filters' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Filters") (3.0s)&#13;
+Then 'FILTERS' right side panel is displayed&#13;
+-&gt; done: EvergreenJnr_RightSidePanel.ThenRightSidePanelIsDisplayed("FILTERS") (2.9s)&#13;
+When User add "WaaS: Hide From End Users" filter where type is "Equals" with added column and following checkboxes:&#13;
+  --- table step argument ---&#13;
+  | SelectedCheckboxes |&#13;
+  | FALSE              |&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.WhenUserAddFilterWhereTypeIsWithAddedColumnAndFollowingCheckboxes("WaaS: Hide From E...", "Equals", &lt;table&gt;) (16.0s)&#13;
+When User add "Application" filter where type is "Equals" with added column and following value:&#13;
+  --- table step argument ---&#13;
+  | Values                             |&#13;
+  | DirectX SDK (Version 8.1) (3663.0) |&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.WhenUserAddFilterWhereTypeIsWithAddedColumnAndFollowingValue("Application", "Equals", &lt;table&gt;) (21.8s)&#13;
+When User clicks 'Run List' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Run List") (0.1s)&#13;
+Then '1,067' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1,067") (6.9s)&#13;
+Then "(WaaS: Hide From End Users = false) OR (Application = DirectX SDK (Version 8.1) (3663.0))" text is displayed in filter container&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.ThenTextIsDisplayedInFilterContainer("(WaaS: Hide From ...") (6.3s)&#13;
+When User perform search by "microsoft"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("microsoft") (4.3s)&#13;
+Then '395' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("395") (7.4s)&#13;
+When User clicks 'Close' button on 'BaseGridToolsPanel' panel&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonOnPanel("Close", "BaseGridToolsPanel") (0.1s)&#13;
+When User clicks 'Run List' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Run List") (0.0s)&#13;
+Then '1,067' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1,067") (6.3s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_50C378B9_0193_4962_B66A_3C9B8Bcf605CFeature" name="EvergreenJnr_DevicesList_Search_CheckThatMultiSelectFilterSearchFieldHaveResetButton" time="48.3274594">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (2.9s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (8.3s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User clicks 'Filters' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Filters") (3.0s)&#13;
+Then 'FILTERS' right side panel is displayed&#13;
+-&gt; done: EvergreenJnr_RightSidePanel.ThenRightSidePanelIsDisplayed("FILTERS") (2.9s)&#13;
+When user select "Import" filter&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.WhenUserSelectFilter("Import") (8.4s)&#13;
+When User enters 'CheckTheResetButton' text to 'Search' textbox on 'BaseRightSideActionsPanel' panel&#13;
+-&gt; done: InputSteps.WhenUserEntersTextToTextboxOnPanel("CheckTheResetButton", "Search", "BaseRightSideActi...") (8.9s)&#13;
+Then reset button in Search field at selected Filter is displayed&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.ThenResetButtonInSearchFieldAtSelectedFilterIsDisplayed() (2.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Dd3Ac799_F780_46F1_A3A0_42B21F8473E5Feature" name="EvergreenJnr_DevicesLists_Search_CheckThatTableSearchWorksCorrectlyForOwnerUsernameColumn" time="131.24919">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.5s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (4.0s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName     |&#13;
+  | Owner Username |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (11.1s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (9.1s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (2.9s)&#13;
+When User removes ColumnName column by Column panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Hostname           |&#13;
+  | Device Type        |&#13;
+  | Operating System   |&#13;
+  | Owner Display Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserRemovesColumnNameColumnByColumnPanel(&lt;table&gt;) (4.8s)&#13;
+Then Columns are removed from the list&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Hostname           |&#13;
+  | Device Type        |&#13;
+  | Operating System   |&#13;
+  | Owner Display Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsAreRemovedFromTheList(&lt;table&gt;) (76.5s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | TON249         | 1            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.5s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Cbe61936_44B0_49F7_A270_275809Ea478DFeature" name="EvergreenJnr_DevicesLists_Search_CheckThatTableSearchWorksCorrectlyForOwnerDisplayNameColumn" time="159.1009966">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.6s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (8.4s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (11.4s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (9.1s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (3.0s)&#13;
+When User removes ColumnName column by Column panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName       |&#13;
+  | Hostname         |&#13;
+  | Device Type      |&#13;
+  | Operating System |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserRemovesColumnNameColumnByColumnPanel(&lt;table&gt;) (4.8s)&#13;
+Then Columns are removed from the list&#13;
+  --- table step argument ---&#13;
+  | ColumnName       |&#13;
+  | Hostname         |&#13;
+  | Device Type      |&#13;
+  | Operating System |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsAreRemovedFromTheList(&lt;table&gt;) (59.4s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Anna           | 119          |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.0s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_A965E1Cd_1D41_4000_9179_B64Bbbcb1D5AFeature" name="EvergreenJnr_AllLists_Search_CheckThatTableSearchIsWorkingCorrectly(iterator: &quot;3&quot;, pageName: &quot;Applications&quot;, columnName: &quot;Import Type&quot;, searchCriteria: &quot;Generic&quot;, numberOfRows: &quot;216&quot;, exampleTags: [])" time="37.1167163">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.9s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.3s)&#13;
+When User add following columns using URL to the "Applications" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName  |&#13;
+  | Import Type |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Applications", &lt;table&gt;) (10.7s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Generic        | 216          |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.5s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_249B6009_2A2B_4Af1_986D_3Dfa1Df5CaebFeature" name="EvergreenJnr_UsersLists_Search_CheckThatTableSearchWorksCorrectlyForDisplayNameColumn" time="182.9427143">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (18.2s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (9.1s)&#13;
+When User clicks 'Users' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Users") (8.9s)&#13;
+Then Page with 'All Users' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Users") (3.0s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (9.1s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (3.0s)&#13;
+When User removes ColumnName column by Column panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Username           |&#13;
+  | Domain             |&#13;
+  | Distinguished Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserRemovesColumnNameColumnByColumnPanel(&lt;table&gt;) (4.7s)&#13;
+Then Columns are removed from the list&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Username           |&#13;
+  | Domain             |&#13;
+  | Distinguished Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsAreRemovedFromTheList(&lt;table&gt;) (58.7s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Hunter         | 26           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.5s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_1A92901F_D4A4_448A_Bd07_36038F34C2AfFeature" name="EvergreenJnr_UsersList_CheckThatRingsInRingsColumnShownAccordingToDisplayOrderOfRing" time="0.001">
+      <skipped/>
+      <system-out>'EvergreenJnr_UsersList_CheckThatRingsInRingsColumnShownAccordingToDisplayOrderOfRing' is skipped because of the linked bug
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Db49Ae05_93Fe_433C_A364_085Be1409834Feature" name="EvergreenJnr_Search_CheckThatThereIsSameAppearanceOfTheUnknownVersionInTestLanguageOnList" time="94.9028639">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.6s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.0s)&#13;
+When User clicks 'Applications' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Applications") (27.3s)&#13;
+Then Page with 'All Applications' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Applications") (3.0s)&#13;
+When User language is changed to "Test Language" via API&#13;
+-&gt; done: EvergreenJnr_API_ProfilePage.WhenUserChangesAccountLanguageInProfile("Test Language") (4.6s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+When User perform search by "acd"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("acd") (3.1s)&#13;
+Then Package Version column of Search Results has no Unknown item&#13;
+-&gt; done: EvergreenJnr_GlobalSearch.ThenPackageVersionColumnOfSearchResultsHasNoUnknownItem() (4.2s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_3C1Ee977_31Bb_42De_B84C_B87E41159E75Feature" name="EvergreenJnr_AllListt_CheckThatSearchWorksWhenLdapColumnsAndFiltersAdded(term: &quot;DynamicUpdate&quot;, results: &quot;1&quot;, url: &quot;users?$filter=(lDAP_75%20IS%20NOT%20EMPTY%20()%20A&quot;..., exampleTags: [])" time="104.934458">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (8.8s)&#13;
+When User navigates to 'users?$filter=(lDAP_75%20IS%20NOT%20EMPTY%20()%20AND%20lDAP_42%20EQUALS%20('0'))&amp;$select=username,directoryName,displayName,fullyDistinguishedObjectName,lDAP_75,lDAP_42,lDAP_9&amp;$orderby=lDAP_75%20asc' url via address line&#13;
+-&gt; done: BaseActions.ThenUserNavigatesToTheSpecificUrlViaAddressLine("users?$filter=(lD...") (8.4s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | DynamicUpdate  | 1            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (16.7s)&#13;
+Then There are no errors in the browser console&#13;
+-&gt; done: BaseActions.ThenThereAreNoErrorsInTheBrowserConsole() (2.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_03501B59_9440_4686_839E_9Def98B909B5Feature" name="EvergreenJnr_MailboxesLists_Search_CheckThatTableSearchWorksCorrectlyForOwnerDisplayNameColumn" time="129.8146618">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.5s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.6s)&#13;
+When User clicks 'Mailboxes' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Mailboxes") (7.6s)&#13;
+Then Page with 'All Mailboxes' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Mailboxes") (3.0s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (8.9s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (2.9s)&#13;
+When User removes ColumnName column by Column panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName       |&#13;
+  | Email Address    |&#13;
+  | Mailbox Platform |&#13;
+  | Mail Server      |&#13;
+  | Mailbox Type     |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserRemovesColumnNameColumnByColumnPanel(&lt;table&gt;) (4.4s)&#13;
+Then Columns are removed from the list&#13;
+  --- table step argument ---&#13;
+  | ColumnName       |&#13;
+  | Email Address    |&#13;
+  | Mailbox Platform |&#13;
+  | Mail Server      |&#13;
+  | Mailbox Type     |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsAreRemovedFromTheList(&lt;table&gt;) (77.0s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 6            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Fcc89922_44Bc_42Ce_9C6C_A1B84Cc9685EFeature" name="EvergreenJnr_DevicesList_Search_CheckThatSearchFieldHaveResetButtonAtListPanel" time="63.4763128">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.6s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.7s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (8.4s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User clicks on 'Hostname' column header&#13;
+-&gt; done: EvergreenJnr_BaseGrid.WhenUserClicksOnColumnHeader("Hostname") (9.5s)&#13;
+Then data in table is sorted by 'Hostname' column in ascending order&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenDataInTableIsSortedByColumnInAscendingOrder("Hostname") (9.4s)&#13;
+When User create dynamic list with "TestListDED759" name on "Devices" page&#13;
+-&gt; done: EvergreenJnr_Lists.WhenUserCreateDynamicListWithNameOnPage("TestListDED759", "Devices") (9.3s)&#13;
+When User focuses on 'Search lists' textbox with javascript&#13;
+-&gt; done: InputSteps.WhenUserFocusesOnTextboxWithJavascript("Search lists") (0.1s)&#13;
+When User enters 'CheckTheResetButton' text to 'Search lists' textbox with focus switch&#13;
+-&gt; done: InputSteps.WhenUserEntersTextToTextboxWithFocusSwitch("CheckTheResetButton", "Search lists") (9.1s)&#13;
+Then 'Clear' button is displayed on 'LeftSubmenu' panel&#13;
+-&gt; done: ButtonSteps.ThenButtonIsDisplayedOnPanel("Clear", "LeftSubmenu") (0.4s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_08E86Cf1_68D2_44D9_85D7_8A9949851F4EFeature" name="EvergreenJnr_AllLists_CheckSearchFilterAndTableContentDuringNavigationBetweenPages" time="205.4765664">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.2s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.4s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (26.3s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+And '17,317' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("17,317") (6.0s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 11           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.6s)&#13;
+When User clicks 'Users' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Users") (9.3s)&#13;
+Then Page with 'All Users' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Users") (3.0s)&#13;
+Then '41,350' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("41,350") (5.9s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+Then '' content is displayed in 'Search Table' textbox&#13;
+-&gt; done: InputSteps.ThenContentIsDisplayedInTextbox("", "Search Table") (0.1s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 59           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.2s)&#13;
+When User clicks 'Applications' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Applications") (7.6s)&#13;
+Then Page with 'All Applications' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Applications") (3.0s)&#13;
+Then '2,192' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("2,192") (5.8s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+Then '' content is displayed in 'Search Table' textbox&#13;
+-&gt; done: InputSteps.ThenContentIsDisplayedInTextbox("", "Search Table") (0.1s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Python         | 7            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (12.4s)&#13;
+When User clicks 'Mailboxes' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Mailboxes") (6.9s)&#13;
+Then Page with 'All Mailboxes' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Mailboxes") (2.9s)&#13;
+Then '10,690' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("10,690") (5.8s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+Then '' content is displayed in 'Search Table' textbox&#13;
+-&gt; done: InputSteps.ThenContentIsDisplayedInTextbox("", "Search Table") (0.0s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 7            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (12.3s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (7.0s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (2.9s)&#13;
+Then '17,317' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("17,317") (5.8s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+Then '' content is displayed in 'Search Table' textbox&#13;
+-&gt; done: InputSteps.ThenContentIsDisplayedInTextbox("", "Search Table") (0.0s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_5F6950F8_0460_487F_Be98_5Ef1Ea450140Feature" name="EvergreenJnr_ApplicationsLists_Search_CheckThatTableSearchIsWorkingCorrectlyForApplicationColumn" time="37.2560542">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (4.0s)&#13;
+When User clicks 'Applications' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Applications") (7.7s)&#13;
+Then Page with 'All Applications' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Applications") (3.0s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Zune           | 3            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.6s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_4F7E054F_F9C9_45F7_855E_86399Ce22611Feature" name="EvergreenJnr_DevicesList_CheckThatRingsInRingsColumnShownAccordingToDisplayOrderOfRing" time="150.8003563">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.5s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (17.6s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (32.3s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (9.3s)&#13;
+When User adds columns to the list and closes Columns panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName |&#13;
+  | WaaS: Ring |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddsColumnsToTheListAndClosesColumnsPanel(&lt;table&gt;) (12.4s)&#13;
+When User clicks 'Filters' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Filters") (3.6s)&#13;
+When User add "WaaS: Ring" filter where type is "Equals" with added column and following checkboxes:&#13;
+  --- table step argument ---&#13;
+  | SelectedCheckboxes |&#13;
+  | Unassigned         |&#13;
+  | Pilot              |&#13;
+  | Early Adopters     |&#13;
+-&gt; done: EvergreenJnr_FiltersPanel.WhenUserAddFilterWhereTypeIsWithAddedColumnAndFollowingCheckboxes("WaaS: Ring", "Equals", &lt;table&gt;) (16.2s)&#13;
+When User clicks 'Run List' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Run List") (0.1s)&#13;
+When User clicks on 'WaaS: Ring' column header&#13;
+-&gt; done: EvergreenJnr_BaseGrid.WhenUserClicksOnColumnHeader("WaaS: Ring") (10.0s)&#13;
+When User clicks on 'WaaS: Ring' column header&#13;
+-&gt; done: EvergreenJnr_BaseGrid.WhenUserClicksOnColumnHeader("WaaS: Ring") (9.5s)&#13;
+Then 'WaaS: Ring' column contains following content&#13;
+  --- table step argument ---&#13;
+  | Content        |&#13;
+  | Early Adopters |&#13;
+  | Pilot          |&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenColumnContainsFollowingContent("WaaS: Ring", &lt;table&gt;) (11.3s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_05A22Efe_Adde_4106_B6Be_5A61914A21C0Feature" name="EvergreenJnr_AllListt_CheckThatSearchWorksWhenLdapColumnsAndFiltersAdded(term: &quot;abel.z.quinn@dwlabs.local&quot;, results: &quot;1&quot;, url: &quot;mailboxes?$filter=(userLDAPField_42%20IS%20EMPTY%2&quot;..., exampleTags: [])" time="33.812244">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (4.1s)&#13;
+When User navigates to 'mailboxes?$filter=(userLDAPField_42%20IS%20EMPTY%20())&amp;$select=principalEmailAddress,mailboxPlatform,serverName,mailboxType,ownerDisplayName,userLDAPField_42,userLDAPField_227,userLDAPField_347&amp;$orderby=principalEmailAddress%20asc' url via address line&#13;
+-&gt; done: BaseActions.ThenUserNavigatesToTheSpecificUrlViaAddressLine("mailboxes?$filter...") (4.2s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria            | NumberOfRows |&#13;
+  | abel.z.quinn@dwlabs.local | 1            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.2s)&#13;
+Then There are no errors in the browser console&#13;
+-&gt; done: BaseActions.ThenThereAreNoErrorsInTheBrowserConsole() (2.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_2212Cafb_9615_4632_9679_Ca6Ee56B125EFeature" name="EvergreenJnr_MailboxesLists_Search_CheckThatTableSearchWorksCorrectlyForOwnerUsernameColumn" time="147.9222962">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.5s)&#13;
+When User add following columns using URL to the "Mailboxes" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName     |&#13;
+  | Owner Username |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Mailboxes", &lt;table&gt;) (11.2s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (8.9s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (3.0s)&#13;
+When User removes ColumnName column by Column panel&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Email Address      |&#13;
+  | Mailbox Platform   |&#13;
+  | Mail Server        |&#13;
+  | Mailbox Type       |&#13;
+  | Owner Display Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserRemovesColumnNameColumnByColumnPanel(&lt;table&gt;) (4.8s)&#13;
+Then Columns are removed from the list&#13;
+  --- table step argument ---&#13;
+  | ColumnName         |&#13;
+  | Email Address      |&#13;
+  | Mailbox Platform   |&#13;
+  | Mail Server        |&#13;
+  | Mailbox Type       |&#13;
+  | Owner Display Name |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsAreRemovedFromTheList(&lt;table&gt;) (94.6s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | 00B            | 9            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_549D9E61_0Ea3_4F7B_A2Ef_419B394A03B0Feature" name="EvergreenJnr_DevicesList_Search_CheckThatTableSearchFieldHaveAResetButton" time="71.3162271">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (8.2s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (9.5s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User perform search by "CheckTheResetButton"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("CheckTheResetButton") (4.4s)&#13;
+Then 'Close' button is displayed on 'BaseGridPage' panel&#13;
+-&gt; done: ButtonSteps.ThenButtonIsDisplayedOnPanel("Close", "BaseGridPage") (0.4s)&#13;
+When User clicks 'Run List' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Run List") (0.1s)&#13;
+Then 'Close' button is displayed on 'BaseGridPage' panel&#13;
+-&gt; done: ButtonSteps.ThenButtonIsDisplayedOnPanel("Close", "BaseGridPage") (0.4s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_6Ed22F07_3A76_4145_9Baa_892D0866C1DbFeature" name="EvergreenJnr_AllLists_CheckThatSingularFoundItemLabelDisplaysOnActionsToolbar(pageName: &quot;Applications&quot;, searchTerm: &quot;ABBYY FineReader 8.0 Professional Edition&quot;, exampleTags: [])" time="37.7674949">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.6s)&#13;
+When User clicks 'Applications' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Applications") (9.7s)&#13;
+Then Page with 'All Applications' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Applications") (3.0s)&#13;
+When User perform search by "ABBYY FineReader 8.0 Professional Edition"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("ABBYY FineReader ...") (4.4s)&#13;
+Then '1' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1") (6.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_1A3C00F4_9E6B_41F8_B94A_81D192306C16Feature" name="EvergreenJnr_UsersList_ClearingSearchReturnsTheFullDataSet" time="117.753053">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (18.2s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (8.7s)&#13;
+When User clicks 'Users' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Users") (9.8s)&#13;
+Then Page with 'All Users' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Users") (3.1s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Luc            | 139          |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.0s)&#13;
+Then URL is 'evergreen/#/users'&#13;
+-&gt; done: BaseActions.ThenURLIs("evergreen/#/users") (0.0s)&#13;
+When User clears 'Search Table' textbox with backspaces&#13;
+-&gt; done: InputSteps.WhenUserClearsTextboxWithBackspaces("Search Table") (0.3s)&#13;
+When User clicks 'Run List' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Run List") (3.0s)&#13;
+When User waits for data loading&#13;
+-&gt; done: EvergreenJnr_BasePage.WhenUserWaitsForDataLoading() (4.0s)&#13;
+Then '41,350' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("41,350") (5.9s)&#13;
+Then URL is 'evergreen/#/users'&#13;
+-&gt; done: BaseActions.ThenURLIs("evergreen/#/users") (0.0s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_56720233_53F2_4713_Bbd0_Caefeaecdd87Feature" name="EvergreenJnr_AllLists_CheckThatSingularFoundItemLabelDisplaysOnActionsToolbar(pageName: &quot;Devices&quot;, searchTerm: &quot;001BAQXT6JWFPI&quot;, exampleTags: [])" time="94.6668236">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.2s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.5s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (27.5s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User perform search by "001BAQXT6JWFPI"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("001BAQXT6JWFPI") (4.5s)&#13;
+Then '1' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1") (7.4s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_843Db07F_B98E_419D_Adc4_5B76009Af344Feature" name="EvergreenJnr_AllLists_CheckThatSingularFoundItemLabelDisplaysOnActionsToolbar(pageName: &quot;Users&quot;, searchTerm: &quot;$231000-3AC04R8AR431&quot;, exampleTags: [])" time="93.6347543">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.9s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.5s)&#13;
+When User clicks 'Users' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Users") (27.7s)&#13;
+Then Page with 'All Users' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Users") (3.0s)&#13;
+When User perform search by "$231000-3AC04R8AR431"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("$231000-3AC04R8AR431") (4.4s)&#13;
+Then '1' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1") (6.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_0A174451_Ea05_4Fcc_880C_05Ccc213F879Feature" name="EvergreenJnr_DevicesLists_Search_CheckThatValidationForSpecialCharactersInSearchEverythingAndSearchTableFieldsIsPresented" time="104.6604581">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.0s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.2s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (26.9s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User type "%%%" in Global Search Field&#13;
+-&gt; done: EvergreenJnr_GlobalSearch.WhenUserTypeInGlobalSearchField("%%%") (6.0s)&#13;
+Then "No results found" message is displayed below Global Search field&#13;
+-&gt; done: EvergreenJnr_GlobalSearch.ThenMessageIsDisplayedBelowGlobalSearchField("No results found") (3.0s)&#13;
+Then User enters invalid SearchCriteria into the agGrid Search Box and "No devices found" message is displayed&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria |&#13;
+  | %%%            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersInvalidSearchCriteriaIntoTheAgGridSearchBoxAndMessageIsDisplayed("No devices found", &lt;table&gt;) (13.7s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_E0C7A266_5Dd2_473C_Be45_800090A51979Feature" name="EvergreenJnr_AllListt_CheckThatSearchWorksWhenLdapColumnsAndFiltersAdded(term: &quot;YV6F8BQW2LH00I&quot;, results: &quot;1&quot;, url: &quot;devices?$filter=(lDAP_76%20IS%20EMPTY%20()%20AND%2&quot;..., exampleTags: [])" time="50.2557284">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.2s)&#13;
+When User navigates to 'devices?$filter=(lDAP_76%20IS%20EMPTY%20()%20AND%20lDAP_5%20CONTAINS%20('00'))&amp;$select=hostname,chassisCategory,oSCategory,ownerDisplayName,lDAP_75,lDAP_4,lDAP_76,lDAP_5,userLDAPField_228,userLDAPField_43' url via address line&#13;
+-&gt; done: BaseActions.ThenUserNavigatesToTheSpecificUrlViaAddressLine("devices?$filter=(...") (4.8s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | YV6F8BQW2LH00I | 1            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.6s)&#13;
+Then There are no errors in the browser console&#13;
+-&gt; done: BaseActions.ThenThereAreNoErrorsInTheBrowserConsole() (2.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_C7240776_3Ccb_46B6_Bf8A_47236C246BdbFeature" name="EvergreenJnr_AllLists_Search_CheckThatTableSearchIsWorkingCorrectly(iterator: &quot;4&quot;, pageName: &quot;Users&quot;, columnName: &quot;department&quot;, searchCriteria: &quot;The Last Department With A Really Lond Name&quot;, numberOfRows: &quot;10&quot;, exampleTags: [])" time="0.001">
+      <skipped/>
+      <system-out>'EvergreenJnr_AllLists_Search_CheckThatTableSearchIsWorkingCorrectly, 4' is skipped because of the linked bug
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_21B76283_4Eec_4049_B3Ba_F52Ce55Ab41AFeature" name="EvergreenJnr_AllLists_Search_CheckThatTableSearchIsWorkingCorrectly(iterator: &quot;1&quot;, pageName: &quot;Devices&quot;, columnName: &quot;Compliance&quot;, searchCriteria: &quot;GREEN&quot;, numberOfRows: &quot;129&quot;, exampleTags: [])" time="38.9091516">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.5s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.3s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName |&#13;
+  | Compliance |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (10.9s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | GREEN          | 129          |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.2s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_9C7Fdb1D_2E1E_4F02_Afde_E6D83E1719B2Feature" name="EvergreenJnr_AllLists_CheckThatSingularFoundItemLabelDisplaysOnActionsToolbar(pageName: &quot;Mailboxes&quot;, searchTerm: &quot;002B5DC7D4D34D5C895@bclabs.local&quot;, exampleTags: [])" time="92.2904439">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (1.1s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.3s)&#13;
+When User clicks 'Mailboxes' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Mailboxes") (25.4s)&#13;
+Then Page with 'All Mailboxes' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Mailboxes") (3.1s)&#13;
+When User perform search by "002B5DC7D4D34D5C895@bclabs.local"&#13;
+-&gt; done: EvergreenJnr_ListSearch.WhenUserPerformSearchBy("002B5DC7D4D34D5C8...") (4.5s)&#13;
+Then '1' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("1") (6.9s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_6780215B_7Adf_4F43_A6D9_57Ffdad3F6BdFeature" name="EvergreenJnr_DevicesList_CheckThatQuickSearchResetWhenMovingBetweenLists" time="135.5808424">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (18.2s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (7.8s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName |&#13;
+  | Build Date |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (12.9s)&#13;
+When User create dynamic list with "TestList7BA11B" name on "Devices" page&#13;
+-&gt; done: EvergreenJnr_Lists.WhenUserCreateDynamicListWithNameOnPage("TestList7BA11B", "Devices") (10.9s)&#13;
+Then "TestList7BA11B" list is displayed to user&#13;
+-&gt; done: EvergreenJnr_NewCustomList.ThenListIsDisplayedToUser("TestList7BA11B") (9.4s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 11           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (16.1s)&#13;
+When User navigates to the "All Devices" list&#13;
+-&gt; done: EvergreenJnr_NewCustomList.WhenUserNavigatesToTheList("All Devices") (9.8s)&#13;
+Then 'Search Table' textbox is not displayed&#13;
+-&gt; done: InputSteps.ThenTextboxIsNotDisplayed("Search Table") (0.0s)&#13;
+When User clicks 'Search' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Search") (0.1s)&#13;
+Then '' content is displayed in 'Search Table' textbox&#13;
+-&gt; done: InputSteps.ThenContentIsDisplayedInTextbox("", "Search Table") (0.1s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_2Bf9166B_D626_43A7_96Fb_7569Ff7B0409Feature" name="EvergreenJnr_DevicesList_SearchTests" time="120.1930297">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.3s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName          |&#13;
+  | Compliance          |&#13;
+  | Owner Email Address |&#13;
+  | IP Address          |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (11.2s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria      | NumberOfRows |&#13;
+  | Véronique Duplessis | 1            |&#13;
+  | Virtual             | 1,997        |&#13;
+  | Windows Vista       | 128          |&#13;
+  | O'Connor            | 13           |&#13;
+  | @demo.juriba.com    | 16,771       |&#13;
+  | 192.168.6           | 5,094        |&#13;
+  | 0JIE                | 1            |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (94.5s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Ee5Da49A_4E40_4Dfb_B625_9842E3D0413FFeature" name="EvergreenJnr_DevicesList_Search_NoDevicesFound" time="208.8263257">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.5s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (7.6s)&#13;
+When User add following columns using URL to the "Devices" page:&#13;
+  --- table step argument ---&#13;
+  | ColumnName          |&#13;
+  | Compliance          |&#13;
+  | Owner Email Address |&#13;
+  | IP Address          |&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserAddFollowingColumnsUsingUrlToThePage("Devices", &lt;table&gt;) (15.1s)&#13;
+Then User enters invalid SearchCriteria into the agGrid Search Box and "No devices found" message is displayed&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria    |&#13;
+  | 0281Z793OLLLDU66  |&#13;
+  | Xavier Beaule     |&#13;
+  | BLUE              |&#13;
+  | Virtuals          |&#13;
+  | Windows 2001      |&#13;
+  | 192.168.7         |&#13;
+  | demo.juriba.co.uk |&#13;
+  | 67#               |&#13;
+  | #12               |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersInvalidSearchCriteriaIntoTheAgGridSearchBoxAndMessageIsDisplayed("No devices found", &lt;table&gt;) (119.2s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_22615187_8F3A_486D_Bd81_56B48Fc9F157Feature" name="EvergreenJnr_DevicesList_CheckThatQuickSearchDoesntTriggersNewListMenu" time="36.80042">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.4s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.9s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (8.1s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+Then User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Smith          | 11           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (14.1s)&#13;
+Then 'Save' button is not displayed on 'LeftSubmenu' panel&#13;
+-&gt; done: ButtonSteps.ThenButtonIsNotDisplayedOnPanel("Save", "LeftSubmenu") (0.1s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_1E4989A4_2714_461A_B163_C3A6A1984F07Feature" name="EvergreenJnr_DevicesList_ClearingSearchReturnsTheFullDataSet" time="50.2454915">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.6s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (4.3s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (8.1s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+And User enters SearchCriteria into the agGrid Search Box and the correct NumberOfRows are returned&#13;
+  --- table step argument ---&#13;
+  | SearchCriteria | NumberOfRows |&#13;
+  | Mary           | 18           |&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenUserEntersSearchCriteriaIntoTheAgGridSearchBoxAndTheCorrectNumberOfRowsAreReturned(&lt;table&gt;) (13.7s)&#13;
+Then URL is 'evergreen/#/devices'&#13;
+-&gt; done: BaseActions.ThenURLIs("evergreen/#/devices") (0.0s)&#13;
+When User clears 'Search Table' textbox with backspaces&#13;
+-&gt; done: InputSteps.WhenUserClearsTextboxWithBackspaces("Search Table") (0.3s)&#13;
+When User clicks 'Run List' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Run List") (3.0s)&#13;
+When User waits for data loading&#13;
+-&gt; done: EvergreenJnr_BasePage.WhenUserWaitsForDataLoading() (4.0s)&#13;
+Then '17,317' rows are displayed in the grid&#13;
+-&gt; done: EvergreenJnr_BaseGrid.ThenRowsAreDisplayedInTheGrid("17,317") (5.8s)&#13;
+Then URL is 'evergreen/#/devices'&#13;
+-&gt; done: BaseActions.ThenURLIs("evergreen/#/devices") (0.0s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_Ab7Fa050_0088_483B_B0Bb_C0Efbce9A742Feature" name="EvergreenJnr_DevicesList_Search_CheckThatSearchFieldHaveResetButtonAtColumnPanel" time="110.3738828">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (17.9s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (9.0s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (8.3s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.1s)&#13;
+When User clicks the Columns button&#13;
+-&gt; done: EvergreenJnr_BaseHeader.WhenUserClicksTheColumnsButton() (9.0s)&#13;
+Then Columns panel is displayed to the user&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.ThenColumnsPanelIsDisplayedToTheUser() (3.0s)&#13;
+When User enters "CheckTheResetButton" text in Search field at Columns Panel&#13;
+-&gt; done: EvergreenJnr_ColumnsPanel.WhenUserEntersTextInSearchFieldAtColumnsPanel("CheckTheResetButton") (6.2s)&#13;
+Then reset button in Search field at selected Panel is displayed&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenResetButtonInSearchFieldOnSelectedPanelIsDisplayed() (3.0s)
+</system-out>
+    </testcase>
+    <testcase classname="DashworksTestAutomationCore.SpecFlowTests.Search_011Cdd27_05D3_4A13_8227_684Adc8C7Ff0Feature" name="EvergreenJnr_DevicesList_Search_CheckThatSearchFieldHaveResetButtonAtFilterPanel" time="102.8523038">
+      <system-out>Given User is logged in to the Evergreen&#13;
+-&gt; done: EvergreenJnr_Login.GivenUserIsLoggedInToTheEvergreen() (0.7s)&#13;
+Then Evergreen Dashboards page should be displayed to the user&#13;
+-&gt; done: EvergreenJnr_Login.ThenEvergreenDashboardsPageShouldBeDisplayedToTheUser() (3.2s)&#13;
+When User clicks 'Devices' on the left-hand menu&#13;
+-&gt; done: EvergreenJnr_LeftHandMenuNavigation.WhenUserClicksOnTheLeft_HandMenu("Devices") (30.8s)&#13;
+Then Page with 'All Devices' header is displayed to user&#13;
+-&gt; done: EvergreenJnr_BaseHeader.ThenPageWithHeaderIsDisplayedToUser("All Devices") (3.0s)&#13;
+When User clicks 'Filters' button after loading&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButtonAfterLoading("Filters") (3.0s)&#13;
+Then 'FILTERS' right side panel is displayed&#13;
+-&gt; done: EvergreenJnr_RightSidePanel.ThenRightSidePanelIsDisplayed("FILTERS") (2.9s)&#13;
+When User clicks 'Add New' button&#13;
+-&gt; done: ButtonSteps.WhenUserClicksButton("Add New") (0.5s)&#13;
+When User enters 'CheckTheResetButton' text to 'Search Filters' textbox on 'BaseRightSideActionsPanel' panel&#13;
+-&gt; done: InputSteps.WhenUserEntersTextToTextboxOnPanel("CheckTheResetButton", "Search Filters", "BaseRightSideActi...") (8.9s)&#13;
+Then reset button in Search field at selected Panel is displayed&#13;
+-&gt; done: EvergreenJnr_ListSearch.ThenResetButtonInSearchFieldOnSelectedPanelIsDisplayed() (2.9s)
+</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

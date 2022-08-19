@@ -1,5 +1,14 @@
 Change Log
 ==========
+0.0.67
+-------------------
+- Additional logging for git
+
+0.0.66
+-------------------
+- Split for xunit azure
+- Latest as option for commits
+
 0.0.62
 -------------------
 - Add support for Gradle cucumber and playwright

@@ -9,16 +9,17 @@ import re
 import logging
 import os
 import threading
-import urllib3
+import logging.config
+import datetime
 
 
 try:
-    import requests
+    import requests, urllib3
     from requests.adapters import HTTPAdapter
     from requests.sessions import Session
     from requests.adapters import Retry
 except ImportError:
-    warnings.warn("Please install 'requests' library, e.g. 'pip install requests'."\
+    warnings.warn("Module 'requests' not found. Please install it, e.g. 'pip install requests'."\
                   "Then run the command again.")
     sys.exit(1)
 
@@ -40,6 +41,43 @@ is_windows = (os.name == 'nt')
 
 #: OS MacOS or Linux
 is_posix = (os.name == 'posix')
+
+DEBUG = True
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': True,
+
+    'formatters': {
+        'default': {
+            'format': '[%(asctime)s] %(levelname)-8s [%(funcName)s:%(lineno)d] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'default',
+            'filename': './testbrain.log',
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 7
+        },
+    },
+    'loggers': {
+        '': {
+            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'handlers': ['console', 'file']
+        },
+    }
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
 
 COMMAND_GET_ALL_COMMITS_SHA = "git log {} --pretty=format:%H"
 COMMAND_COMMIT = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%nAuthor:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%nMessage:\t%s%n' {}"
@@ -297,6 +335,7 @@ def execute(commandLine):
         process.kill()
         if DEBUG:
             logging.error("Execution '{}'".format(repr(commandLine)))
+            logging.error("with error '{}'".format(error))
         raise Exception(error)
     return out
 
@@ -305,7 +344,14 @@ def get_commits_sha(start, number, branch):
     get_all_commits_sha_cmd = COMMAND_GET_ALL_COMMITS_SHA.format(branch)
     all_commits_sha = execute(get_all_commits_sha_cmd)
     all_commits_sha = all_commits_sha.split('\n')
-    index = all_commits_sha.index(start)
+    if start == 'latest':
+        index = 0
+    else:
+        try:
+            index = all_commits_sha.index(start)
+        except ValueError:
+            logging.error("Commit '{}' not found on branch '{}'".format(start, branch))
+            sys.exit(1)
     commits_sha = all_commits_sha[index:index+number]
     commits_sha.reverse()
     return commits_sha
@@ -328,8 +374,11 @@ def request(url, token, data, event):
         session.mount('https://', HTTPAdapter(max_retries=3))
         resp = session.post(url=url, data=data, headers=headers, verify=False, allow_redirects=True)
         result = (resp.status_code, resp.reason)
-    except Exception as e:
-        print("Request error: ", e)
+        if resp.status_code == 401:
+            logging.error('Could not verify, please check it and try again.')
+            sys.exit(1)
+    except Exception:
+        logging.error('Can\'t not get a connection to the server, please check your url try again.')
         result = (None, None)
     return result
 
@@ -343,9 +392,12 @@ def get_project_id(base_url, project_name, token):
         session.mount('http://', HTTPAdapter(max_retries=3))
         session.mount('https://', HTTPAdapter(max_retries=3))
         resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
-    except Exception as e:
-        print("Request error: ", e)
-        return None
+        if resp.status_code == 401:
+            logging.error('Could not verify your token, please check it and try again.')
+            sys.exit(1)
+    except Exception:
+        logging.error('Can\'t not get a connection to the server, please check your url or token and try again.')
+        sys.exit(1)
     return resp.text
 
 
@@ -744,6 +796,8 @@ parser.add_argument('--branch', type=str, required=True,
                     help='Enter the explicity branch to process commit')
 parser.add_argument('--blame', action='store_true',
                     help='Choose to commit revision of each line or not')
+parser.add_argument('--debug', action='store_true',
+                    help='Write data of commits to json file')
 
 
 args = parser.parse_args()
@@ -752,13 +806,19 @@ base_url = args.url.rstrip('/')
 project = args.project
 token = args.token
 start = args.start
-number = args.number if args.number else 100
+number = args.number if args.number else 10
 branch = args.branch
 blame = args.blame
+debug = args.debug
 
 
-project_id = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))["project_id"]
-url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
+project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
+if 'project_id' in project_id_data:
+    project_id = project_id_data['project_id']
+    url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
+elif 'error' in project_id_data:
+    logging.error('Project not found')
+    sys.exit(1)
 
 
 def performPush(url, token, start, number, branch, blame):
@@ -771,10 +831,20 @@ def performPush(url, token, start, number, branch, blame):
     data = wrap_push_event(ref=branch, commits=commits, file_tree=file_tree)
     # with open('./data.txt', 'w') as f:
     #     f.write(data)
+    if debug:
+        if not os.path.exists('./testbrain-debug'):
+            os.makedirs('./testbrain-debug')
+        current_time = datetime.datetime.now(datetime.timezone.utc).astimezone().strftime('%Y-%m-%dT')
+        with open(f'./testbrain-debug/{current_time}.json', 'w') as f:
+            f.write(data)
     status_code, content = request(url, token, data, event='push')
 
 def gittoappsurify():
+    logging.info('Started syncing commits to {}'.format(base_url))
     performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame)
+    logging.info('Successfully synced commits to {}'.format(base_url))
+    logging.info('Start commit: {}'.format(start))
+    logging.info('Number of commit(s): {}'.format(number))
     
 #example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript" --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA" --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 
