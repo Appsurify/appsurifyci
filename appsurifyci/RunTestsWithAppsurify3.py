@@ -829,6 +829,9 @@ def get_and_run_tests(type):
         if type == 9:
             testrunset = list(set(testrunset + alwaysrunset))
 
+        #if testtemplate == "mvn":
+        #    testrunset = sorted(testrunset)
+
         for testName in testrunset:
             count = count + 1
             if encodetests == "true":
@@ -849,6 +852,12 @@ def get_and_run_tests(type):
             if count == 1:
                 tests = prefixtest + testName + postfixtest
             else:
+                #if testtemplate == "mvn":
+                    #if tests.split(testseparator)[-1].split(testsuitesnameseparator)[0] == testName.split(testsuitesnameseparator)[0]:
+                        #tests = tests + "+" + testName.split(testsuitesnameseparator)[1]
+                    #else:
+                        #tests = tests + testseparator + prefixtest + testName + postfixtest
+                    
                 tests = tests + testseparator + prefixtest + testName + postfixtest
 
             if count == maxtests:
@@ -1542,16 +1551,17 @@ def runtestswithappsurify(*args):
             endspecificrun = " -Pappsurifytests=\""
 
         if testtemplate == "mvn":
-            testseparator = ","
-            addtestsuitename = "true"
-            testsuitesnameseparator = "#"
+            #testseparator = ","
+            testseparator = "+"
+            #addtestsuitename = "true"
+            #testsuitesnameseparator = "#"
             startrunspecific = "mvn"
-            endrunspecific = " test"
+            endrunspecific = "\" test"
             startrunall = "mvn test"
             report = "./target/surefire-reports/"
             reporttype = "directory"
             deletereports = "false"
-            endspecificrun = " -Dtest="
+            endspecificrun = " -Dtest=\"#"
 
         if testtemplate == "webdriverio mocha":
             testseparator = "|"
