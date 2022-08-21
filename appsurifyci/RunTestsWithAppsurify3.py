@@ -718,7 +718,7 @@ def get_tests(testpriority, retryGetTests=True):
     api_url = url + "/api/external/prioritized-tests/"
     if proxy == "":
         response = requests.get(
-            url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=200
+            url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600
         )
     else:
         try:
@@ -731,7 +731,7 @@ def get_tests(testpriority, retryGetTests=True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=200
+                    timeout=600
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -741,7 +741,7 @@ def get_tests(testpriority, retryGetTests=True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=200
+                    timeout=600
                 )
         except:
             httpproxy = proxy
@@ -753,7 +753,7 @@ def get_tests(testpriority, retryGetTests=True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=200
+                    timeout=600
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -763,7 +763,7 @@ def get_tests(testpriority, retryGetTests=True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=200
+                    timeout=600
                 )
     print("request sent to get tests")
     print((response.status_code))
@@ -924,7 +924,7 @@ def getresults(retryResults = True):
     print(headers)
     if proxy == "":
         response = requests.get(
-            url + "/api/external/output/", headers=headers, params=params, timeout=200
+            url + "/api/external/output/", headers=headers, params=params, timeout=600
         )
     else:
         try:
@@ -937,7 +937,7 @@ def getresults(retryResults = True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=200
+                    timeout=600
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -947,7 +947,7 @@ def getresults(retryResults = True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=200
+                    timeout=600
                 )
         except:
             httpproxy = proxy
@@ -959,7 +959,7 @@ def getresults(retryResults = True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=200
+                    timeout=600
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -969,7 +969,7 @@ def getresults(retryResults = True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=200
+                    timeout=600
                 )
     print("result request sent")
     resultset = ""
@@ -1550,7 +1550,7 @@ def runtestswithappsurify(*args):
             endrunspecific = "\""
             endspecificrun = " -Pappsurifytests=\""
 
-        if testtemplate == "mvn":
+        if testtemplate == "mvn old":
             #testseparator = ","
             testseparator = "+"
             #addtestsuitename = "true"
@@ -1562,6 +1562,20 @@ def runtestswithappsurify(*args):
             reporttype = "directory"
             deletereports = "false"
             endspecificrun = " -Dtest=\"#"
+
+        if testtemplate == "mvn":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn"
+            endrunspecific = " test"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dtest="
+
+
 
         if testtemplate == "webdriverio mocha":
             testseparator = "|"
