@@ -653,7 +653,8 @@ def get_always_tests_azure():
     return tests
 
 
-def get_tests(testpriority):
+def get_tests(testpriority, retryGetTests=True):
+    origtestpriority = testpriority
     echo("getting test set " + str(testpriority))
     tests = ""
     valuetests = ""
@@ -717,7 +718,7 @@ def get_tests(testpriority):
     api_url = url + "/api/external/prioritized-tests/"
     if proxy == "":
         response = requests.get(
-            url + "/api/external/prioritized-tests/", headers=headers, params=params
+            url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=200
         )
     else:
         try:
@@ -730,6 +731,7 @@ def get_tests(testpriority):
                     headers=headers,
                     params=params,
                     proxies=proxies,
+                    timeout=200
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -739,6 +741,7 @@ def get_tests(testpriority):
                     params=params,
                     proxies=proxies,
                     auth=auth,
+                    timeout=200
                 )
         except:
             httpproxy = proxy
@@ -750,6 +753,7 @@ def get_tests(testpriority):
                     headers=headers,
                     params=params,
                     proxies=proxies,
+                    timeout=200
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -759,6 +763,7 @@ def get_tests(testpriority):
                     params=params,
                     proxies=proxies,
                     auth=auth,
+                    timeout=200
                 )
     print("request sent to get tests")
     print((response.status_code))
@@ -795,6 +800,12 @@ def get_tests(testpriority):
                 )
             )
         )
+
+    if retryGetTests == True:
+        if response.status_code != 200:
+            print("retrying getting prioritized tests")
+            get_tests(origtestpriority, retryGetTests=False)
+
     return None
 
 
@@ -888,7 +899,7 @@ def rerun_tests():
             numruns = numruns + 1
 
 
-def getresults():
+def getresults(retryResults = True):
     print(run_id)
     if run_id == "":
         print("no results")
@@ -904,7 +915,7 @@ def getresults():
     print(headers)
     if proxy == "":
         response = requests.get(
-            url + "/api/external/output/", headers=headers, params=params
+            url + "/api/external/output/", headers=headers, params=params, timeout=200
         )
     else:
         try:
@@ -917,6 +928,7 @@ def getresults():
                     headers=headers,
                     params=params,
                     proxies=proxies,
+                    timeout=200
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -926,6 +938,7 @@ def getresults():
                     params=params,
                     proxies=proxies,
                     auth=auth,
+                    timeout=200
                 )
         except:
             httpproxy = proxy
@@ -937,6 +950,7 @@ def getresults():
                     headers=headers,
                     params=params,
                     proxies=proxies,
+                    timeout=200
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -946,6 +960,7 @@ def getresults():
                     params=params,
                     proxies=proxies,
                     auth=auth,
+                    timeout=200
                 )
     print("result request sent")
     resultset = ""
@@ -981,6 +996,12 @@ def getresults():
                 )
             )
         )
+    
+    if retryResults == True:
+        if response.status_code != 200:
+            print("retrying getting results")
+            getresults(retryResults=False)
+            return
 
     if resultset["new_defects"] and "newdefects" in fail:
         exit(1)
@@ -1050,7 +1071,8 @@ def push_results():
             print("Import failed")
 
 
-def call_import(filepath):
+def call_import(filepath, retryImport = True):
+    origfilepath = filepath
     print("importing results")
     print(filepath)
     if importtype == "trx" and replaceretry == "true":
@@ -1220,6 +1242,10 @@ def call_import(filepath):
                 )
             )
         )
+    if retryImport == True:
+        if response.status_code != 200 and response.status_code != 201:
+            print("retrying import")
+            call_import(origfilepath, retryImport=False)
 
 
 def runtestswithappsurify(*args):

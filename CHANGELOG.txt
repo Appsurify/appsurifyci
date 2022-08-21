@@ -1,5 +1,9 @@
 Change Log
 ==========
+0.0.72
+-------------------
+- retries and timeouts for requests
+
 0.0.67
 -------------------
 - Additional logging for git
