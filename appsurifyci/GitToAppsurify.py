@@ -1070,7 +1070,6 @@ def get_commit(sha, blame=False):
 
 
 def wrap_push_event(ref, commits, file_tree, repo_name=''):
-    repo_name = repo_name if repo_name != '' else get_repo_name()
     try:
         data = {
             "before": commits[0]["sha"],
@@ -1138,6 +1137,8 @@ if __name__ == '__main__':
                         help='Write data of commits to json file')
     parser.add_argument('--repo_name', type=str, required=False, default='',
                         help='Define repository name')
+    parser.add_argument('--auto_repo_name', action='store_true', default=False,
+                        help='Use Git remote as repository name.')
 
     args = parser.parse_args()
 
@@ -1149,7 +1150,12 @@ if __name__ == '__main__':
     branch = args.branch
     blame = args.blame
     debug = args.debug
+
     repo_name = args.repo_name
+    auto_repo_name = args.auto_repo_name
+
+    if auto_repo_name:
+        repo_name = get_repo_name()
 
     project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
     if 'project_id' in project_id_data:
