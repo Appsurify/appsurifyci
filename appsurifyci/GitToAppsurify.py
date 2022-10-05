@@ -99,6 +99,7 @@ RE_COMMIT_DIFF = re.compile(
     r"""^diff[ ]--git[ ](?P<a_path_fallback>"?a/.+?"?)[ ](?P<b_path_fallback>"?b/.+?"?)\n(?:^old[ ]mode[ ](?P<old_mode>\d+)\n^new[ ]mode[ ](?P<new_mode>\d+)(?:\n|$))?(?:^similarity[ ]index[ ]\d+%\n^rename[ ]from[ ](?P<rename_from>.*)\n^rename[ ]to[ ](?P<rename_to>.*)(?:\n|$))?(?:^new[ ]file[ ]mode[ ](?P<new_file_mode>.+)(?:\n|$))?(?:^deleted[ ]file[ ]mode[ ](?P<deleted_file_mode>.+)(?:\n|$))?(?:^index[ ](?P<a_blob_id>[0-9A-Fa-f]+)\.\.(?P<b_blob_id>[0-9A-Fa-f]+)[ ]?(?P<b_mode>.+)?(?:\n|$))?(?:^---[ ](?P<a_path>[^\t\n\r\f\v]*)[\t\r\f\v]*(?:\n|$))?(?:^\+\+\+[ ](?P<b_path>[^\t\n\r\f\v]*)[\t\r\f\v]*(?:\n|$))?""",
     re.VERBOSE | re.MULTILINE)
 
+REPOSITORY_NAME = ''
 
 class BasePlatform(object):
     FORMATS = {
@@ -372,8 +373,8 @@ class GitUrlParsed(object):
         return dict(self._parsed)
 
 
-def get_repo_name():
-    repo_name = 'default'
+def get_repo_name(dflt='UNKNOWN'):
+    repo_name = dflt
     remote_repo = execute(COMMAND_REMOTE_URL)
     try:
         r = GitUrlParsed(parse_repo_url(url=remote_repo, check_domain=True))
@@ -439,7 +440,7 @@ def _pick_best_path(path_match, rename_match, path_fallback_match):
 
 
 def _parse_numstats(text):
-    repo_name = get_repo_name()
+    repo_name = REPOSITORY_NAME
     hsh = {"total": {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}, "files": {}}
     for line in text.splitlines():
 
@@ -469,7 +470,7 @@ def _parse_numstats(text):
 
 def _parse_stats(text):
     diffs = dict()
-    repo_name = get_repo_name()
+    repo_name = REPOSITORY_NAME
 
     for line in text.splitlines():
         try:
@@ -547,7 +548,7 @@ def _parse_stats(text):
 def _parse_patch(text):
     diffs = list()
     previous_header = None
-    repo_name = get_repo_name()
+    repo_name = REPOSITORY_NAME
 
     for header in RE_COMMIT_DIFF.finditer(text):
         a_path_fallback, b_path_fallback, old_mode, new_mode, \
@@ -1155,7 +1156,9 @@ if __name__ == '__main__':
     auto_repo_name = args.auto_repo_name
 
     if auto_repo_name:
-        repo_name = get_repo_name()
+        REPOSITORY_NAME = get_repo_name()
+    else:
+        REPOSITORY_NAME = repo_name
 
     project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
     if 'project_id' in project_id_data:
