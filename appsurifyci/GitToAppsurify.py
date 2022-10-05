@@ -373,19 +373,6 @@ class GitUrlParsed(object):
 
 
 def get_repo_name():
-    # repo_name = 'default'
-    # remote_repo = execute(COMMAND_REMOTE_URL)
-    # https_clone_prefixes = ['https://github.com/', 'https://gitlab.com/',]
-    # ssh_clone_prefixes = ['git@github.com:', 'git@gitlab.com:']
-    # if 'https' in remote_repo:
-    #     for https_prefix in https_clone_prefixes:
-    #         remote_repo = remote_repo.replace(https_prefix, '').replace('.git', '')
-    #     repo_name = remote_repo.split('/')[-1]
-    # elif 'git@' in remote_repo:
-    #     for ssh_prefix in ssh_clone_prefixes:
-    #         remote_repo = remote_repo.replace(ssh_prefix, '').replace('.git', '')
-    #     repo_name = remote_repo.split('/')[-1]
-    # return repo_name
     repo_name = 'default'
     remote_repo = execute(COMMAND_REMOTE_URL)
     try:
@@ -1082,7 +1069,8 @@ def get_commit(sha, blame=False):
     return commit
 
 
-def wrap_push_event(ref, commits, file_tree):
+def wrap_push_event(ref, commits, file_tree, repo_name=''):
+    repo_name = repo_name if repo_name != '' else get_repo_name()
     try:
         data = {
             "before": commits[0]["sha"],
@@ -1094,7 +1082,7 @@ def wrap_push_event(ref, commits, file_tree):
             "size": len(commits),
             "head_commit": commits[-1],
             "file_tree": file_tree,
-            "repo_name": get_repo_name(),
+            "repo_name": repo_name,
         }
         return json.dumps(data)
     except Exception as e:
@@ -1102,16 +1090,14 @@ def wrap_push_event(ref, commits, file_tree):
         return json.dumps({})
 
 
-
-
-def performPush(url, token, start, number, branch, blame):
+def performPush(url, token, start, number, branch, blame, repo_name=''):
     sha_list = get_commits_sha(start=start, number=number, branch=branch)
     commits = list()
     for sha in sha_list:
         commit = get_commit(sha=sha, blame=blame)
         commits.append(commit)
     file_tree = get_file_tree()
-    data = wrap_push_event(ref=branch, commits=commits, file_tree=file_tree)
+    data = wrap_push_event(ref=branch, commits=commits, file_tree=file_tree, repo_name=repo_name)
     # with open('./data.txt', 'w') as f:
     #     f.write(data)
     if debug:
@@ -1124,7 +1110,7 @@ def performPush(url, token, start, number, branch, blame):
 
 def gittoappsurify():
     logging.info('Started syncing commits to {}'.format(base_url))
-    performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame)
+    performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame, repo_name=repo_name)
     logging.info('Successfully synced commits to {}'.format(base_url))
     logging.info('Start commit: {}'.format(start))
     logging.info('Number of commit(s): {}'.format(number))
@@ -1150,6 +1136,8 @@ if __name__ == '__main__':
                         help='Choose to commit revision of each line or not')
     parser.add_argument('--debug', action='store_true',
                         help='Write data of commits to json file')
+    parser.add_argument('--repo_name', type=str, required=False, default='',
+                        help='Define repository name')
 
     args = parser.parse_args()
 
@@ -1161,6 +1149,7 @@ if __name__ == '__main__':
     branch = args.branch
     blame = args.blame
     debug = args.debug
+    repo_name = args.repo_name
 
     project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
     if 'project_id' in project_id_data:
