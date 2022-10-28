@@ -1124,6 +1124,57 @@ def performPush(url, token, start, number, branch, blame, repo_name=''):
     status_code, content = request(url, token, data, event='push')
     logging.info("Data has been sent with status_code {}".format(status_code))
 
+parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
+
+parser.add_argument('--url', type=str, required=True,
+                    help='Enter your organization url')
+parser.add_argument('--project', type=str, required=True,
+                    help='Enter project name')
+parser.add_argument('--token', type=str, required=True,
+                    help='The API key to communicate with API')
+parser.add_argument('--start', type=str, required=True,
+                    help='Enter the commit that would be the starter')
+parser.add_argument('--number', type=int,
+                    help='Enter the number of commits that would be returned')
+parser.add_argument('--branch', type=str, required=True,
+                    help='Enter the explicity branch to process commit')
+parser.add_argument('--blame', action='store_true',
+                    help='Choose to commit revision of each line or not')
+parser.add_argument('--debug', action='store_true',
+                    help='Write data of commits to json file')
+parser.add_argument('--repo_name', type=str, required=False, default='',
+                    help='Define repository name')
+parser.add_argument('--auto_repo_name', action='store_true', default=False,
+                    help='Use Git remote as repository name.')
+
+args = parser.parse_args()
+
+base_url = args.url.rstrip('/')
+project = args.project
+token = args.token
+start = args.start
+number = args.number if args.number else 100
+branch = args.branch
+blame = args.blame
+debug = args.debug
+debug = True
+
+repo_name = args.repo_name
+auto_repo_name = args.auto_repo_name
+
+if auto_repo_name:
+    REPOSITORY_NAME = get_repo_name()
+else:
+    REPOSITORY_NAME = repo_name
+
+project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
+if 'project_id' in project_id_data:
+    project_id = project_id_data['project_id']
+    url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
+elif 'error' in project_id_data:
+    logging.debug('Project not found')
+    sys.exit(1)
+
 
 def gittoappsurify():
     logging.info('Started syncing commits to {}'.format(base_url))
@@ -1139,55 +1190,4 @@ def gittoappsurify():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
-
-    parser.add_argument('--url', type=str, required=True,
-                        help='Enter your organization url')
-    parser.add_argument('--project', type=str, required=True,
-                        help='Enter project name')
-    parser.add_argument('--token', type=str, required=True,
-                        help='The API key to communicate with API')
-    parser.add_argument('--start', type=str, required=True,
-                        help='Enter the commit that would be the starter')
-    parser.add_argument('--number', type=int,
-                        help='Enter the number of commits that would be returned')
-    parser.add_argument('--branch', type=str, required=True,
-                        help='Enter the explicity branch to process commit')
-    parser.add_argument('--blame', action='store_true',
-                        help='Choose to commit revision of each line or not')
-    parser.add_argument('--debug', action='store_true',
-                        help='Write data of commits to json file')
-    parser.add_argument('--repo_name', type=str, required=False, default='',
-                        help='Define repository name')
-    parser.add_argument('--auto_repo_name', action='store_true', default=False,
-                        help='Use Git remote as repository name.')
-
-    args = parser.parse_args()
-
-    base_url = args.url.rstrip('/')
-    project = args.project
-    token = args.token
-    start = args.start
-    number = args.number if args.number else 100
-    branch = args.branch
-    blame = args.blame
-    debug = args.debug
-    debug = True
-
-    repo_name = args.repo_name
-    auto_repo_name = args.auto_repo_name
-
-    if auto_repo_name:
-        REPOSITORY_NAME = get_repo_name()
-    else:
-        REPOSITORY_NAME = repo_name
-
-    project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
-    if 'project_id' in project_id_data:
-        project_id = project_id_data['project_id']
-        url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
-    elif 'error' in project_id_data:
-        logging.debug('Project not found')
-        sys.exit(1)
-
     gittoappsurify()
