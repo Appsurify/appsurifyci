@@ -45,6 +45,23 @@ is_posix = (os.name == 'posix')
 
 DEBUG = True
 
+def exception_handler(type, value, tb):
+    logging.exception("Uncaught exception: {0}".format(str(value)))
+
+
+# Install exception handler
+sys.excepthook = exception_handler
+
+
+def gittoappsurifyInit():
+    if not os.path.exists('./.testbrain'):
+        os.makedirs('./.testbrain')
+    if not os.path.exists('./.testbrain/debug'):
+        os.makedirs('./.testbrain/debug')
+
+
+gittoappsurifyInit()
+
 LOGGING_CONFIG = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -57,7 +74,7 @@ LOGGING_CONFIG = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
@@ -65,7 +82,7 @@ LOGGING_CONFIG = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default',
-            'filename': './testbrain.log',
+            'filename': './.testbrain/debug.log',
             'maxBytes': 10 * 1024 * 1024,
             'backupCount': 7
         },
@@ -381,6 +398,8 @@ def get_repo_name(dflt='UNKNOWN'):
         repo_name = r.repo
     except Exception as exc:
         logging.exception(exc, exc_info=True)
+    logging.debug("REPO_NAME: {}".format(repo_name))
+    repo_name = repo_name.replace(".git", "")
     return repo_name
 
 
@@ -640,8 +659,8 @@ def execute(commandLine):
     if error:
         process.kill()
         if DEBUG:
-            logging.error("Execution '{}'".format(repr(commandLine)))
-            logging.error("with error '{}'".format(error))
+            logging.debug("Execution '{}'".format(repr(commandLine)))
+            logging.debug("with error '{}'".format(error))
         raise Exception(error)
     return out
 
@@ -674,10 +693,10 @@ def request(url, token, data, event):
         resp = session.post(url=url, data=data, headers=headers, verify=False, allow_redirects=True)
         result = (resp.status_code, resp.reason)
         if resp.status_code == 401:
-            logging.error('Could not verify, please check it and try again.')
+            logging.debug('Could not verify, please check it and try again.')
             sys.exit(1)
     except Exception as e:
-        logging.error('Can\'t not get a connection to the server, please check your url try again.')
+        logging.debug('Can\'t not get a connection to the server, please check your url try again.')
         result = (None, None)
     return result
 
@@ -692,10 +711,10 @@ def get_project_id(base_url, project_name, token):
         session.mount('https://', HTTPAdapter(max_retries=3))
         resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
         if resp.status_code == 401:
-            logging.error('Could not verify your token, please check it and try again.')
+            logging.debug('Could not verify your token, please check it and try again.')
             sys.exit(1)
     except Exception as e:
-        logging.error('Can\'t not get a connection to the server, please check your url or token and try again.')
+        logging.debug('Can\'t not get a connection to the server, please check your url or token and try again.')
         sys.exit(1)
     return resp.text
 
@@ -1099,15 +1118,11 @@ def performPush(url, token, start, number, branch, blame, repo_name=''):
         commits.append(commit)
     file_tree = get_file_tree()
     data = wrap_push_event(ref=branch, commits=commits, file_tree=file_tree, repo_name=repo_name)
-    # with open('./data.txt', 'w') as f:
-    #     f.write(data)
-    if debug:
-        if not os.path.exists('./testbrain-debug'):
-            os.makedirs('./testbrain-debug')
-        current_time = datetime.datetime.now(datetime.timezone.utc).astimezone().strftime('%Y-%m-%dT')
-        with open(f'./testbrain-debug/{current_time}.json', 'w') as f:
-            f.write(data)
+    current_time = datetime.datetime.now(datetime.timezone.utc).astimezone().strftime('%Y-%m-%dT')
+    with open(f'./.testbrain/debug/{current_time}.json', 'w') as f:
+        f.write(data)
     status_code, content = request(url, token, data, event='push')
+    logging.info("Data has been sent with status_code {}".format(status_code))
 
 
 def gittoappsurify():
@@ -1171,7 +1186,7 @@ if __name__ == '__main__':
         project_id = project_id_data['project_id']
         url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
     elif 'error' in project_id_data:
-        logging.error('Project not found')
+        logging.debug('Project not found')
         sys.exit(1)
 
     gittoappsurify()
