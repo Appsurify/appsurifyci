@@ -1172,6 +1172,7 @@ if __name__ == '__main__':
     branch = args.branch
     blame = args.blame
     debug = args.debug
+    debug = True
 
     repo_name = args.repo_name
     auto_repo_name = args.auto_repo_name
