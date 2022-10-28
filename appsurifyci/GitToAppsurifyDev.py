@@ -80,7 +80,7 @@ LOGGING_CONFIG = {
 
 logging.config.dictConfig(LOGGING_CONFIG)
 
-COMMAND_GET_ALL_COMMITS_SHA = "git log --pretty=format:%H {} --"
+COMMAND_GET_ALL_COMMITS_SHA = "git log {} --pretty=format:%H"
 COMMAND_COMMIT = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%nAuthor:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%nMessage:\t%s%n' {}"
 COMMAND_COMMIT_BRANCH = "git branch --contains {}"
 COMMAND_COMMIT_FILE_BLAME = "git blame {}^ -L {},{} -- {}"
@@ -150,7 +150,7 @@ class BitbucketPlatform(BasePlatform):
 
 class GitHubPlatform(BasePlatform):
     PATTERNS = {
-        'https': r'https://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+)(.git)?',
+        'https': r'https://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+).git',
         'ssh': r'git@(?P<domain>.+):(?P<owner>.+)/(?P<repo>.+).git',
         'git': r'git://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+).git',
     }
@@ -167,7 +167,7 @@ class GitHubPlatform(BasePlatform):
 
 class GitLabPlatform(BasePlatform):
     PATTERNS = {
-        'https': r'https://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+)(.git)?',
+        'https': r'https://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+).git',
         'ssh': r'git@(?P<domain>.+):(?P<owner>.+)/(?P<repo>.+).git',
         'git': r'git://(?P<domain>.+)/(?P<owner>.+)/(?P<repo>.+).git',
     }
@@ -1108,19 +1108,14 @@ def performPush(url, token, start, number, branch, blame, repo_name=''):
             f.write(data)
     status_code, content = request(url, token, data, event='push')
 
-
 def gittoappsurify():
     logging.info('Started syncing commits to {}'.format(base_url))
     performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame, repo_name=repo_name)
     logging.info('Successfully synced commits to {}'.format(base_url))
     logging.info('Start commit: {}'.format(start))
     logging.info('Number of commit(s): {}'.format(number))
-
-
-# example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript"
-# --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA"
-# --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
-
+    
+#example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript" --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA" --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
