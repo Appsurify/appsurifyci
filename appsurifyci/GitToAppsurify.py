@@ -741,7 +741,8 @@ def get_commit_branch(sha):
 exclude = set(['.git', '$tf'])
 def get_file_tree():
     files_paths = []
-    repo_name = get_repo_name()
+    #repo_name = get_repo_name()
+    repo_name = REPOSITORY_NAME
     for path, subdirs, files in os.walk('.'):
         subdirs[:] = [sub for sub in subdirs if sub not in exclude]
         for name in files:
