@@ -482,8 +482,12 @@ def _parse_numstats(text):
         hsh["total"]["changes"] += insertions + deletions
         hsh["total"]["total"] += insertions + deletions
         hsh["total"]["files"] += 1
-        hsh["files"][f'{repo_name}/' + filename.strip()] = {"filename": f'{repo_name}/' + filename.strip(), "additions": insertions, "deletions": deletions,
-                                          "changes": insertions + deletions}
+        hsh["files"][filename.strip()] = {
+            "filename": filename.strip(),
+            "additions": insertions,
+            "deletions": deletions,
+            "changes": insertions + deletions
+        }
     return (hsh["total"], hsh["files"])
 
 
@@ -546,12 +550,12 @@ def _parse_stats(text):
             status = "renamed"
 
         diff = dict(
-            filename=f'{repo_name}/' + filename if filename else filename,
-            previous_filename=f'{repo_name}/' + previous_filename if previous_filename else previous_filename,
+            filename=filename if filename else filename,
+            previous_filename=previous_filename if previous_filename else previous_filename,
             sha=sha,
             status=status,
-            a_path=f'{repo_name}/' + a_path if a_path else a_path,
-            b_path=f'{repo_name}/' + b_path if b_path else b_path,
+            a_path=a_path if a_path else a_path,
+            b_path=b_path if b_path else b_path,
             a_blob_id=a_blob_id,
             a_blob=a_blob, b_blob_id=b_blob_id, b_blob=b_blob,
             a_mode=old_mode, b_mode=new_mode, new_file=new_file,
@@ -559,7 +563,7 @@ def _parse_stats(text):
             change_type=change_type, score=score, patch=""
         )
 
-        diffs[f'{repo_name}/' + filename if filename else filename] = diff
+        diffs[filename if filename else filename] = diff
 
     return diffs
 
@@ -614,12 +618,12 @@ def _parse_patch(text):
             status = "modified"
 
         diff = dict(
-            filename=f'{repo_name}/' + filename if filename else filename,
-            previous_filename=f'{repo_name}/' + previous_filename if previous_filename else previous_filename,
+            filename=filename if filename else filename,
+            previous_filename=previous_filename if previous_filename else previous_filename,
             sha=sha,
             status=status,
-            a_path=f'{repo_name}/' + a_path if a_path else a_path,
-            b_path=f'{repo_name}/' + b_path if b_path else b_path,
+            a_path=a_path if a_path else a_path,
+            b_path=b_path if b_path else b_path,
             a_blob_id=a_blob_id,
             a_blob=a_blob, b_blob_id=b_blob_id, b_blob=b_blob,
             a_mode=a_mode and a_mode,
@@ -766,7 +770,7 @@ def get_file_tree():
         subdirs[:] = [sub for sub in subdirs if sub not in exclude]
         for name in files:
             file_path = os.path.join(path, name).lstrip('.').lstrip('/').lstrip('\\')
-            repo_file_path = f'{repo_name}/' + file_path
+            repo_file_path = file_path
             files_paths.append(repo_file_path)
     return files_paths
 
@@ -1127,7 +1131,7 @@ def performPush(url, token, start, number, branch, blame, repo_name=''):
 
 def gittoappsurify():
     logging.info('Started syncing commits to {}'.format(base_url))
-    performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame, repo_name=repo_name)
+    performPush(url=url, token=token, start=start, number=number, branch=branch, blame=blame, repo_name=REPOSITORY_NAME)
     logging.info('Successfully synced commits to {}'.format(base_url))
     logging.info('Start commit: {}'.format(start))
     logging.info('Number of commit(s): {}'.format(number))
