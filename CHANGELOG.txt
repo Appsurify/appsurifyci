@@ -1,5 +1,9 @@
 Change Log
 ==========
+0.0.83
+-------------------
+- multi repo to running tests
+
 0.0.76
 -------------------
 - multi repo to git script

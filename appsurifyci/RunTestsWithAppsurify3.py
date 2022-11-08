@@ -24,6 +24,7 @@ import datetime
 from shutil import copyfile
 from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
+import time
 
 try:
     import yaml
@@ -119,6 +120,7 @@ createfile = "false"
 createpropertiesfile = "false"
 spliton = "false"
 nopush = "false"
+repo_name = ""
 
 def find(name):
     currentdir = (
@@ -713,6 +715,10 @@ def get_tests(testpriority, retryGetTests=True):
 
     if testpriority == 11:
         params["day"] = newdays
+    
+    if repo_name != "":
+        params["repo_name"] = repo_name
+
 
     print(params)
     api_url = url + "/api/external/prioritized-tests/"
@@ -1171,6 +1177,10 @@ def call_import(filepath, retryImport = True):
         "test_suite_name": testsuiteencoded,
         "repo": repository,
     }
+
+    if repo_name != "":
+        payload["repo_name"] = repo_name
+
     files = {
         "file": open(filepath, "rb"),
     }
@@ -1264,7 +1274,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name
     try:    
 
         
@@ -1357,6 +1367,7 @@ def runtestswithappsurify(*args):
         createpropertiesfile = "false"
         spliton = "false"
         nopush = "false"
+        repo_name = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1370,7 +1381,7 @@ def runtestswithappsurify(*args):
         except Exception as e:
             print("Starting script execution")
         c = 0
-        print("===================================")
+        print("================================================")
         if len(sys.argv) > 1:
             c = len(sys.argv)
             for k in range(1, c):
@@ -1549,7 +1560,8 @@ def runtestswithappsurify(*args):
             deletereports = "false"
             endrunspecific = "\""
             endspecificrun = " -Pappsurifytests=\""
-
+            
+        #https://jadala-ajay16.medium.com/running-tests-from-command-line-different-options-427a5dadd224
         if testtemplate == "mvn old":
             #testseparator = ","
             testseparator = "+"
@@ -2197,12 +2209,14 @@ def runtestswithappsurify(*args):
                     nopush = "true"
                 if sys.argv[k] == "--spliton":
                     spliton = sys.argv[k + 1]
+                if sys.argv[k] == "--repo_name":
+                    repo_name = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
                     )
                 
-
+        
         if commandset == "":
             startrunspecific = startrunspecific + endspecificrun
             print("################################################")
@@ -2308,6 +2322,15 @@ def runtestswithappsurify(*args):
         # run_id=""
 
         # $url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commit $run_id
+        if repo_name != "":
+            print("Uploading results")
+            from time import sleep
+            sleep(30)
+            print("Upload completed")
+            return
+            #print("Uploading results3")
+        
+        
         echo("Getting tests to run")
 
         valuetests = ""
