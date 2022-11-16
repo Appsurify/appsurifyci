@@ -2323,12 +2323,12 @@ def runtestswithappsurify(*args):
         # run_id=""
 
         # $url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commit $run_id
-        if repo_name != "":
-            print("Uploading results")
-            from time import sleep
-            sleep(30)
-            print("Upload completed")
-            return
+        #if repo_name != "":
+        #    print("Uploading results")
+        #    from time import sleep
+        #    sleep(30)
+        #    print("Upload completed")
+        #    return
             #print("Uploading results3")
         
         
