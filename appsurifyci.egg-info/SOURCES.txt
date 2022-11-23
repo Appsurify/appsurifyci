@@ -7,6 +7,7 @@ setup.py
 appsurifyci/GitToAppsurify.py
 appsurifyci/GitToAppsurifyDev.py
 appsurifyci/RunTestsWithAppsurify3.py
+appsurifyci/RunTestsWithAppsurifyDev.py
 appsurifyci/__init__.py
 appsurifyci/appsurifytests.txt
 appsurifyci/trxcpnvert.py

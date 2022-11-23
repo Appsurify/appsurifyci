@@ -358,6 +358,25 @@ def strip_non_ascii(string):
     stripped = (c for c in string if 0 < ord(c) < 127)
     return "".join(stripped)
 
+def replace_non_ascii(string):
+    """Returns the string without non ASCII characters"""
+    newstring = ""
+    addedAsciiSpace = False
+    for c in string:
+        if 0 < ord(c) < 127:
+            if c == " ":
+                if addedAsciiSpace == False:
+                    newstring = newstring + c
+            else:
+                newstring = newstring + c
+            addedAsciiSpace = False
+        else:
+            if newstring[-1] != " ":
+                newstring = newstring + " "
+                addedAsciiSpace = True
+    return newstring
+    
+
 
 # created at 3/3 from below should be kept up to date.  Refactor to use the same method for both
 # https://youtrack.jetbrains.com/issue/TW-70205
@@ -1086,7 +1105,7 @@ def push_results():
             print("Import failed")
 
 
-def call_import(filepath, retryImport = True):
+def call_import(filepath, retryImport = True, replaceAscii = False):
     origfilepath = filepath
     print("importing results")
     print(filepath)
@@ -1103,6 +1122,20 @@ def call_import(filepath, retryImport = True):
                 openfile.write(filedata)
         except:
             print("unable to strip retries from file")
+
+    if replaceAscii:
+        try:
+            with open(filepath, "r", errors="ignore") as openfile:
+                filedata = openfile.read()
+
+                # Replace the target string
+            filedata = replace_non_ascii(filedata)
+
+            # Write the file out again
+            with open(filepath, "w") as openfile:
+                openfile.write(filedata)
+        except:
+            print("unable to strip Ascii")
 
     sizeOfFile = os.path.getsize(filepath)
     # if importtype == "trx" and sizeOfFile > 1000000:
@@ -1232,13 +1265,18 @@ def call_import(filepath, retryImport = True):
 
     print("file import sent")
     if response.status_code >= 500:
-        print(
-            (
-                "[!] [{0}] Server Error {1}".format(
-                    response.status_code, response.content.decode("utf-8")
+        if retryImport == True and "Parse error" in response.content.decode("utf-8"):
+            print("retrying import after parsing errors")
+            call_import(origfilepath, retryImport=False, replaceAscii=True)
+            return
+        else:
+            print(
+                (
+                    "[!] [{0}] Server Error {1}".format(
+                        response.status_code, response.content.decode("utf-8")
+                    )
                 )
             )
-        )
     elif response.status_code == 404:
         print(("[!] [{0}] URL not found: []".format(response.status_code)))
     elif response.status_code == 401:
