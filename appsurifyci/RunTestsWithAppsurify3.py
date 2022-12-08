@@ -121,6 +121,8 @@ createpropertiesfile = "false"
 spliton = "false"
 nopush = "false"
 repo_name = ""
+screenplay = False
+endcommand = ""
 
 def find(name):
     currentdir = (
@@ -676,7 +678,7 @@ def get_always_tests_azure():
 
 def get_tests(testpriority, retryGetTests=True):
     origtestpriority = testpriority
-    echo("getting test set " + str(testpriority))
+    #echo("getting test set " + str(testpriority))
     tests = ""
     valuetests = ""
     finalTestNames = ""
@@ -856,7 +858,10 @@ def get_and_run_tests(type):
 
         #if testtemplate == "mvn":
         #    testrunset = sorted(testrunset)
-
+        #if screenplay and project == "Campspot":
+        #    print("Setting screenplay")
+        #    count = 1
+        #    tests = "e2e.tests.EditWorkflowTest#datesChange"
         for testName in testrunset:
             count = count + 1
             if encodetests == "true":
@@ -872,6 +877,8 @@ def get_and_run_tests(type):
                 testName = testName.replace("=", "\=")
                 testName = testName.replace("!", "\!")
                 testName = testName.replace("~", "\~")
+            if screenplay:
+                testName = testName.split("(Actor)")[0]
             if spliton != "false" and spliton != "":
                 testName = testName.split(spliton)[0]
             if count == 1:
@@ -884,7 +891,7 @@ def get_and_run_tests(type):
                         #tests = tests + testseparator + prefixtest + testName + postfixtest
                     
                 tests = tests + testseparator + prefixtest + testName + postfixtest
-
+            
             if count == maxtests:
                 print("reached max tests")
                 execute_tests(tests, type)
@@ -1123,6 +1130,22 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
         except:
             print("unable to strip retries from file")
 
+    try:
+        with open(filepath, "r", errors="ignore") as openfile:
+            filedata = openfile.read()
+
+            # Replace the target string
+        if filedata.startswith("This XML file does not appear to have any style information associated with it. The document tree is shown below."):
+            print("replacing invalid xml")
+            filedata = filedata.replace("This XML file does not appear to have any style information associated with it. The document tree is shown below.", "")
+            with open(filepath, "w") as openfile:
+                openfile.write(filedata)
+
+        # Write the file out again
+    except:
+        testpath = filepath
+        #print("unable to remove text")
+
     if replaceAscii:
         try:
             with open(filepath, "r", errors="ignore") as openfile:
@@ -1209,7 +1232,11 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
         "project_name": projectencoded,
         "test_suite_name": testsuiteencoded,
         "repo": repository,
+        "import_type": "prioritized",
     }
+
+    if teststorun == "all":
+        payload["import_type"] = "full_test_run"
 
     if repo_name != "":
         payload["repo_name"] = repo_name
@@ -1312,7 +1339,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand
     try:    
 
         
@@ -1406,6 +1433,8 @@ def runtestswithappsurify(*args):
         spliton = "false"
         nopush = "false"
         repo_name = ""
+        screenplay = False
+        endcommand = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1605,8 +1634,8 @@ def runtestswithappsurify(*args):
             testseparator = "+"
             #addtestsuitename = "true"
             #testsuitesnameseparator = "#"
-            startrunspecific = "mvn"
-            endrunspecific = "\" test"
+            startrunspecific = "mvn test"
+            endrunspecific = "\""
             startrunall = "mvn test"
             report = "./target/surefire-reports/"
             reporttype = "directory"
@@ -1617,15 +1646,64 @@ def runtestswithappsurify(*args):
             testseparator = ","
             addtestsuitename = "true"
             testsuitesnameseparator = "#"
-            startrunspecific = "mvn"
-            endrunspecific = " test"
+            startrunspecific = "mvn test"
+            endrunspecific = ""
             startrunall = "mvn test"
             report = "./target/surefire-reports/"
             reporttype = "directory"
             deletereports = "false"
             endspecificrun = " -Dtest="
 
+        if testtemplate == "mvn screenplay":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn test"
+            endrunspecific = ""
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dtest="
+            screenplay = True
 
+        if testtemplate == "mvn integration old":
+            #testseparator = ","
+            testseparator = "+"
+            #addtestsuitename = "true"
+            #testsuitesnameseparator = "#"
+            startrunspecific = "mvn test"
+            endrunspecific = "\""
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dit.test=\"#"
+
+        if testtemplate == "mvn integration":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn test"
+            endrunspecific = ""
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dit.test="
+
+        if testtemplate == "mvn integration screenplay":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn test"
+            endrunspecific = ""
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dit.test="
+            screenplay = True
 
         if testtemplate == "webdriverio mocha":
             testseparator = "|"
@@ -2236,6 +2314,10 @@ def runtestswithappsurify(*args):
                     startrunspecific = sys.argv[k + 1] + endspecificrun
                     #print("fall back command = " + startrunall)
                     #print("prioritized run = " + startrunspecific)
+                if sys.argv[k] == "--endcommand":
+                    endcommand = sys.argv[k + 1]
+                    #print("fall back command = " + startrunall)
+                    #print("prioritized run = " + startrunspecific)
                 # if sys.argv[k] == "--runnewtests":
                 #    runnewtests = sys.argv[k+1]
                 if sys.argv[k] == "--noupload":
@@ -2260,6 +2342,9 @@ def runtestswithappsurify(*args):
             startrunspecific = startrunspecific + endspecificrun
             print("################################################")
             #print("prioritized run = " + startrunspecific)
+
+        if endcommand != "":
+            endrunpostfix = endcommand
         
         if githubactionsvariable != "" and githubactionsvariable is not None:
             executioncommand = (
