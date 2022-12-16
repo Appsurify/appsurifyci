@@ -46,7 +46,7 @@ is_posix = (os.name == 'posix')
 DEBUG = True
 
 def exception_handler(type, value, tb):
-    logging.exception("Uncaught exception: {0}".format(str(value)))
+    logging.exception("Uncaught exception: {0} {1}".format(str(value), str(type)))
 
 
 # Install exception handler
@@ -709,19 +709,25 @@ def get_project_id(base_url, project_name, token):
     url = base_url + '/api/ssh_v2/hook/fetch/?project_name={}'.format(project_name)
     headers = {"Content-Type": "application/json",
                 "token": token}
-    try:
-        session = Session()
-        session.mount('http://', HTTPAdapter(max_retries=3))
-        session.mount('https://', HTTPAdapter(max_retries=3))
-        resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
-        if resp.status_code == 401:
-            logging.debug('Could not verify your token, please check it and try again.')
-            sys.exit(1)
-    except Exception as e:
-        logging.debug('Can\'t not get a connection to the server, please check your url or token and try again.')
-        sys.exit(1)
-    return resp.text
 
+    session = Session()
+    session.mount('http://', HTTPAdapter(max_retries=3))
+    session.mount('https://', HTTPAdapter(max_retries=3))
+
+    resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
+
+    if resp.status_code == 200:
+        return resp.json()
+
+    if resp.status_code == 401:
+        logging.debug('Could not verify your token, please check it and try again.')
+        # sys.exit(1)
+        raise Exception('Could not verify your token, please check it and try again.')
+
+    if resp.status_code != 200:
+        logging.debug('Can\'t not get a connection to the server, please check your url or token and try again.')
+        # sys.exit(1)
+        raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
 
 def get_commit_branch(sha):
     branch_list = list()
@@ -1184,14 +1190,19 @@ if auto_repo_name:
 else:
     REPOSITORY_NAME = repo_name
 
-project_id_data = json.loads(get_project_id(base_url=base_url, project_name=project, token=token))
+
+try:
+    project_id_data = get_project_id(base_url=base_url, project_name=project, token=token)
+except Exception as exc:
+    sys.exit(1)
+
+
 if 'project_id' in project_id_data:
     project_id = project_id_data['project_id']
     url = base_url + '/api/ssh_v2/hook/{}/'.format(project_id)
 elif 'error' in project_id_data:
     logging.debug('Project not found')
     sys.exit(1)
-
 
 
 if __name__ == '__main__':

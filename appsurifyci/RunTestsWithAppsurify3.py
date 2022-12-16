@@ -25,6 +25,7 @@ from shutil import copyfile
 from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
 import time
+from requests.adapters import HTTPAdapter, Retry
 
 try:
     import yaml
@@ -109,7 +110,6 @@ runnewtests = "false"
 weekendrunall = "false"
 newdays = 14
 azurevariablenum = 0
-time = ""
 commandset = ""
 alwaysrun = ""
 alwaysrunset = []
@@ -123,6 +123,8 @@ nopush = "false"
 repo_name = ""
 screenplay = False
 endcommand = ""
+createfiles = ""
+createfilesdirectory = ""
 
 def find(name):
     currentdir = (
@@ -743,8 +745,17 @@ def get_tests(testpriority, retryGetTests=True):
 
     print(params)
     api_url = url + "/api/external/prioritized-tests/"
+
+    s = requests.Session()
+
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+
+    s.mount(url, HTTPAdapter(max_retries=retries))
+
     if proxy == "":
-        response = requests.get(
+        response = s.get(
             url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600
         )
     else:
@@ -753,7 +764,7 @@ def get_tests(testpriority, retryGetTests=True):
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/prioritized-tests/",
                     headers=headers,
                     params=params,
@@ -762,7 +773,7 @@ def get_tests(testpriority, retryGetTests=True):
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/prioritized-tests/",
                     headers=headers,
                     params=params,
@@ -775,7 +786,7 @@ def get_tests(testpriority, retryGetTests=True):
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/prioritized-tests/",
                     headers=headers,
                     params=params,
@@ -784,7 +795,7 @@ def get_tests(testpriority, retryGetTests=True):
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/prioritized-tests/",
                     headers=headers,
                     params=params,
@@ -828,18 +839,24 @@ def get_tests(testpriority, retryGetTests=True):
             )
         )
 
-    if retryGetTests == True:
-        if response.status_code != 200:
-            print("retrying getting prioritized tests")
-            get_tests(origtestpriority, retryGetTests=False)
+    #if retryGetTests == True:
+    #    if response.status_code != 200:
+    #        print("retrying getting prioritized tests")
+    #        get_tests(origtestpriority, retryGetTests=False)
 
     return None
 
 
 def get_and_run_tests(type):
+    global maxtests
     count = 0
     tests = ""
     testset = ""
+    try:
+        oldmaxtests = maxtests
+    except Exception as e: print(e)
+    runcount = 1
+    numplusone = 0
     try:
         testset = get_tests(type)
         count = 0
@@ -856,6 +873,15 @@ def get_and_run_tests(type):
         if type == 9:
             testrunset = list(set(testrunset + alwaysrunset))
 
+        if createfiles.isnumeric():
+            numoftests = len(testrunset)            
+            maxtests = numoftests // int(createfiles) + (numoftests % int(createfiles) > 0)
+            maxtests = numoftests // int(createfiles)
+            numplusone = numoftests % int(createfiles)
+            #this below might not be a good idea :/
+            if maxtests > oldmaxtests:
+                maxtests = oldmaxtests
+                numplusone = 0
         #if testtemplate == "mvn":
         #    testrunset = sorted(testrunset)
         #if screenplay and project == "Campspot":
@@ -891,22 +917,46 @@ def get_and_run_tests(type):
                         #tests = tests + testseparator + prefixtest + testName + postfixtest
                     
                 tests = tests + testseparator + prefixtest + testName + postfixtest
-            
-            if count == maxtests:
-                print("reached max tests")
+            maxtofind = maxtests
+            if runcount <= numplusone:
+                maxtofind = maxtofind + 1
+            if count == maxtofind:
+                #print("reached max tests")
+                if createfiles.isnumeric():
+                    filetosave = "appsurifytests"+str(runcount)+".txt"
+                    #filedirectories doesn't work yet
+                    if createfilesdirectory != "":
+                        #use this so it is relative?
+                        #pathtocreate = os.path.join(getcwd(),createfilesdirectory)
+                        os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
+                        filetosave = os.path.join(createfilesdirectory, filetosave)
+                    f= open(filetosave,"w+")
+                    f.write(tests)
+                    f.close()
                 execute_tests(tests, type)
                 count = 0
                 tests = ""
-                print("restarting test count")
+                #print("restarting test count")
                 failfast_tests()
-
+                runcount = runcount + 1
+        if createfiles.isnumeric():
+            if count != 0:
+                filetosave = "appsurifytests"+str(runcount)+".txt"
+                if createfilesdirectory != "":
+                    os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
+                    filetosave = os.path.join(createfilesdirectory, filetosave)
+                f= open(filetosave,"w+")
+                f.write(tests)
+                f.close()
     except Exception as e:
-        #print(e)
         print("No tests to run")
 
     if tests != "":
         execute_tests(tests, type)
         failfast_tests()
+
+    if createfiles.isnumeric():
+        maxtests = oldmaxtests
 
     return tests
 
@@ -941,6 +991,7 @@ def rerun_tests():
 
 
 def getresults(retryResults = True):
+    global run_id
     print(run_id)
     if run_id == "":
         print("no results")
@@ -954,8 +1005,17 @@ def getresults(retryResults = True):
     params = (("test_run", run_id),)
     print(params)
     print(headers)
+
+    s = requests.Session()
+
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+
+    s.mount(url, HTTPAdapter(max_retries=retries))
+
     if proxy == "":
-        response = requests.get(
+        response = s.get(
             url + "/api/external/output/", headers=headers, params=params, timeout=600
         )
     else:
@@ -964,7 +1024,7 @@ def getresults(retryResults = True):
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -973,7 +1033,7 @@ def getresults(retryResults = True):
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -986,7 +1046,7 @@ def getresults(retryResults = True):
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -995,7 +1055,7 @@ def getresults(retryResults = True):
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.get(
+                response = s.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -1038,11 +1098,11 @@ def getresults(retryResults = True):
             )
         )
     
-    if retryResults == True:
-        if response.status_code != 200:
-            print("retrying getting results")
-            getresults(retryResults=False)
-            return
+    #if retryResults == True:
+    #    if response.status_code != 200:
+    #        print("retrying getting results")
+    #        getresults(retryResults=False)
+    #        return
 
     if resultset["new_defects"] and "newdefects" in fail:
         exit(1)
@@ -1061,6 +1121,7 @@ def getresults(retryResults = True):
 
 
 def push_results():
+    global run_id
     print("pushing results " + reporttype + " " + report)
     if trainer == "true":
         runcommand("trainer")
@@ -1113,6 +1174,7 @@ def push_results():
 
 
 def call_import(filepath, retryImport = True, replaceAscii = False):
+    global run_id
     origfilepath = filepath
     print("importing results")
     print(filepath)
@@ -1250,20 +1312,35 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     print(headers)
     print(payload)
     print(apiurl)
+
+    s = requests.Session()
+
+    retries = Retry(total=3,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+
+    if retryImport == False:
+        retries = Retry(total=3,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+
+    s.mount(url, HTTPAdapter(max_retries=retries))
+
+
     if proxy == "":
-        response = requests.post(apiurl, headers=headers, data=payload, files=files)
+        response = s.post(apiurl, headers=headers, data=payload, files=files)
     else:
         try:
             httpproxy = "http://" + proxy
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.post(
+                response = s.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.post(
+                response = s.post(
                     apiurl,
                     headers=headers,
                     data=payload,
@@ -1276,12 +1353,12 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = requests.post(
+                response = s.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = requests.post(
+                response = s.post(
                     apiurl,
                     headers=headers,
                     data=payload,
@@ -1329,6 +1406,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     if retryImport == True:
         if response.status_code != 200 and response.status_code != 201:
             print("retrying import")
+            time.sleep(5)
             call_import(origfilepath, retryImport=False)
 
 
@@ -1338,8 +1416,8 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, time, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory
     try:    
 
         
@@ -1421,7 +1499,6 @@ def runtestswithappsurify(*args):
         weekendrunall = "false"
         newdays = 14
         azurevariablenum = 0
-        time = ""
         commandset = ""
         alwaysrun = ""
         alwaysrunset = []
@@ -1435,6 +1512,8 @@ def runtestswithappsurify(*args):
         repo_name = ""
         screenplay = False
         endcommand = ""
+        createfiles = ""
+        createfilesdirectory = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1629,6 +1708,7 @@ def runtestswithappsurify(*args):
             endspecificrun = " -Pappsurifytests=\""
             
         #https://jadala-ajay16.medium.com/running-tests-from-command-line-different-options-427a5dadd224
+        #https://maven.apache.org/surefire/maven-surefire-plugin/test-mojo.html
         if testtemplate == "mvn old":
             #testseparator = ","
             testseparator = "+"
@@ -2290,14 +2370,14 @@ def runtestswithappsurify(*args):
                     azurefilteronall = "false"
                 if sys.argv[k] == "--percentage":
                     percentage = sys.argv[k + 1]
+                if sys.argv[k] == "--percent":
+                    percentage = sys.argv[k + 1]
                 if sys.argv[k] == "--weekendrunall":
                     weekendrunall = "true"
                 if sys.argv[k] == "--newdays":
                     newdays = sys.argv[k + 1]
                 if sys.argv[k] == "--azurevariablenum":
                     azurevariablenum = sys.argv[k + 1]
-                if sys.argv[k] == "--time":
-                    time = sys.argv[k + 1]
                 if sys.argv[k] == "--alwaysrun":
                     alwaysrun = sys.argv[k + 1]
                     if alwaysrun.lower() != "none":
@@ -2326,6 +2406,10 @@ def runtestswithappsurify(*args):
                     createpropertiesfile = "true"
                 if sys.argv[k] == "--createfile":
                     createfile = "true"
+                if sys.argv[k] == "--createfiles":
+                    createfiles = sys.argv[k + 1]
+                if sys.argv[k] == "--createfilesdirectory":
+                    createfilesdirectory = sys.argv[k + 1]
                 if sys.argv[k] == "--nopush":
                     nopush = "true"
                 if sys.argv[k] == "--spliton":
@@ -2498,7 +2582,7 @@ def runtestswithappsurify(*args):
         ):
             print("Weekend running all tests")
             testtypes = []
-
+        
         ####start loop
         for i in testtypes:
             # print(("testsrun1 = " + testsrun))
@@ -2506,6 +2590,7 @@ def runtestswithappsurify(*args):
                 testsrun = get_and_run_tests(i) + testsrun
             except Exception as e:
                 print("Error running tests in set")
+                #print(e)
 
         if executetests == "false":
             print("Tests to run")
