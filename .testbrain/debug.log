@@ -1,3 +1,6 @@
 [2022-11-24 22:20:20] INFO     [gittoappsurify:1133] Started syncing commits to https://gmailtwo.dev.appsurify.com
 [2022-11-24 22:20:23] ERROR    [exception_handler:49] Uncaught exception: 'utf-8' codec can't decode byte 0xd1 in position 1180819: invalid continuation byte
 NoneType: None
+[2022-12-16 10:12:36] INFO     [gittoappsurify:1139] Started syncing commits to https://demo.appsurify.com
+[2022-12-16 10:12:40] ERROR    [exception_handler:49] Uncaught exception: 'utf-8' codec can't decode byte 0xd1 in position 1180819: invalid continuation byte <class 'UnicodeDecodeError'>
+NoneType: None

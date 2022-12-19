@@ -125,6 +125,7 @@ screenplay = False
 endcommand = ""
 createfiles = ""
 createfilesdirectory = ""
+maxtime = 60
 
 def find(name):
     currentdir = (
@@ -746,63 +747,73 @@ def get_tests(testpriority, retryGetTests=True):
     print(params)
     api_url = url + "/api/external/prioritized-tests/"
 
-    s = requests.Session()
+    #s = requests.Session()
 
-    retries = Retry(total=5,
-                    backoff_factor=0.1,
-                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+    #retries = Retry(total=3,
+    #                backoff_factor=5,
+    #                status_forcelist=[ 400, 500, 502, 503, 504 ])
 
-    s.mount(url, HTTPAdapter(max_retries=retries))
-
+    #s.mount(url, HTTPAdapter(max_retries=retries))
+    retryCount = 3
     if proxy == "":
-        response = s.get(
-            url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600
-        )
+        try:
+            #response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+            response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+            for x in range(retryCount):
+                timetowait = maxtime/retryCount
+                if response.status_code == 200:
+                    break
+                time.sleep(timetowait)
+                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+        except Exception as e: print(e)
+
     else:
         try:
             httpproxy = "http://" + proxy
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.get(
-                    url + "/api/external/prioritized-tests/",
-                    headers=headers,
-                    params=params,
-                    proxies=proxies,
-                    timeout=600
-                )
+                #response = s.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
+                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.get(
-                    url + "/api/external/prioritized-tests/",
-                    headers=headers,
-                    params=params,
-                    proxies=proxies,
-                    auth=auth,
-                    timeout=600
-                )
+                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
         except:
             httpproxy = proxy
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.get(
-                    url + "/api/external/prioritized-tests/",
-                    headers=headers,
-                    params=params,
-                    proxies=proxies,
-                    timeout=600
-                )
+                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
+                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.get(
-                    url + "/api/external/prioritized-tests/",
-                    headers=headers,
-                    params=params,
-                    proxies=proxies,
-                    auth=auth,
-                    timeout=600
-                )
+                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
     print("request sent to get tests")
     print((response.status_code))
 
@@ -1006,34 +1017,55 @@ def getresults(retryResults = True):
     print(params)
     print(headers)
 
-    s = requests.Session()
+    #s = requests.Session()
 
-    retries = Retry(total=5,
-                    backoff_factor=0.1,
-                    status_forcelist=[ 400, 500, 502, 503, 504 ])
+    #retries = Retry(total=3,
+    #                backoff_factor=5,
+    #                status_forcelist=[ 400, 500, 502, 503, 504 ])
 
-    s.mount(url, HTTPAdapter(max_retries=retries))
-
+    #s.mount(url, HTTPAdapter(max_retries=retries))
+    retryCount = 3
     if proxy == "":
-        response = s.get(
+        
+        response = requests.get(
             url + "/api/external/output/", headers=headers, params=params, timeout=600
         )
+        for x in range(retryCount):
+            timetowait = maxtime/retryCount
+            if response.status_code == 200:
+                break
+            time.sleep(timetowait)
+            response = requests.get(
+                url + "/api/external/output/", headers=headers, params=params, timeout=600
+            )
     else:
         try:
             httpproxy = "http://" + proxy
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.get(
+                response = requests.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
                     proxies=proxies,
                     timeout=600
                 )
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(
+                        url + "/api/external/output/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        timeout=600
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.get(
+                response = requests.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -1041,21 +1073,46 @@ def getresults(retryResults = True):
                     auth=auth,
                     timeout=600
                 )
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(
+                        url + "/api/external/output/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        auth=auth,
+                        timeout=600
+                    )
         except:
             httpproxy = proxy
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.get(
+                response = requests.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
                     proxies=proxies,
                     timeout=600
                 )
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(
+                        url + "/api/external/output/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        timeout=600
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.get(
+                response = requests.get(
                     url + "/api/external/output/",
                     headers=headers,
                     params=params,
@@ -1063,6 +1120,19 @@ def getresults(retryResults = True):
                     auth=auth,
                     timeout=600
                 )
+                for x in range(retryCount):
+                    timetowait = maxtime/retryCount
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.get(
+                        url + "/api/external/output/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        auth=auth,
+                        timeout=600
+                    )
     print("result request sent")
     resultset = ""
     if response.status_code >= 500:
@@ -1313,34 +1383,37 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     print(payload)
     print(apiurl)
 
-    s = requests.Session()
-
-    retries = Retry(total=3,
-                    backoff_factor=0.1,
-                    status_forcelist=[ 400, 500, 502, 503, 504 ])
-
-    if retryImport == False:
-        retries = Retry(total=3,
-                    backoff_factor=0.1,
-                    status_forcelist=[ 400, 500, 502, 503, 504 ])
-
-    s.mount(url, HTTPAdapter(max_retries=retries))
-
-
+    retryCount = 3
+    timetowait = (maxtime/2)/retryCount
     if proxy == "":
-        response = s.post(apiurl, headers=headers, data=payload, files=files)
+        print("here")
+        response = requests.post(apiurl, headers=headers, data=payload, files=files)
+        print("here2")
+        for x in range(retryCount):
+            if response.status_code == 200:
+                break
+            print("here3")
+            time.sleep(timetowait)
+            response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
         try:
             httpproxy = "http://" + proxy
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.post(
+                response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
+                for x in range(retryCount):
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.post(
+                        apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.post(
+                response = requests.post(
                     apiurl,
                     headers=headers,
                     data=payload,
@@ -1348,17 +1421,36 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     proxies=proxies,
                     auth=auth,
                 )
+                for x in range(retryCount):
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                        auth=auth,
+                    )  
         except:
             httpproxy = proxy
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                response = s.post(
+                response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
+                for x in range(retryCount):
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.post(
+                        apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                response = s.post(
+                response = requests.post(
                     apiurl,
                     headers=headers,
                     data=payload,
@@ -1366,6 +1458,18 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     proxies=proxies,
                     auth=auth,
                 )
+                for x in range(retryCount):
+                    if response.status_code == 200:
+                        break
+                    time.sleep(timetowait)
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                        auth=auth,
+                    )
 
     print("file import sent")
     if response.status_code >= 500:
@@ -1417,7 +1521,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxtime
     try:    
 
         
@@ -1514,6 +1618,7 @@ def runtestswithappsurify(*args):
         endcommand = ""
         createfiles = ""
         createfilesdirectory = ""
+        maxtime = 60
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2416,6 +2521,8 @@ def runtestswithappsurify(*args):
                     spliton = sys.argv[k + 1]
                 if sys.argv[k] == "--repo_name":
                     repo_name = sys.argv[k + 1]
+                if sys.argv[k] == "--maxtime":
+                    maxtime = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
