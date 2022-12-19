@@ -125,7 +125,7 @@ screenplay = False
 endcommand = ""
 createfiles = ""
 createfilesdirectory = ""
-maxtime = 60
+maxretrytime = 60
 
 def find(name):
     currentdir = (
@@ -760,7 +760,7 @@ def get_tests(testpriority, retryGetTests=True):
             #response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
             response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
             for x in range(retryCount):
-                timetowait = maxtime/retryCount
+                timetowait = maxretrytime/retryCount
                 if response.status_code == 200:
                     break
                 time.sleep(timetowait)
@@ -776,7 +776,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -786,7 +786,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -799,7 +799,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -809,7 +809,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1031,7 +1031,7 @@ def getresults(retryResults = True):
             url + "/api/external/output/", headers=headers, params=params, timeout=600
         )
         for x in range(retryCount):
-            timetowait = maxtime/retryCount
+            timetowait = maxretrytime/retryCount
             if response.status_code == 200:
                 break
             time.sleep(timetowait)
@@ -1052,7 +1052,7 @@ def getresults(retryResults = True):
                     timeout=600
                 )
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1074,7 +1074,7 @@ def getresults(retryResults = True):
                     timeout=600
                 )
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1099,7 +1099,7 @@ def getresults(retryResults = True):
                     timeout=600
                 )
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1121,7 +1121,7 @@ def getresults(retryResults = True):
                     timeout=600
                 )
                 for x in range(retryCount):
-                    timetowait = maxtime/retryCount
+                    timetowait = maxretrytime/retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1384,7 +1384,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     print(apiurl)
 
     retryCount = 3
-    timetowait = (maxtime/2)/retryCount
+    timetowait = (maxretrytime/2)/retryCount
     if proxy == "":
         response = requests.post(apiurl, headers=headers, data=payload, files=files)
         for x in range(retryCount):
@@ -1518,7 +1518,7 @@ def runtestswithappsurify(*args):
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxtime
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime
     try:    
 
         
@@ -1615,7 +1615,7 @@ def runtestswithappsurify(*args):
         endcommand = ""
         createfiles = ""
         createfilesdirectory = ""
-        maxtime = 60
+        maxretrytime = 60
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2518,8 +2518,8 @@ def runtestswithappsurify(*args):
                     spliton = sys.argv[k + 1]
                 if sys.argv[k] == "--repo_name":
                     repo_name = sys.argv[k + 1]
-                if sys.argv[k] == "--maxtime":
-                    maxtime = sys.argv[k + 1]
+                if sys.argv[k] == "--maxretrytime":
+                    maxretrytime = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
