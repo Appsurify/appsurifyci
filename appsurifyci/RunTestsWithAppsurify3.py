@@ -1386,13 +1386,10 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     retryCount = 3
     timetowait = (maxtime/2)/retryCount
     if proxy == "":
-        print("here")
         response = requests.post(apiurl, headers=headers, data=payload, files=files)
-        print("here2")
         for x in range(retryCount):
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 break
-            print("here3")
             time.sleep(timetowait)
             response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
@@ -1405,7 +1402,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
                 for x in range(retryCount):
-                    if response.status_code == 200:
+                    if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
                     response = requests.post(
@@ -1422,7 +1419,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     auth=auth,
                 )
                 for x in range(retryCount):
-                    if response.status_code == 200:
+                    if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
                     response = requests.post(
@@ -1442,7 +1439,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
                 for x in range(retryCount):
-                    if response.status_code == 200:
+                    if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
                     response = requests.post(
@@ -1459,7 +1456,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     auth=auth,
                 )
                 for x in range(retryCount):
-                    if response.status_code == 200:
+                    if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
                     response = requests.post(
