@@ -26,6 +26,9 @@ from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
 import time
 from requests.adapters import HTTPAdapter, Retry
+import socket
+from urllib3.connection import HTTPConnection
+
 
 try:
     import yaml
@@ -755,16 +758,35 @@ def get_tests(testpriority, retryGetTests=True):
 
     #s.mount(url, HTTPAdapter(max_retries=retries))
     retryCount = 3
+    #HTTPConnection.default_socket_options = (
+    #    HTTPConnection.default_socket_options + [
+    #        (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+    #        (socket.SOL_TCP, socket.TCP_KEEPIDLE, 45),
+    #        (socket.SOL_TCP, socket.TCP_KEEPINTVL, 10),
+    #        (socket.SOL_TCP, socket.TCP_KEEPCNT, 6)
+    #    ]
+    #)
+    response_returned = True
     if proxy == "":
         try:
             #response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
-            response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+            try:
+                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+                response_returned = True
+            except:
+                response_returned = False
             for x in range(retryCount):
                 timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
-                if response.status_code == 200:
-                    break
+                if response_returned:
+                    if response.status_code == 200:
+                        break
+                print("Processing commits")
                 time.sleep(timetowait)
-                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+                try:
+                    response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+                    response_returned = True
+                except:
+                    response_returned = False
         except Exception as e: print(e)
 
     else:

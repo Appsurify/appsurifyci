@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='appsurifyci',
-  version='0.0.96',
+  version='0.0.97',
   description='Package used to run tests using Appsurify',
   long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type='text/markdown',
