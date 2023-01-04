@@ -760,7 +760,7 @@ def get_tests(testpriority, retryGetTests=True):
             #response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
             response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
             for x in range(retryCount):
-                timetowait = maxretrytime/retryCount
+                timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
                 if response.status_code == 200:
                     break
                 time.sleep(timetowait)
@@ -776,7 +776,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -786,7 +786,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -799,7 +799,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -809,7 +809,7 @@ def get_tests(testpriority, retryGetTests=True):
                 #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -833,7 +833,7 @@ def get_tests(testpriority, retryGetTests=True):
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
         return None
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request".format(response.status_code)))
+        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
         return None
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
@@ -1151,7 +1151,7 @@ def getresults(retryResults = True):
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
         return None
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request".format(response.status_code)))
+        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
         return None
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
@@ -1487,7 +1487,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     elif response.status_code == 401:
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request".format(response.status_code)))
+        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
     elif response.status_code == 200 or response.status_code == 201:
