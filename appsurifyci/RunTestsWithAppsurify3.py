@@ -111,6 +111,7 @@ percentage = ""
 endspecificrun = ""
 runnewtests = "false"
 weekendrunall = "false"
+daysrunall = ""
 newdays = 14
 azurevariablenum = 0
 commandset = ""
@@ -129,6 +130,8 @@ endcommand = ""
 createfiles = ""
 createfilesdirectory = ""
 maxretrytime = 60
+testsetnum = ""
+numtestsets = ""
 
 def find(name):
     currentdir = (
@@ -757,7 +760,7 @@ def get_tests(testpriority, retryGetTests=True):
     #                status_forcelist=[ 400, 500, 502, 503, 504 ])
 
     #s.mount(url, HTTPAdapter(max_retries=retries))
-    retryCount = 3
+    retryCount = 6
     #HTTPConnection.default_socket_options = (
     #    HTTPConnection.default_socket_options + [
     #        (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
@@ -776,7 +779,7 @@ def get_tests(testpriority, retryGetTests=True):
             except:
                 response_returned = False
             for x in range(retryCount):
-                timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
+                timetowait = maxretrytime*1.5/retryCount + maxretrytime*1.5/retryCount*x
                 if response_returned:
                     if response.status_code == 200:
                         break
@@ -923,6 +926,22 @@ def get_and_run_tests(type):
         #    tests = "e2e.tests.EditWorkflowTest#datesChange"
         for testName in testrunset:
             count = count + 1
+
+            if testtemplate == "cypress circleci":
+                circlecisplitstring = "\""
+                if testName.endswith(circlecisplitstring):
+                    testName = testName[0:-len(circlecisplitstring)]
+                if circlecisplitstring in testName:
+                    testName = testName.split(circlecisplitstring)[-1]
+
+                circlecisplitstring = "&quot;"
+                if testName.endswith(circlecisplitstring):
+                    testName = testName[0:-len(circlecisplitstring)]
+                if circlecisplitstring in testName:
+                    testName = testName.split(circlecisplitstring)[-1]
+                    
+                testName = testName.strip()
+
             if encodetests == "true":
                 testName = testName.encode("unicode_escape").decode()
                 testName = testName.replace("\\", "\\\\")
@@ -1539,8 +1558,9 @@ def runtestswithappsurify(*args):
     global commit, scriptlocation, branch, runfrequency, fromcommit, repository, scriptlocation, generatefile, template, addtestsuitename, addclassname, runtemplate, testsuitesnameseparator
     global testtemplate, classnameseparator, testseparatorend, testtemplatearg1, testtemplatearg2, testtemplatearg3, testtemplatearg4, startrunpostfix, endrunprefix
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
-    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
-    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime
+    global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
+    global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
+    global numtestsets
     try:    
 
         
@@ -1620,6 +1640,7 @@ def runtestswithappsurify(*args):
         endspecificrun = ""
         runnewtests = "false"
         weekendrunall = "false"
+        daysrunall = ""
         newdays = 14
         azurevariablenum = 0
         commandset = ""
@@ -1638,6 +1659,8 @@ def runtestswithappsurify(*args):
         createfiles = ""
         createfilesdirectory = ""
         maxretrytime = 60
+        testset = ""
+        numtestsets = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2048,6 +2071,19 @@ def runtestswithappsurify(*args):
         # cypress run --reporter junit --reporter-options mochaFile=result.xml
         # updated to https://github.com/cypress-io/cypress-grep
         if testtemplate == "cypress":
+            testseparator = "; "
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' --env grep="'
+
+        if testtemplate == "cypress circleci":
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
@@ -2498,6 +2534,8 @@ def runtestswithappsurify(*args):
                     percentage = sys.argv[k + 1]
                 if sys.argv[k] == "--weekendrunall":
                     weekendrunall = "true"
+                if sys.argv[k] == "--daysrunall":
+                    daysrunall = sys.argv[k + 1].lower()
                 if sys.argv[k] == "--newdays":
                     newdays = sys.argv[k + 1]
                 if sys.argv[k] == "--azurevariablenum":
@@ -2542,6 +2580,10 @@ def runtestswithappsurify(*args):
                     repo_name = sys.argv[k + 1]
                 if sys.argv[k] == "--maxretrytime":
                     maxretrytime = sys.argv[k + 1]
+                if sys.argv[k] == "--testsetnum":
+                    testsetnum = sys.argv[k + 1]
+                if sys.argv[k] == "--numtestsets":
+                    numtestsets = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -2708,6 +2750,30 @@ def runtestswithappsurify(*args):
         ):
             print("Weekend running all tests")
             testtypes = []
+
+        daysofweek = {0:"monday", 1:"tuesday", 2:"wednesday", 3:"thursday", 4:"friday", 5:"saturday", 6:"sunday"}
+        day = daysofweek[weekno]
+        runningallday = False
+        if daysrunall != "":
+            for runfullday in daysrunall.split(','):
+                if (
+                    teststorun != "all"
+                    and teststorun != "none"
+                    and (runfullday in day or day in runfullday)
+                ):
+                    print("Running all tests as we are on "+ day)
+                    testtypes = []
+                    runningallday = True
+            
+            if not runningallday:
+                if (
+                    teststorun != "all"
+                    and teststorun != "none"
+                    and day in daysrunall
+                ):
+                    print("Running all tests as we are on "+ day)
+                    testtypes = []
+                    runningallday = True
         
         ####start loop
         for i in testtypes:
