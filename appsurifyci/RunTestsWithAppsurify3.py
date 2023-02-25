@@ -941,6 +941,8 @@ def get_and_run_tests(type):
                     testName = testName.split(circlecisplitstring)[-1]
                     
                 testName = testName.strip()
+            if "cypress" in testtemplate:
+                testName = max(testName.split(","), key=len).strip()
 
             if encodetests == "true":
                 testName = testName.encode("unicode_escape").decode()
