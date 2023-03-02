@@ -1,5 +1,5 @@
-testName = "asdf,aadsafsdg, asdfgh, asdf,aadsaf  sdg"
-testtemplate = "cypress"
-if "cypress" in testtemplate:
-    testName = max(testName.split(","), key=len).strip()
-print(testName)
+azurefilter = "asdf&asdf&Batch1"
+
+if azurefilter[0:-1].endswith("Batch"):
+    azurefilter = azurefilter[0:-7]
+print(azurefilter)

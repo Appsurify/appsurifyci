@@ -133,6 +133,7 @@ maxretrytime = 60
 testsetnum = ""
 numtestsets = ""
 
+
 def find(name):
     currentdir = (
         os.getcwd()
@@ -1663,6 +1664,7 @@ def runtestswithappsurify(*args):
         maxretrytime = 60
         testset = ""
         numtestsets = ""
+        testsetnum = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2814,7 +2816,11 @@ def runtestswithappsurify(*args):
         # print("tests " + os.environ.get('TESTSTORUN'))
         # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
         if "azure" in testtemplate:
+            
             max_length = 28000
+
+                            
+
             variable_num = 1
 
             if runnewtests != "false" and runnewtests != "true":
@@ -2868,6 +2874,17 @@ def runtestswithappsurify(*args):
                         i = i + 1
                 percentage = old_percentage
                 execute_tests(newtestset, 11)
+
+            if numtestsets != "" and numtestsets != "1" and numtestsets != 1:
+                try:
+                    numtestsets = int(numtestsets)
+                    testlength = len(testsrun)
+                    new_max_length = int(testlength / numtestsets) + (testlength % numtestsets > 0)
+                    #print("new max length = "+ str(new_max_length))
+                    if new_max_length <= max_length:
+                        max_length = new_max_length + 50
+                except Exception as e:
+                    print(e)
             if len(testsrun) == 0 or testsrun == "all":
                 print("no tests to set for azure")
                 if azurefilteronall == "false":
@@ -2894,6 +2911,8 @@ def runtestswithappsurify(*args):
             else:
                 azurealwaysruntestsformatted = get_always_tests_azure()
                 print("running subset of azure tests")
+                if azurefilter[0:-1].endswith("Batch") and azurevariablenum!="" and numtestsets != "":
+                    azurefilter = azurefilter[0:-7]
                 if azurefilter != "":
                     if (
                         azurefilter.endswith("&") is False
