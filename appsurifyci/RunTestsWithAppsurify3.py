@@ -2297,16 +2297,27 @@ def runtestswithappsurify(*args):
             endspecificrun = " -Dtest="
 
         #add reporter - https://playwright.dev/docs/test-reporters
+        #if testtemplate == "playwright python":
+        #    testseparator = "|"
+        #    reporttype = "file"
+        #    report = "test-results.xml"
+        #    startrunspecific = "playwright test "
+        #    endrunspecific = "'"
+        #    postfixtest = "$"
+        #    prefixtest = "^"
+        #    startrunall = "playwright test "
+        #    endspecificrun = " -g '"
+
+        # pytest
+        # https://stackoverflow.com/questions/36456920/is-there-a-way-to-specify-which-pytest-tests-to-run-from-a-file
         if testtemplate == "playwright python":
-            testseparator = "|"
+            testseparator = " or "
             reporttype = "file"
             report = "test-results.xml"
-            startrunspecific = "playwright test "
+            startrunspecific = "python -m pytest --junitxml=test-results.xml"
             endrunspecific = "'"
-            postfixtest = "$"
-            prefixtest = "^"
-            startrunall = "playwright test "
-            endspecificrun = " -g '"
+            startrunall = "python -m pytest --junitxml=test-results.xml"
+            endspecificrun = " -k '"
 
         # tosca
         # https://support.tricentis.com/community/article.do?number=KB0013693
