@@ -976,8 +976,11 @@ def get_and_run_tests(type):
                         testName = ""
                 except:
                     testName = ""
-            if count == 1 and testName != "":
-                tests = prefixtest + testName + postfixtest
+            if count == 1:
+                if  testName != "":
+                    tests = prefixtest + testName + postfixtest
+                else:
+                    count = 0
             else:
                 #if testtemplate == "mvn":
                     #if tests.split(testseparator)[-1].split(testsuitesnameseparator)[0] == testName.split(testsuitesnameseparator)[0]:
@@ -2843,7 +2846,11 @@ def runtestswithappsurify(*args):
             # os.environ["TESTSTORUN"] = "*"
 
         if createfile == "true":
-            f= open("appsurifytests.txt","w+")
+            filetosave = "appsurifytests.txt"
+            if createfilesdirectory != "":
+                os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
+                filetosave = os.path.join(createfilesdirectory, filetosave)
+            f= open(filetosave,"w+")
             f.write(testsrun)
             f.close()
 
