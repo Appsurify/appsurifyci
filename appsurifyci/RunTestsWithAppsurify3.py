@@ -132,6 +132,7 @@ createfilesdirectory = ""
 maxretrytime = 60
 testsetnum = ""
 numtestsets = ""
+filenames = ""
 
 
 def find(name):
@@ -750,6 +751,10 @@ def get_tests(testpriority, retryGetTests=True):
     if repo_name != "":
         params["repo_name"] = repo_name
 
+    if filenames == "True":
+        params["filename"] = "True"
+        params["filename_separator"] = "#"
+
 
     print(params)
     api_url = url + "/api/external/prioritized-tests/"
@@ -906,10 +911,8 @@ def get_and_run_tests(type):
         for element in testset:
             testName = element["name"]
             testrunset.append(testName)
-
         if type == 9:
             testrunset = list(set(testrunset + alwaysrunset))
-
         if createfiles.isnumeric():
             numoftests = len(testrunset)            
             maxtests = numoftests // int(createfiles) + (numoftests % int(createfiles) > 0)
@@ -927,7 +930,6 @@ def get_and_run_tests(type):
         #    tests = "e2e.tests.EditWorkflowTest#datesChange"
         for testName in testrunset:
             count = count + 1
-
             if testtemplate == "cypress circleci":
                 circlecisplitstring = "\""
                 if testName.endswith(circlecisplitstring):
@@ -962,7 +964,19 @@ def get_and_run_tests(type):
                 testName = testName.split("(Actor)")[0]
             if spliton != "false" and spliton != "":
                 testName = testName.split(spliton)[0]
-            if count == 1:
+            if filenames == "True":
+                try:
+                    if "#" in testName:
+                        testName = testName.split("#")[0]
+                        if testName in tests:
+                            testName = ""
+                        if "." not in testName:
+                            testName = ""
+                    else:
+                        testName = ""
+                except:
+                    testName = ""
+            if count == 1 and testName != "":
                 tests = prefixtest + testName + postfixtest
             else:
                 #if testtemplate == "mvn":
@@ -970,8 +984,8 @@ def get_and_run_tests(type):
                         #tests = tests + "+" + testName.split(testsuitesnameseparator)[1]
                     #else:
                         #tests = tests + testseparator + prefixtest + testName + postfixtest
-                    
-                tests = tests + testseparator + prefixtest + testName + postfixtest
+                if testName != "":    
+                    tests = tests + testseparator + prefixtest + testName + postfixtest
             maxtofind = maxtests
             if runcount <= numplusone:
                 maxtofind = maxtofind + 1
@@ -1563,7 +1577,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets
+    global numtestsets, filenames
     try:    
 
         
@@ -1665,6 +1679,7 @@ def runtestswithappsurify(*args):
         testset = ""
         numtestsets = ""
         testsetnum = ""
+        filenames = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1694,6 +1709,8 @@ def runtestswithappsurify(*args):
                     testtemplatearg3 = sys.argv[k + 1]
                 if sys.argv[k] == "--testtemplatearg4":
                     testtemplatearg4 = sys.argv[k + 1]
+                if sys.argv[k] == "--filenames":
+                    filenames = "True"
 
         #####Test Run Templates######
 
@@ -2400,6 +2417,15 @@ def runtestswithappsurify(*args):
             )
             generatefile = "opentest"
 
+        if filenames == "True":
+            addtestsuitename = "false"
+            addclassname = "false"
+            testsuitesnameseparator = ""
+            classnameseparator = ""
+            testseparator = ","
+            prefixtest = ""
+            postfixtest = ""
+
         # Todo
         # mstest
         # nunit
@@ -2599,6 +2625,8 @@ def runtestswithappsurify(*args):
                     testsetnum = sys.argv[k + 1]
                 if sys.argv[k] == "--numtestsets":
                     numtestsets = sys.argv[k + 1]
+                if sys.argv[k] == "--filenames":
+                    filenames = "True"
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -2922,8 +2950,8 @@ def runtestswithappsurify(*args):
             else:
                 azurealwaysruntestsformatted = get_always_tests_azure()
                 print("running subset of azure tests")
-                if azurefilter[0:-1].endswith("Batch") and azurevariablenum!="" and numtestsets != "":
-                    azurefilter = azurefilter[0:-7]
+                if azurefilter[0:-1].endswith("TestCategory=Batch") and azurevariablenum!="" and numtestsets != "":
+                    azurefilter = azurefilter[0:-19]
                 if azurefilter != "":
                     if (
                         azurefilter.endswith("&") is False
