@@ -712,8 +712,12 @@ def get_project_id(base_url, project_name, token):
     session = Session()
     session.mount('http://', HTTPAdapter(max_retries=3))
     session.mount('https://', HTTPAdapter(max_retries=3))
-
-    resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
+    try:
+        resp = session.get(url=url, headers=headers, verify=False, allow_redirects=True)
+    except Exception as exc:
+        logging.debug("Unable to get project id '{}' exist in branches: '{}'".format(type(exc), str(exc)))
+        raise Exception("Unable to get project id '{}' exist in branches: '{}'".format(type(exc), str(exc)))
+        
     if resp.status_code == 200:
         return resp.json()
     if resp.status_code == 401:
@@ -725,6 +729,7 @@ def get_project_id(base_url, project_name, token):
         logging.debug('Can\'t not get a connection to the server, please check your url or token and try again. Http status {}'.format(resp.status_code))
         # sys.exit(1)
         raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
+    
 
 def get_commit_branch(sha):
     branch_list = list()
