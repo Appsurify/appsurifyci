@@ -657,8 +657,8 @@ def _parse_person(text):
 def execute(commandLine):
     process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    out = process.stdout.read().strip().decode("UTF-8")
-    error = process.stderr.read().strip().decode("UTF-8")
+    out = process.stdout.read().strip().decode("UTF-8", errors='ignore')
+    error = process.stderr.read().strip().decode("UTF-8", errors='ignore')
 
     if error:
         process.kill()
