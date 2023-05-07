@@ -46,7 +46,7 @@ is_posix = (os.name == 'posix')
 DEBUG = True
 
 def exception_handler(type, value, tb):
-    logging.exception("Uncaught exception: {0} {1}".format(str(value), str(type)))
+    logging.exception("Uncaught exception: {0} {1} - Line : {2} ".format(str(value), str(type),str(tb.tb_lineno)))
 
 
 # Install exception handler
@@ -697,8 +697,12 @@ def request(url, token, data, event):
         resp = session.post(url=url, data=data, headers=headers, verify=False, allow_redirects=True)
         result = (resp.status_code, resp.reason)
         if resp.status_code == 401:
-            logging.debug('Could not verify, please check it and try again.')
+            logging.info('Could not verify, please check it and try again.')
             sys.exit(1)
+        if resp.status_code != 200:
+            logging.info('Can\'t not get a connection to the server, please check your url or token and try again. Http status {}.  Reason {}'.format(resp.status_code, resp.reason))
+            sys.exit(1)
+            #raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
     except Exception as e:
         logging.debug('Can\'t not get a connection to the server, please check your url try again.')
         result = (None, None)
@@ -722,13 +726,13 @@ def get_project_id(base_url, project_name, token):
         return resp.json()
     if resp.status_code == 401:
         logging.debug('Could not verify your token, please check it and try again.')
-        # sys.exit(1)
-        raise Exception('Could not verify your token, please check it and try again.')
+        sys.exit(1)
+        #raise Exception('Could not verify your token, please check it and try again.')
 
     if resp.status_code != 200:
-        logging.debug('Can\'t not get a connection to the server, please check your url or token and try again. Http status {}'.format(resp.status_code))
-        # sys.exit(1)
-        raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
+        logging.info('Can\'t not get a connection to the server, please check your url or token and try again. Http status {}.  Reason {}'.format(resp.status_code, resp.reason))
+        sys.exit(1)
+        #raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
     
 
 def get_commit_branch(sha):

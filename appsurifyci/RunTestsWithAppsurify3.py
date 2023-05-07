@@ -1877,6 +1877,18 @@ def runtestswithappsurify(*args):
             deletereports = "false"
             endrunspecific = "\""
             endspecificrun = " -Pappsurifytests=\""
+
+        if testtemplate == "testcafe":
+            testseparator = ","
+            addtestsuitename = "true"
+            testsuitesnameseparator = "#"
+            startrunspecific = "mvn test"
+            endrunspecific = ""
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = " -Dtest="
             
         #https://jadala-ajay16.medium.com/running-tests-from-command-line-different-options-427a5dadd224
         #https://maven.apache.org/surefire/maven-surefire-plugin/test-mojo.html
