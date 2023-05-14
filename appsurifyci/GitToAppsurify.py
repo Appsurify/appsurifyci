@@ -11,6 +11,7 @@ import os
 import threading
 import logging.config
 import datetime
+import shlex
 from collections import defaultdict
 
 
@@ -655,7 +656,25 @@ def _parse_person(text):
 
 
 def execute(commandLine):
-    process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins1":
+        commandLine = "\"" + commandLine + "\""
+        process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins2":
+        #commandLine = "\"" + commandLine + "\""
+        process = subprocess.run(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins4":
+        process = subprocess.run(*shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins3":
+        commandLine = "powershell \"" + commandLine + "\""
+        process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins5":
+        #commandLine = "powershell \"" + commandLine + "\""
+        process = subprocess.Popen(commandLine, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)        
+    if execution_type == "jenkins6":
+        #commandLine = "powershell \"" + commandLine + "\""
+        process = subprocess.run(*shlex.split(commandLine), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)        
+    else:
+        process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     out = process.stdout.read().strip().decode("UTF-8", errors='ignore')
     error = process.stderr.read().strip().decode("UTF-8", errors='ignore')
@@ -1175,6 +1194,8 @@ parser.add_argument('--repo_name', type=str, required=False, default='',
                     help='Define repository name')
 parser.add_argument('--auto_repo_name', action='store_true', default=False,
                     help='Use Git remote as repository name.')
+parser.add_argument('--execution_type', type=str, required=False, default='default',
+                    help='Execution modification')
 
 args = parser.parse_args()
 base_url = args.url.rstrip('/')
@@ -1185,6 +1206,8 @@ number = args.number if args.number else 100
 branch = args.branch
 blame = args.blame
 debug = args.debug
+execution_type = args.execution_type
+
 if debug:
     logging.info('Setting debug')
     logging.getLogger().setLevel(logging.DEBUG)
@@ -1200,6 +1223,7 @@ else:
     REPOSITORY_NAME = repo_name
 logging.debug('Finding project id')
 
+
 try:
     project_id_data = get_project_id(base_url=base_url, project_name=project, token=token)
 except Exception as exc:
@@ -1212,7 +1236,6 @@ if 'project_id' in project_id_data:
 elif 'error' in project_id_data:
     logging.debug('Project not found')
     sys.exit(1)
-
 
 if __name__ == '__main__':
     gittoappsurify()
