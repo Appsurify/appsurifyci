@@ -657,22 +657,21 @@ def _parse_person(text):
 
 def execute(commandLine):
     if execution_type == "jenkins1":
-        commandLine = "\"" + commandLine + "\""
+        commandLine = commandLine.replace('%', '%%') 
         process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if execution_type == "jenkins2":
-        #commandLine = "\"" + commandLine + "\""
+        commandLine = commandLine.replace('%', '%%')
         process = subprocess.run(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if execution_type == "jenkins4":
-        process = subprocess.run(*shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if execution_type == "jenkins3":
-        commandLine = "powershell \"" + commandLine + "\""
-        process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if execution_type == "jenkins4":
+        process = subprocess.run(shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if execution_type == "jenkins5":
-        #commandLine = "powershell \"" + commandLine + "\""
-        process = subprocess.Popen(commandLine, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)        
+        commandLine = commandLine.replace('%', '%%') 
+        process = subprocess.Popen(shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if execution_type == "jenkins6":
-        #commandLine = "powershell \"" + commandLine + "\""
-        process = subprocess.run(*shlex.split(commandLine), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)        
+        commandLine = commandLine.replace('%', '%%') 
+        process = subprocess.run(shlex.split(commandLine), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)     
     else:
         process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
