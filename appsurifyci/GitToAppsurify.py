@@ -100,7 +100,13 @@ logging.config.dictConfig(LOGGING_CONFIG)
 
 COMMAND_GET_ALL_COMMITS_SHA = "git log --pretty=format:%H {} --"
 COMMAND_GET_ALL_COMMITS_SHA_JENKINS = "git log --pretty=format:%%H {} --"
-COMMAND_COMMIT = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%nAuthor:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%nMessage:\t%s%n' {}"
+
+# Divide into smaller commands
+COMMAND_COMMIT_COMMIT_INFO = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%n' {}"
+COMMAND_COMMIT_PERSON_INFO = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Author:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%n' {}"
+COMMAND_COMMIT_MSG = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Message:\t%s%n' {}"
+
+# COMMAND_COMMIT = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%nAuthor:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%nMessage:\t%s%n' {}"
 COMMAND_COMMIT_BRANCH = "git branch --contains {}"
 COMMAND_COMMIT_FILE_BLAME = "git blame {}^ -L {},{} -- {}"
 COMMAND_COMMIT_FILE_BLAME_FIX = "git log --pretty=%H -1 {}^ -- {}"
@@ -112,9 +118,21 @@ COMMIT_COUNT = 10
 
 # PATTERNS
 RE_OCTAL_BYTE = re.compile(r"""\\\\([0-9]{3})""")
-RE_COMMIT_HEADER = re.compile(
-    r"""^Commit:\t(?P<sha>[0-9A-Fa-f]+)\nDate:\t(?P<date>.*)\nTree:\t(?P<tree>[0-9A-Fa-f]+)\nParents:\t(?P<parents>.*)\nAuthor:\t(?P<author>.*)\nCommitter:\t(?P<committer>.*)\nMessage:\t(?P<message>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
+# RE_COMMIT_HEADER = re.compile(
+#     r"""^Commit:\t(?P<sha>[0-9A-Fa-f]+)\nDate:\t(?P<date>.*)\nTree:\t(?P<tree>[0-9A-Fa-f]+)\nParents:\t(?P<parents>.*)\nAuthor:\t(?P<author>.*)\nCommitter:\t(?P<committer>.*)\nMessage:\t(?P<message>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
+#     re.VERBOSE | re.MULTILINE)
+
+# New regex for smaller commands
+RE_COMMIT_HEADER_COMMIT_INFO = re.compile(
+    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\s*(?P<parents>.*)\n\s*""",
     re.VERBOSE | re.MULTILINE)
+RE_COMMIT_HEADER_COMMIT_PERSON = re.compile(
+    r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)\n\s*""",
+    re.VERBOSE | re.MULTILINE)
+RE_COMMIT_HEADER_MSG = re.compile(
+    r"""^Message:\s*(?P<message>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
+    re.VERBOSE | re.MULTILINE)
+
 RE_COMMIT_DIFF = re.compile(
     r"""^diff[ ]--git[ ](?P<a_path_fallback>"?a/.+?"?)[ ](?P<b_path_fallback>"?b/.+?"?)\n(?:^old[ ]mode[ ](?P<old_mode>\d+)\n^new[ ]mode[ ](?P<new_mode>\d+)(?:\n|$))?(?:^similarity[ ]index[ ]\d+%\n^rename[ ]from[ ](?P<rename_from>.*)\n^rename[ ]to[ ](?P<rename_to>.*)(?:\n|$))?(?:^new[ ]file[ ]mode[ ](?P<new_file_mode>.+)(?:\n|$))?(?:^deleted[ ]file[ ]mode[ ](?P<deleted_file_mode>.+)(?:\n|$))?(?:^index[ ](?P<a_blob_id>[0-9A-Fa-f]+)\.\.(?P<b_blob_id>[0-9A-Fa-f]+)[ ]?(?P<b_mode>.+)?(?:\n|$))?(?:^---[ ](?P<a_path>[^\t\n\r\f\v]*)[\t\r\f\v]*(?:\n|$))?(?:^\+\+\+[ ](?P<b_path>[^\t\n\r\f\v]*)[\t\r\f\v]*(?:\n|$))?""",
     re.VERBOSE | re.MULTILINE)
@@ -840,31 +858,51 @@ def get_file_tree():
 
 def get_parent_commit(sha_parent, blame=False):
     try:
-        commit_cmd = COMMAND_COMMIT.format(sha_parent)
+        # Get commit, parents
+        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
-
+        logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
 
-        commit_header = RE_COMMIT_HEADER.findall(output)[0]
+        commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
-
         sha, \
         date, \
         tree, \
-        parents, \
-        author, \
-        committer, \
-        message, \
-        file_stats, \
-        file_numstats, \
-        patch = commit_header
+        parents = commit_info
 
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
 
+        # Get person involve commit info
+        commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+
+        logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+        commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
+    
+        author, \
+        committer = commit_person
+
         author = _parse_person(author)
         committer = _parse_person(committer)
+        
+        # Get commit message info
+        commit_cmd = COMMAND_COMMIT_MSG.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+        logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+        commit_msg = RE_COMMIT_HEADER_MSG.findall(output)[0]
+
+        message, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_msg
+        commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
 
         commit = dict(
             sha=sha,
@@ -1046,27 +1084,57 @@ def get_commit_file_blame(filename, sha, patch, ignore=True):
 
 def get_commit(sha, blame=False):
     try:
-        commit_cmd = COMMAND_COMMIT.format(sha)
+        # Get commit, parents
+        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
-            commit_cmd = commit_cmd.replace('\t', '%x09')
-        logging.debug('Commit command {}'.format(commit_cmd))
+    
+        logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
-        logging.debug('Output {}'.format(output))
-        commit_header = RE_COMMIT_HEADER.findall(output)[0]
-        logging.debug('Commit Header {}'.format(commit_header))
+        logging.debug('Output commit info {}'.format(output))
+
+        commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
-        logging.debug('Commit Stats {}'.format(commit_numstats))
         sha, \
         date, \
         tree, \
-        parents, \
+        parents = commit_info
+
+        date = date.split(" ")
+        date = "{}T{}{}".format(date[0], date[1], date[2])
+
+        # Get person involve commit info
+        commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+
+        logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+
+        logging.debug('Output person involve commit info {}'.format(output))
+
+        commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
+    
         author, \
-        committer, \
+        committer = commit_person
+
+        author = _parse_person(author)
+        committer = _parse_person(committer)
+        
+        # Get commit message info
+        commit_cmd = COMMAND_COMMIT_MSG.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+        logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+        logging.debug('Output commit message info {}'.format(output))
+        commit_msg = RE_COMMIT_HEADER_MSG.findall(output)[0]
+
         message, \
         file_stats, \
         file_numstats, \
-        patch = commit_header
+        patch = commit_msg
+        commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
 
         sha_parent_list = [parent_sha for parent_sha in parents.split(" ") if parent_sha]
         logging.debug('sha_parent_list {}'.format(sha_parent_list))
