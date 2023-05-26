@@ -1085,9 +1085,10 @@ def get_commit_file_blame(filename, sha, patch, ignore=True):
 def get_commit(sha, blame=False):
     try:
         # Get commit, parents
-        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
+        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
     
         logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
@@ -1099,14 +1100,15 @@ def get_commit(sha, blame=False):
         date, \
         tree, \
         parents = commit_info
-
+        logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
 
         # Get person involve commit info
-        commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha_parent)
+        commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
 
         logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
@@ -1122,7 +1124,7 @@ def get_commit(sha, blame=False):
         committer = _parse_person(committer)
         
         # Get commit message info
-        commit_cmd = COMMAND_COMMIT_MSG.format(sha_parent)
+        commit_cmd = COMMAND_COMMIT_MSG.format(sha)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
         logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
