@@ -124,10 +124,10 @@ RE_OCTAL_BYTE = re.compile(r"""\\\\([0-9]{3})""")
 
 # New regex for smaller commands
 RE_COMMIT_HEADER_COMMIT_INFO = re.compile(
-    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\s*(?P<parents>.*)\n\s*""",
+    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\t(?P<parents>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
 RE_COMMIT_HEADER_COMMIT_PERSON = re.compile(
-    r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)\n\s*""",
+    r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
 RE_COMMIT_HEADER_MSG = re.compile(
     r"""^Message:\s*(?P<message>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
@@ -769,6 +769,7 @@ def request(url, token, data, event):
 def get_project_id(base_url, project_name, token):
     try:
         url = base_url + '/api/ssh_v2/hook/fetch/?project_name={}'.format(project_name)
+        print(url)
         headers = {"Content-Type": "application/json",
                     "token": token}
         session = Session()
@@ -862,16 +863,23 @@ def get_parent_commit(sha_parent, blame=False):
         commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
+    
         logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
+        logging.debug('Output commit info {}'.format(output))
 
         commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+        logging.debug('Output info regex {}'.format(commit_info))
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
         sha, \
         date, \
         tree, \
-        parents = commit_info
-
+        parents,\
+        file_stats, \
+        file_numstats, \
+        patch= commit_info
+        logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
 
@@ -879,13 +887,20 @@ def get_parent_commit(sha_parent, blame=False):
         commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha_parent)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
 
         logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
+
+        logging.debug('Output person involve commit info {}'.format(output))
+
         commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
-    
+        logging.debug('Output person regex {}'.format(commit_person))
         author, \
-        committer = commit_person
+        committer, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_person
 
         author = _parse_person(author)
         committer = _parse_person(committer)
@@ -896,7 +911,9 @@ def get_parent_commit(sha_parent, blame=False):
             commit_cmd = commit_cmd.replace('\'', '\"')
         logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
         output = execute(commit_cmd)
+        logging.debug('Output commit message info {}'.format(output))
         commit_msg = RE_COMMIT_HEADER_MSG.findall(output)[0]
+        logging.debug('Output msg regex {}'.format(commit_msg))
 
         message, \
         file_stats, \
@@ -1095,11 +1112,15 @@ def get_commit(sha, blame=False):
         logging.debug('Output commit info {}'.format(output))
 
         commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
         sha, \
         date, \
         tree, \
-        parents = commit_info
+        parents,\
+        file_stats, \
+        file_numstats, \
+        patch= commit_info
         logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
@@ -1116,9 +1137,12 @@ def get_commit(sha, blame=False):
         logging.debug('Output person involve commit info {}'.format(output))
 
         commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
-    
+
         author, \
-        committer = commit_person
+        committer, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_person
 
         author = _parse_person(author)
         committer = _parse_person(committer)
@@ -1145,13 +1169,6 @@ def get_commit(sha, blame=False):
             parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
             parent_commits.append(parent_commit)
         logging.debug('parent_commits {}'.format(parent_commits))
-        date = date.split(" ")
-        date = "{}T{}{}".format(date[0], date[1], date[2])
-
-        author = _parse_person(author)
-        logging.debug('author {}'.format(author))
-        committer = _parse_person(committer)
-        logging.debug('committer {}'.format(committer))
 
         commit = dict(
             sha=sha,
@@ -1306,8 +1323,8 @@ def gittoappsurify():
 
 # example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript"
 # --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA"
-# --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 
+# --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
 
 parser.add_argument('--url', type=str, required=True,
