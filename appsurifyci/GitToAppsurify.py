@@ -124,10 +124,10 @@ RE_OCTAL_BYTE = re.compile(r"""\\\\([0-9]{3})""")
 
 # New regex for smaller commands
 RE_COMMIT_HEADER_COMMIT_INFO = re.compile(
-    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\s*(?P<parents>[^\n:]*)""",
+    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\t(?P<parents>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
 RE_COMMIT_HEADER_COMMIT_PERSON = re.compile(
-    r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)\n\s*""",
+    r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
 RE_COMMIT_HEADER_MSG = re.compile(
     r"""^Message:\s*(?P<message>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
@@ -298,7 +298,7 @@ def parse_repo_url(url, check_domain=True):
 
         # Empty if none matched
     except Exception as ex:
-        print(ex)
+        print("parse_repo_url",ex)
         sys.exit(1)
     return parsed_info
 
@@ -430,7 +430,7 @@ def get_repo_name(dflt='UNKNOWN'):
         logging.debug("REPO_NAME: {}".format(repo_name))
         repo_name = repo_name.replace(".git", "")
     except Exception as ex:
-        print(ex)
+        print("get_repo_name",ex)
         sys.exit(1)
     return repo_name
 
@@ -475,7 +475,7 @@ def _decode_path(path, has_ab_prefix=True):
         except UnicodeDecodeError:
             logging.error("Error decode path: {}".format(path))
     except Exception as ex:
-        print(ex)
+        print("_decode_path",ex)
         sys.exit(1)
     return path
 
@@ -525,7 +525,7 @@ def _parse_numstats(text):
                 "changes": insertions + deletions
             }
     except Exception as ex:
-        print(ex)
+        print("_parse_numstats",ex)
         sys.exit(1)
     return (hsh["total"], hsh["files"])
 
@@ -605,7 +605,7 @@ def _parse_stats(text):
 
             diffs[filename if filename else filename] = diff
     except Exception as ex:
-        print(ex)
+        print("_parse_stats",ex)
         sys.exit(1)
     return diffs
 
@@ -687,20 +687,30 @@ def _parse_patch(text):
         for diff in diffs:
             dict_diffs[diff["filename"]] = diff
     except Exception as ex:
-        print(ex)
+        print("_parse_patch",ex)
         sys.exit(1)
     return dict_diffs
 
-
+def is_datetime_format(text):
+    try:
+        datetime.datetime.strptime(text, "%Y-%m-%d %H:%M:%S %z")
+        return True
+    except ValueError:
+        return False
+    
 def _parse_person(text):
     try:
         (person_name, person_email, person_date) = text.split("\t")
+        if not is_datetime_format(person_date):
+            person_date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S %z")
+        
         person_date = person_date.split(" ")
         person_date = "{}T{}{}".format(person_date[0], person_date[1], person_date[2])
     except Exception as ex:
-        print(ex)
+        print("_parse_person_error",ex)
         sys.exit(1)
     return {"name": person_name, "email": person_email, "date": person_date}
+
 
 
 def execute(commandLine):
@@ -717,7 +727,7 @@ def execute(commandLine):
                 logging.debug("with error '{}'".format(error))
             raise Exception(error)
     except Exception as ex:
-        print(ex)
+        print("execute",ex)
         sys.exit(1)
     return out
 
@@ -738,7 +748,7 @@ def get_commits_sha(start, number, branch):
         commits_sha = all_commits_sha[index:index+number]
         commits_sha.reverse()
     except Exception as ex:
-        print(ex)
+        print("get_commits_sha",ex)
         sys.exit(1)
     return commits_sha
 
@@ -769,6 +779,7 @@ def request(url, token, data, event):
 def get_project_id(base_url, project_name, token):
     try:
         url = base_url + '/api/ssh_v2/hook/fetch/?project_name={}'.format(project_name)
+        print(url)
         headers = {"Content-Type": "application/json",
                     "token": token}
         session = Session()
@@ -792,7 +803,7 @@ def get_project_id(base_url, project_name, token):
             sys.exit(1)
             #raise Exception('Can\'t not get a connection to the server, please check your url or token and try again.')
     except Exception as ex:
-        print(ex)
+        print("get_project_id",ex)
         sys.exit(1)
     
 
@@ -825,7 +836,7 @@ def get_commit_branch(sha):
         logging.debug("Commit '{}' exist in branches: '{}'".format(sha, len(branch_list)))
         return list(set(branch_list))
     except Exception as ex:
-        print(ex)
+        print("get_commit_branch",ex)
         sys.exit(1)
 
 
@@ -852,7 +863,7 @@ def get_file_tree():
                 files_paths.append(repo_file_path)
         return files_paths
     except Exception as ex:
-        print(ex)
+        print("get_file_tree",ex)
         sys.exit(1)
 
 
@@ -862,16 +873,23 @@ def get_parent_commit(sha_parent, blame=False):
         commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
+    
         logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
+        logging.debug('Output commit info {}'.format(output))
 
         commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+        logging.debug('Output info regex {}'.format(commit_info))
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
         sha, \
         date, \
         tree, \
-        parents = commit_info
-
+        parents,\
+        file_stats, \
+        file_numstats, \
+        patch= commit_info
+        logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
 
@@ -879,13 +897,20 @@ def get_parent_commit(sha_parent, blame=False):
         commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha_parent)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
 
         logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
+
+        logging.debug('Output person involve commit info {}'.format(output))
+
         commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
-    
+        logging.debug('Output person regex {}'.format(commit_person))
         author, \
-        committer = commit_person
+        committer, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_person
 
         author = _parse_person(author)
         committer = _parse_person(committer)
@@ -896,7 +921,9 @@ def get_parent_commit(sha_parent, blame=False):
             commit_cmd = commit_cmd.replace('\'', '\"')
         logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
         output = execute(commit_cmd)
+        logging.debug('Output commit message info {}'.format(output))
         commit_msg = RE_COMMIT_HEADER_MSG.findall(output)[0]
+        logging.debug('Output msg regex {}'.format(commit_msg))
 
         message, \
         file_stats, \
@@ -999,7 +1026,7 @@ def get_parent_commit(sha_parent, blame=False):
 
         return commit
     except Exception as ex:
-        print(ex)
+        print("get_parent_commit",ex)
         sys.exit(1)
 
 
@@ -1034,7 +1061,7 @@ def get_commit_file_blame(filename, sha, patch, ignore=True):
 
         threads = list()
     except Exception as ex:
-        print(ex)
+        print("get_commit_file_blame",ex)
         sys.exit(1)
 
     def _get_blame(sha, start_string, end_string, filename):
@@ -1078,7 +1105,7 @@ def get_commit_file_blame(filename, sha, patch, ignore=True):
             return "\n\n".join(blame)
         return ""
     except Exception as ex:
-        print(ex)
+        print("_get_blame",ex)
         sys.exit(1)
 
 
@@ -1088,18 +1115,23 @@ def get_commit(sha, blame=False):
         commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha)  
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
     
         logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
         logging.debug('Output commit info {}'.format(output))
 
         commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
         sha, \
         date, \
         tree, \
-        parents = commit_info
-
+        parents,\
+        file_stats, \
+        file_numstats, \
+        patch= commit_info
+        logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
 
@@ -1107,6 +1139,7 @@ def get_commit(sha, blame=False):
         commit_cmd = COMMAND_COMMIT_PERSON_INFO.format(sha)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
 
         logging.debug('Commit cmd for commit person related info : {}'.format(commit_cmd))
         output = execute(commit_cmd)
@@ -1114,11 +1147,15 @@ def get_commit(sha, blame=False):
         logging.debug('Output person involve commit info {}'.format(output))
 
         commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
-    
-        author, \
-        committer = commit_person
 
-        logging.debug('Output person involve commit info {}'.format(commit_person))
+        author, \
+        committer, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_person
+
+        author = _parse_person(author)
+        committer = _parse_person(committer)
         
         # Get commit message info
         commit_cmd = COMMAND_COMMIT_MSG.format(sha)
@@ -1136,18 +1173,12 @@ def get_commit(sha, blame=False):
         commit_numstats = {"additions": 0, "deletions": 0, "changes": 0, "total": 0, "files": 0}
 
         sha_parent_list = [parent_sha for parent_sha in parents.split(" ") if parent_sha]
-
         logging.debug('sha_parent_list {}'.format(sha_parent_list))
         parent_commits = list()
         for sha_parent in sha_parent_list:
             parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
             parent_commits.append(parent_commit)
         logging.debug('parent_commits {}'.format(parent_commits))
-
-        author = _parse_person(author)
-        logging.debug('author {}'.format(author))
-        committer = _parse_person(committer)
-        logging.debug('committer {}'.format(committer))
 
         commit = dict(
             sha=sha,
@@ -1240,7 +1271,7 @@ def get_commit(sha, blame=False):
 
         return commit
     except Exception as ex:
-        print(ex)
+        print("get_commit",ex)
         sys.exit(1)
 
 
@@ -1288,9 +1319,8 @@ def performPush(url, token, start, number, branch, blame, repo_name=''):
         status_code, content = request(url, token, data, event='push')
         logging.info("Data has been sent with status_code {}".format(status_code))
     except Exception as ex:
-        print(ex)
+        print("performPush_error",ex)
         sys.exit(1)
-
 
 def gittoappsurify():
     logging.info('Started syncing commits to {}'.format(base_url))
@@ -1302,8 +1332,8 @@ def gittoappsurify():
 
 # example usage gittoappsurify --url "https://demo.appsurify.com/" --project "GitScript"
 # --token "MTU6ZW9FZUxhcXpMZU9CdGZZVmZ4U3BFM3g5MmhVcDl5ZmQzampUWEM1SWRfNA"
-# --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 
+# --start "a3b8cad7c079beab89e8fba3f497fe5a1fff367d" --branch "master"
 parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
 
 parser.add_argument('--url', type=str, required=True,
