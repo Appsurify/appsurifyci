@@ -1265,7 +1265,15 @@ def push_results():
             directoryToPushFrom = os.path.join(
                 os.getcwd(), directoryToPushFrom.strip("\\").strip("/")
             )
-            print("using dir " + directoryToPushFrom)
+            if not os.path.isdir(directoryToPushFrom):
+                if report.startswith('.') and not report.startswith('..'):
+                    directoryToPushFrom = os.path.join(
+                        os.getcwd(), report[1:].strip("\\").strip("/")
+                    )
+            if os.path.isdir(directoryToPushFrom):
+                print("using dir " + directoryToPushFrom)
+            else:
+                print("ERROR - Path to report is incorrect, please use the full path")
         filetype = ".xml"
         if recursive == "true":
             if importtype == "trx":
@@ -2186,6 +2194,32 @@ def runtestswithappsurify(*args):
             importtype = "trx"
             endspecificrun = " /tests:"
 
+        # vstest
+        # /Tests:TestMethod1,testMethod2
+        # vstest.console.exe"  /testcontainer:"%WORKSPACE%\MYPROJECT\bin\debug\MYTEST.dll" /test:"ABC" /resultsfile:"%WORKSPACE%\result_%BUILD_NUMBER%.xml"
+        if testtemplate == "nunit":
+            testseparator = ","
+            reporttype = "file"
+            startrunspecific = (
+                "nunit.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+                + "/tests:"
+            )
+            postfixtest = "'"
+            prefixtest = "'"
+            startrunall = (
+                "nunit.console.exe /resultsfile:'"
+                + testtemplatearg1
+                + "' /testcontainer:'"
+                + testtemplatearg2
+                + "'"
+            )
+            report = testtemplatearg1
+            endspecificrun = " /tests:"
+
         # Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,True,True\)|Name=IbsAlarmAudioDeterminerIsAudioOffTest\(RedAlarm,Off,False,False\)
         # https://github.com/microsoft/vstest-docs/blob/master/docs/filter.md
         # https://stackoverflow.com/questions/38139803/using-vstest-console-exe-testcategory-with-equals-and-not-equals
@@ -2487,7 +2521,7 @@ def runtestswithappsurify(*args):
                 if sys.argv[k] == "--testsuite":
                     testsuite = sys.argv[k + 1]
                 if sys.argv[k] == "--report":
-                    report = sys.argv[k + 1]
+                    report = sys.argv[k + 1].strip()
                 if sys.argv[k] == "--reporttype":
                     reporttype = sys.argv[k + 1]
                 if sys.argv[k] == "--teststorun":
