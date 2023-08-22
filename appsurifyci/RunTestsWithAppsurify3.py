@@ -1407,6 +1407,22 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                                 stacktrace.text = stacktrace.text[:500]
             tree._setroot(root)
             tree.write(filepath)
+    if importtype == "junit":
+        with open(filepath, "r", errors="replace", encoding="utf8") as f:
+            root = ET.fromstring(f.read())
+            tree = ET.ElementTree()
+            added_failure_type = False
+            for test in root.findall('testcase'):
+                failure = test.find('failure')
+                if failure is None:
+                    continue
+                else:
+                    if "type" not in failure.attrib:
+                        failure.set("type", "AssertionError")
+                        added_failure_type = True
+            if added_failure_type:
+                tree._setroot(root)
+                tree.write(filepath)
 
     if webdriverio == "true":
         tree = ElementTree()
