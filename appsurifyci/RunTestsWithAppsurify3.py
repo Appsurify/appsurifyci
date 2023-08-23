@@ -1346,7 +1346,6 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     except:
         testpath = filepath
         #print("unable to remove text")
-
     if replaceAscii:
         try:
             with open(filepath, "r", errors="ignore") as openfile:
@@ -1360,8 +1359,11 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                 openfile.write(filedata)
         except:
             print("unable to strip Ascii")
-
-    sizeOfFile = os.path.getsize(filepath)
+    try:
+        sizeOfFile = os.path.getsize(filepath)
+    except:
+        print("Unable to get file size")
+        sizeOfFile = 0
     # if importtype == "trx" and sizeOfFile > 1000000:
     #    ET.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
     #    tree = ET.ElementTree()
@@ -1385,7 +1387,6 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     #                    for stacktrace in ErrorInfo.findall(f"{ns}StackTrace"):
     #                        stacktrace.text = stacktrace.text[:500]
     #    tree.write(filepath)
-
     if importtype == "trx" and sizeOfFile > 1000000:
         ET.register_namespace(
             "", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"
@@ -1429,7 +1430,6 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     tree.write(filepath)
         except:
             print("unable to set failure type")
-
     if webdriverio == "true":
         tree = ElementTree()
         tree.parse(filepath)
