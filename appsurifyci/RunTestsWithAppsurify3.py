@@ -1405,24 +1405,30 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                         for ErrorInfo in output.findall(f"{ns}ErrorInfo"):
                             for stacktrace in ErrorInfo.findall(f"{ns}StackTrace"):
                                 stacktrace.text = stacktrace.text[:500]
-            tree._setroot(root)
-            tree.write(filepath)
-    if importtype == "junit":
-        with open(filepath, "r", errors="replace", encoding="utf8") as f:
-            root = ET.fromstring(f.read())
-            tree = ET.ElementTree()
-            added_failure_type = False
-            for test in root.findall('testcase'):
-                failure = test.find('failure')
-                if failure is None:
-                    continue
-                else:
-                    if "type" not in failure.attrib:
-                        failure.set("type", "AssertionError")
-                        added_failure_type = True
-            if added_failure_type:
+            try:
                 tree._setroot(root)
                 tree.write(filepath)
+            except:
+                print("unable to write file")
+    if importtype == "junit":
+        try:
+            with open(filepath, "r", errors="replace", encoding="utf8") as f:
+                root = ET.fromstring(f.read())
+                tree = ET.ElementTree()
+                added_failure_type = False
+                for test in root.findall('testcase'):
+                    failure = test.find('failure')
+                    if failure is None:
+                        continue
+                    else:
+                        if "type" not in failure.attrib:
+                            failure.set("type", "AssertionError")
+                            added_failure_type = True
+                if added_failure_type:
+                    tree._setroot(root)
+                    tree.write(filepath)
+        except:
+            print("unable to set failure type")
 
     if webdriverio == "true":
         tree = ElementTree()
@@ -1476,6 +1482,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             if response.status_code == 200 or response.status_code == 201:
                 break
             time.sleep(timetowait)
+            files = {
+                "file": open(filepath, "rb"),
+            }
             response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
         try:
@@ -1483,6 +1492,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
+                files = {
+                   "file": open(filepath, "rb"),
+                }
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1490,11 +1502,17 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
+                    files = {
+                       "file": open(filepath, "rb"),
+                    }   
                     response = requests.post(
                         apiurl, headers=headers, data=payload, files=files, proxies=proxies
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
+                files = {
+                   "file": open(filepath, "rb"),
+                }
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1507,6 +1525,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
+                    files = {
+                        "file": open(filepath, "rb"),
+                    }
                     response = requests.post(
                         apiurl,
                         headers=headers,
@@ -1520,6 +1541,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
+                files = {
+                   "file": open(filepath, "rb"),
+                }
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1527,11 +1551,17 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
+                    files = {
+                        "file": open(filepath, "rb"),
+                    }
                     response = requests.post(
                         apiurl, headers=headers, data=payload, files=files, proxies=proxies
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
+                files = {
+                    "file": open(filepath, "rb"),
+                }
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1544,6 +1574,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
+                    files = {
+                        "file": open(filepath, "rb"),
+                    }
                     response = requests.post(
                         apiurl,
                         headers=headers,
