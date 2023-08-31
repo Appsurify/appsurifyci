@@ -1350,7 +1350,10 @@ def get_commit(sha, blame=False):
         parent_commits = list()
         for sha_parent in sha_parent_list:
             # parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
-            parent_commit = get_parent_commit_min(sha_parent=sha_parent, blame=blame)
+            if minimize:
+                parent_commit = get_parent_commit_min(sha_parent=sha_parent, blame=blame)
+            else:
+                parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
             parent_commits.append(parent_commit)
         logging.debug('parent_commits {}'.format(parent_commits))
 
@@ -1532,6 +1535,8 @@ parser.add_argument('--auto_repo_name', action='store_true', default=False,
                     help='Use Git remote as repository name.')
 parser.add_argument('--execution_type', type=str, required=False, default='default',
                     help='Execution modification')
+parser.add_argument('--minimize', dest='minimize', action='store_true')
+parser.set_defaults(minimize=False)
 
 args = parser.parse_args()
 base_url = args.url.rstrip('/')
@@ -1543,6 +1548,7 @@ branch = args.branch
 blame = args.blame
 debug = args.debug
 execution_type = args.execution_type
+minimize = args.minimize
 
 if debug:
     logging.info('Setting debug')
