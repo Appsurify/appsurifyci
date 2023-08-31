@@ -103,8 +103,13 @@ COMMAND_GET_ALL_COMMITS_SHA_JENKINS = "git log --pretty=format:%%H {} --"
 
 # Divide into smaller commands
 COMMAND_COMMIT_COMMIT_INFO = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%n' {}"
+COMMAND_COMMIT_COMMIT_INFO_MIN = "git show --reverse --first-parent --abbrev=40 --full-index -s -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%n' {}"
+
 COMMAND_COMMIT_PERSON_INFO = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Author:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%n' {}"
+COMMAND_COMMIT_PERSON_INFO_MIN = "git show --reverse --first-parent --abbrev=40 --full-index -s -M --pretty=format:'Author:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%n' {}"
+
 COMMAND_COMMIT_MSG = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Message:\t%s%n' {}"
+COMMAND_COMMIT_MSG_MIN = "git show --reverse --first-parent --abbrev=40 --full-index -s -M --pretty=format:'Message:\t%s%n' {}"
 
 # COMMAND_COMMIT = "git show --reverse --first-parent --raw --numstat --abbrev=40 --full-index -p -M --pretty=format:'Commit:\t%H%nDate:\t%ai%nTree:\t%T%nParents:\t%P%nAuthor:\t%an\t%ae\t%ai%nCommitter:\t%cn\t%ce\t%ci%nMessage:\t%s%n' {}"
 COMMAND_COMMIT_BRANCH = "git branch --contains {}"
@@ -867,10 +872,178 @@ def get_file_tree():
         sys.exit(1)
 
 
+def get_parent_commit_min(sha_parent, blame=False):
+    try:
+        logging.debug('[Parrent] Commit cmd for commit info : {}'.format(sha_parent))
+        # Get commit, parents
+        commit_cmd = COMMAND_COMMIT_COMMIT_INFO_MIN.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
+
+        logging.debug('Commit cmd for commit info : {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+        logging.debug('Output commit info {}'.format(output))
+
+        commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+        logging.debug('Output info regex {}'.format(commit_info))
+        commit_numstats = {"additions": 0, "deletions": 0, "changes": 0,
+                           "total": 0, "files": 0}
+        sha, \
+        date, \
+        tree, \
+        parents, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_info
+        logging.debug('parents {}'.format(commit_info))
+        date = date.split(" ")
+        date = "{}T{}{}".format(date[0], date[1], date[2])
+
+        # Get person involve commit info
+        commit_cmd = COMMAND_COMMIT_PERSON_INFO_MIN.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+            commit_cmd = commit_cmd.replace('\t', '%x09')
+
+        logging.debug('Commit cmd for commit person related info : {}'.format(
+            commit_cmd))
+        output = execute(commit_cmd)
+
+        logging.debug('Output person involve commit info {}'.format(output))
+
+        commit_person = RE_COMMIT_HEADER_COMMIT_PERSON.findall(output)[0]
+        logging.debug('Output person regex {}'.format(commit_person))
+        author, \
+        committer, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_person
+
+        author = _parse_person(author)
+        committer = _parse_person(committer)
+
+        # Get commit message info
+        commit_cmd = COMMAND_COMMIT_MSG_MIN.format(sha_parent)
+        if is_windows:
+            commit_cmd = commit_cmd.replace('\'', '\"')
+        logging.debug('Commit cmd for commit message: {}'.format(commit_cmd))
+        output = execute(commit_cmd)
+        logging.debug('Output commit message info {}'.format(output))
+        commit_msg = RE_COMMIT_HEADER_MSG.findall(output)[0]
+        logging.debug('Output msg regex {}'.format(commit_msg))
+
+        message, \
+        file_stats, \
+        file_numstats, \
+        patch = commit_msg
+        commit_numstats = {"additions": 0, "deletions": 0, "changes": 0,
+                           "total": 0, "files": 0}
+
+        commit = dict(
+            sha=sha,
+            tree=tree,
+            parents=parents,
+            date=date,
+            message=message,
+            author=author,
+            committer=committer,
+            stats=commit_numstats,
+            files=[],
+            added=[],
+            removed=[],
+            modified=[]
+        )
+
+        if file_numstats:
+            commit_numstats, file_numstats = _parse_numstats(file_numstats)
+        else:
+            file_numstats = {}
+
+        if file_stats:
+            file_stats = _parse_stats(file_stats)
+        else:
+            file_stats = {}
+
+        if patch:
+            patch = _parse_patch(patch)
+        else:
+            patch = {}
+
+        filename_list_1 = []
+        filename_list_2 = []
+        filename_list_3 = []
+
+        for filename, data in file_numstats.items():
+            filename_list_1.append(filename)
+
+        for filename, data in file_stats.items():
+            filename_list_2.append(filename)
+
+        for filename, data in patch.items():
+            filename_list_3.append(filename)
+
+        for filename in set(
+                filename_list_1 + filename_list_2 + filename_list_3):
+
+            if isinstance(filename, bytes):
+                filename = filename.decode('utf-8', errors='ignore')
+
+            try:
+                numstat = file_numstats[filename]
+                stat = file_stats[filename]
+                diff = patch[filename]
+            except Exception as e:
+                traceback.print_exc()
+                continue
+
+            if blame:
+                try:
+                    blame = get_commit_file_blame(filename=filename, sha=sha,
+                                                  patch=diff["patch"])
+                except Exception as e:
+                    blame = ""
+            else:
+                blame = ""
+
+            file_object = dict(
+                filename=filename,
+                additions=numstat["additions"],
+                deletions=numstat["deletions"],
+                changes=numstat["changes"],
+                sha=stat["sha"],
+                status=stat["status"],
+                previous_filename=stat["previous_filename"],
+                patch=diff["patch"],
+                blame=blame or ""
+            )
+
+            if stat["status"] == "added":
+                commit["added"].append(filename)
+            elif stat["status"] == "added":
+                commit["added"].append(filename)
+            elif stat["status"] == "deleted":
+                commit["removed"].append(filename)
+            elif stat["status"] == "modified":
+                commit["modified"].append(filename)
+            elif stat["status"] == "renamed":
+                commit["removed"].append(stat["previous_filename"])
+                commit["added"].append(filename)
+            elif stat["status"] == "unknown":
+                commit["modified"].append(filename)
+
+            commit["files"].append(file_object)
+
+        return commit
+    except Exception as ex:
+        print("get_parent_commit", ex)
+        sys.exit(1)
+
+
 def get_parent_commit(sha_parent, blame=False):
     try:
         # Get commit, parents
-        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)  
+        commit_cmd = COMMAND_COMMIT_COMMIT_INFO.format(sha_parent)
         if is_windows:
             commit_cmd = commit_cmd.replace('\'', '\"')
             commit_cmd = commit_cmd.replace('\t', '%x09')
@@ -1176,7 +1349,8 @@ def get_commit(sha, blame=False):
         logging.debug('sha_parent_list {}'.format(sha_parent_list))
         parent_commits = list()
         for sha_parent in sha_parent_list:
-            parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
+            # parent_commit = get_parent_commit(sha_parent=sha_parent, blame=blame)
+            parent_commit = get_parent_commit_min(sha_parent=sha_parent, blame=blame)
             parent_commits.append(parent_commit)
         logging.debug('parent_commits {}'.format(parent_commits))
 
