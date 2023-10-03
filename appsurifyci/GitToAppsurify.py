@@ -131,6 +131,9 @@ RE_OCTAL_BYTE = re.compile(r"""\\\\([0-9]{3})""")
 RE_COMMIT_HEADER_COMMIT_INFO = re.compile(
     r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n\s*Parents:\t(?P<parents>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
+RE_COMMIT_HEADER_COMMIT_INFO_MIN = re.compile(
+    r"""^Commit:\s*(?P<sha>[0-9A-Fa-f]+)\n\s*Date:\s*(?P<date>.*)\n\s*Tree:\s*(?P<tree>[0-9A-Fa-f]+)\n?""",
+    re.VERBOSE | re.MULTILINE)
 RE_COMMIT_HEADER_COMMIT_PERSON = re.compile(
     r"""^Author:\s*(?P<author>.*)\n\s*Committer:\s*(?P<committer>.*)?(?:\n\n|$)?(?P<file_stats>(?:^:.+\n)+)?(?P<file_numstats>(?:.+\t.*\t.*\n)+)?(?:\n|\n\n|$)?(?P<patch>(?:diff[ ]--git(?:.+\n)+)+)?(?:\n\n|$)?""",
     re.VERBOSE | re.MULTILINE)
@@ -874,7 +877,7 @@ def get_file_tree():
 
 def get_parent_commit_min(sha_parent, blame=False):
     try:
-        logging.debug('[Parrent] Commit cmd for commit info : {}'.format(sha_parent))
+        logging.debug('[Parent] Commit cmd for commit info : {}'.format(sha_parent))
         # Get commit, parents
         commit_cmd = COMMAND_COMMIT_COMMIT_INFO_MIN.format(sha_parent)
         if is_windows:
@@ -885,17 +888,27 @@ def get_parent_commit_min(sha_parent, blame=False):
         output = execute(commit_cmd)
         logging.debug('Output commit info {}'.format(output))
 
-        commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
-        logging.debug('Output info regex {}'.format(commit_info))
-        commit_numstats = {"additions": 0, "deletions": 0, "changes": 0,
-                           "total": 0, "files": 0}
-        sha, \
-        date, \
-        tree, \
-        parents, \
-        file_stats, \
-        file_numstats, \
-        patch = commit_info
+        try:
+            commit_info = RE_COMMIT_HEADER_COMMIT_INFO.findall(output)[0]
+            logging.debug('Output info regex {}'.format(commit_info))
+            commit_numstats = {"additions": 0, "deletions": 0, "changes": 0,
+                            "total": 0, "files": 0}
+            sha, \
+            date, \
+            tree, \
+            parents, \
+            file_stats, \
+            file_numstats, \
+            patch = commit_info
+        except:
+            commit_info = RE_COMMIT_HEADER_COMMIT_INFO_MIN.findall(output)[0]
+            print('Output info regex {}'.format(commit_info))
+            commit_numstats = {"additions": 0, "deletions": 0, "changes": 0,
+                                "total": 0, "files": 0}
+            sha, \
+            date, \
+            tree = commit_info
+            parents = ""
         logging.debug('parents {}'.format(commit_info))
         date = date.split(" ")
         date = "{}T{}{}".format(date[0], date[1], date[2])
