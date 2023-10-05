@@ -1481,6 +1481,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
         for x in range(retryCount):
             if response.status_code == 200 or response.status_code == 201:
                 break
+            print(("Status code : [{0}] Retrying".format(response.status_code)))
             time.sleep(timetowait)
             files = {
                 "file": open(filepath, "rb"),
@@ -1537,6 +1538,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                         auth=auth,
                     )  
         except:
+            print("Exception importing, retrying")
             httpproxy = proxy
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
