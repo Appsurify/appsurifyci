@@ -1307,6 +1307,7 @@ def push_results():
                 print("No files pushed")
     if reporttype == "file":
         try:
+            print("Importing file: " + report)
             call_import(report)
         except:
             print("Import failed")
@@ -1315,8 +1316,16 @@ def push_results():
 def call_import(filepath, retryImport = True, replaceAscii = False):
     global run_id
     origfilepath = filepath
-    print("importing results")
-    print(filepath)
+
+    print("Current dir " + os.getcwd())
+    print("importing results from " + filepath)
+
+    # curr_dir = os.getcwd()
+    # if not filepath.startswith(curr_dir):
+    #     filepath = os.path.join(curr_dir, filepath)
+    #
+    # print("importing results 2 from " + filepath)
+
     if importtype == "trx" and replaceretry == "true":
         try:
             with open(filepath, "r", errors="ignore") as openfile:
@@ -1328,7 +1337,8 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             # Write the file out again
             with open(filepath, "w") as openfile:
                 openfile.write(filedata)
-        except:
+        except Exception as e:
+            print(str(e))
             print("unable to strip retries from file")
 
     try:
@@ -1464,28 +1474,41 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     if repo_name != "":
         payload["repo_name"] = repo_name
 
-    files = {
-        "file": open(filepath, "rb"),
-    }
+    # files = {
+    #     "file": open(filepath, "rb"),
+    # }
+
+    files = [
+        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+    ]
+
     headers = {
-        "token": apikey,
+        "Token": apikey,
     }
+
     print(headers)
     print(payload)
     print(apiurl)
+    print("=======================================")
 
     retryCount = 3
     timetowait = (maxretrytime/2)/retryCount
+
     if proxy == "":
+
         response = requests.post(apiurl, headers=headers, data=payload, files=files)
+
         for x in range(retryCount):
             if response.status_code == 200 or response.status_code == 201:
                 break
             print(("Status code : [{0}] Retrying".format(response.status_code)))
             time.sleep(timetowait)
-            files = {
-                "file": open(filepath, "rb"),
-            }
+            # files = {
+            #     "file": open(filepath, "rb"),
+            # }
+            files = [
+                ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+            ]
             response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
         try:
@@ -1493,9 +1516,12 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                files = {
-                   "file": open(filepath, "rb"),
-                }
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [
+                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                ]
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1503,17 +1529,23 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
-                    files = {
-                       "file": open(filepath, "rb"),
-                    }   
+                    # files = {
+                    #    "file": open(filepath, "rb"),
+                    # }
+                    files = [
+                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                    ]
                     response = requests.post(
                         apiurl, headers=headers, data=payload, files=files, proxies=proxies
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
-                files = {
-                   "file": open(filepath, "rb"),
-                }
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [
+                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                ]
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1526,9 +1558,12 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
-                    files = {
-                        "file": open(filepath, "rb"),
-                    }
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [
+                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                    ]
                     response = requests.post(
                         apiurl,
                         headers=headers,
@@ -1543,9 +1578,12 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                files = {
-                   "file": open(filepath, "rb"),
-                }
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [
+                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                ]
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1553,17 +1591,23 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
-                    files = {
-                        "file": open(filepath, "rb"),
-                    }
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [
+                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                    ]
                     response = requests.post(
                         apiurl, headers=headers, data=payload, files=files, proxies=proxies
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
-                files = {
-                    "file": open(filepath, "rb"),
-                }
+                # files = {
+                #     "file": open(filepath, "rb"),
+                # }
+                files = [
+                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                ]
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1576,9 +1620,12 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     if response.status_code == 200 or response.status_code == 201:
                         break
                     time.sleep(timetowait)
-                    files = {
-                        "file": open(filepath, "rb"),
-                    }
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [
+                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
+                    ]
                     response = requests.post(
                         apiurl,
                         headers=headers,
