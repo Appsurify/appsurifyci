@@ -133,6 +133,7 @@ maxretrytime = 60
 testsetnum = ""
 numtestsets = ""
 filenames = ""
+printout = "false"
 
 
 def find(name):
@@ -1639,7 +1640,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames
+    global numtestsets, filenames, printout
     try:    
 
         
@@ -1742,6 +1743,7 @@ def runtestswithappsurify(*args):
         numtestsets = ""
         testsetnum = ""
         filenames = ""
+        printout = "false"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -1976,6 +1978,18 @@ def runtestswithappsurify(*args):
             deletereports = "false"
             endspecificrun = " -Dtest="
 
+        if testtemplate == "printout":
+            testseparator = "\n"
+            startrunspecific = 'mvn test '
+            endrunspecific = '" '
+            postfixtest = "$'"
+            prefixtest = "--name '^"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = ' -Dcucumber.options="'
+
         if testtemplate == "mvn screenplay":
             testseparator = ","
             addtestsuitename = "true"
@@ -2059,7 +2073,7 @@ def runtestswithappsurify(*args):
         # https://github.com/angular/protractor/issues/164
 
         # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
-        if testtemplate == "cucmber mvn":
+        if testtemplate == "cucumber mvn":
             testseparator = " "
             startrunspecific = 'mvn test '
             endrunspecific = '" '
@@ -2727,6 +2741,8 @@ def runtestswithappsurify(*args):
                     numtestsets = sys.argv[k + 1]
                 if sys.argv[k] == "--filenames":
                     filenames = "True"
+                if sys.argv[k] == "--printout":
+                    printout = "True"
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -2740,6 +2756,9 @@ def runtestswithappsurify(*args):
 
         if endcommand != "":
             endrunpostfix = endcommand
+
+        if printout == "True":
+            testseparator = testseparator + "\n"
         
         if githubactionsvariable != "" and githubactionsvariable is not None:
             executioncommand = (
