@@ -134,7 +134,8 @@ testsetnum = ""
 numtestsets = ""
 filenames = ""
 printout = "false"
-
+includefailing = "false"
+convertcucumber = "false"
 
 def find(name):
     currentdir = (
@@ -743,6 +744,9 @@ def get_tests(testpriority, retryGetTests=True):
         params["target_branch"] = branch
         params["from_commit"] = fromcommit
 
+    if includefailing == "true":
+        params["include_failing"] = "True"
+
     if percentage.isnumeric() and testpriority != 11 and testpriority != 10:
         params["percent"] = percentage
 
@@ -1252,6 +1256,117 @@ def getresults(retryResults = True):
         exit(1)
 
 
+def convertcucumberfile(cucumberfile, xmlfile):
+    with open(cucumberfile, "r", encoding="utf8", errors="ignore") as json_file:
+        print("Opening file " + cucumberfile + " in read-only")
+        try:
+            json_data = json.load(json_file)
+        except Exception as error:
+            # handle the exception
+            print("An exception occurred:", error) # An exception occurred: division by zero
+
+    test_cases = ""
+    header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+
+    test_suite_time = 0.0
+    failure_count = 0
+    scenario_count = 0
+
+    for feature in json_data:
+        feature_name = sanitize(feature["name"])
+        scenarios = feature["elements"]
+        feature_time = 0.0
+
+        for scenario in scenarios:
+            scenario_count += 1
+
+            scenario_name = sanitize(scenario["name"])
+            steps_blob = "<![CDATA["
+            err_blob = ""
+            scenario_status = "passed"
+            scenario_time = 0.0
+
+            if scenario["type"] != "background":
+                for tag in scenario["tags"]:
+                    steps_blob += tag["name"] + " "
+                steps_blob += "\n"
+            for step in scenario["steps"]:
+                try:
+                    description = sanitize(step["name"])
+                except:
+                    description = ""
+                results = step["result"]
+                status = sanitize(results["status"])
+                keyword = sanitize(step["keyword"])
+
+                if status != "skipped":
+                    try:
+                        scenario_time += float(results["duration"]) / 1000000000
+                    except:
+                        do_nothing = ""
+
+                num_dots = 83 - len(keyword) - len(description) - len(status)
+                if num_dots <= 0:
+                    num_dots = 1
+
+                steps_blob += keyword + description
+                for i in range(num_dots):
+                    steps_blob += "."
+                steps_blob += status + "\n"
+                if status == "failed":
+                    err_blob = sanitize(results["error_message"])
+                    scenario_status = "failed"
+                    failure_count += 1
+            feature_time += scenario_time
+
+            steps_blob += "]]>"
+
+            test_case = "<testcase "
+            test_case += "classname=\"" + feature_name + "\" "
+            test_case += "name=\"" + scenario_name + "\" "
+            test_case += "time=\"" + str(scenario_time) + "\">"
+            if scenario_status == "passed":
+                test_case += "<system-out>" + steps_blob + "</system-out>\n"
+            else:
+                test_case += "<failure message=\"" + err_blob + "\">"
+                test_case += steps_blob + "</failure>\n"
+            test_case += "</testcase>\n"
+
+            test_cases += test_case
+            test_suite_time += feature_time
+    test_suite = "<testsuite "
+    test_suite += "failures=\"" + str(failure_count) + "\" "
+    test_suite += "name=\"Cucumber JSON to JUnit\" "
+    test_suite += "skipped=\"0\" "
+    test_suite += "tests=\"" + str(scenario_count) + "\" "
+    test_suite += "time=\"" + str(test_suite_time) + "\">\n"
+    for test_case in test_cases:
+        test_suite += test_case
+    test_suite += "</testsuite>"
+    with open(xmlfile, "w") as junit_file:
+        print("Writing to file " + xmlfile + "...")
+        junit_file.write(header)
+        junit_file.write(test_suite)
+
+def sanitize(input):
+    try:
+        input = input.replace("&","&amp;").replace("\"","&quot;")
+        input = input.replace("<","&lt;").replace(">","&gt;")
+    except:
+        input = ""
+    return input
+
+def convertcucumberfolderrecursive(directoryToPushFrom):
+    for root, dirs, files in os.walk(directoryToPushFrom):
+        for file in files:
+            if file.lower().endswith(".json"):
+                convertcucumberfile(os.path.abspath(os.path.join(root, file)), os.path.abspath(os.path.join(root, file))+".xml")
+
+def convertcucumberfolder(directoryToPushFrom):
+    for file in os.listdir(directoryToPushFrom):
+        if file.lower().endswith(".json"):
+            convertcucumberfile(os.path.abspath(os.path.join(directoryToPushFrom, file)), os.path.abspath(os.path.join(directoryToPushFrom, file))+".xml")
+
 def push_results():
     global run_id
     print("pushing results " + reporttype + " " + report)
@@ -1280,6 +1395,8 @@ def push_results():
             if importtype == "trx":
                 filetype = ".trx"
             pushedfile = False
+            if convertcucumber.lower() == "true":
+                convertcucumberfolderrecursive(directoryToPushFrom)
             for root, dirs, files in os.walk(directoryToPushFrom):
                 for file in files:
                     if file.endswith(filetype):
@@ -1294,6 +1411,8 @@ def push_results():
             if importtype == "trx":
                 filetype = ".trx"
             pushedfile = False
+            if convertcucumber.lower() == "true":
+                convertcucumberfolder(directoryToPushFrom)
             for file in os.listdir(directoryToPushFrom):
                 if file.endswith(filetype):
                     echo(file)
@@ -1687,7 +1806,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout
+    global numtestsets, filenames, printout, includefailing, convertcucumber
     try:    
 
         
@@ -1791,6 +1910,8 @@ def runtestswithappsurify(*args):
         testsetnum = ""
         filenames = ""
         printout = "false"
+        includefailing = "false"
+        convertcucumber = "false"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2121,6 +2242,18 @@ def runtestswithappsurify(*args):
 
         # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
         if testtemplate == "cucumber mvn":
+            testseparator = " "
+            startrunspecific = 'mvn test '
+            endrunspecific = '" '
+            postfixtest = "$'"
+            prefixtest = "--name '^"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = ' -Dcucumber.options="'
+
+        if testtemplate == "cucumber protractor":
             testseparator = " "
             startrunspecific = 'mvn test '
             endrunspecific = '" '
@@ -2736,6 +2869,8 @@ def runtestswithappsurify(*args):
                     percentage = sys.argv[k + 1]
                 if sys.argv[k] == "--weekendrunall":
                     weekendrunall = "true"
+                if sys.argv[k] == "--includefailing":
+                    includefailing = "true"
                 if sys.argv[k] == "--daysrunall":
                     daysrunall = sys.argv[k + 1].lower()
                 if sys.argv[k] == "--newdays":
@@ -2790,6 +2925,8 @@ def runtestswithappsurify(*args):
                     filenames = "True"
                 if sys.argv[k] == "--printout":
                     printout = "True"
+                if sys.argv[k] == "--convertcucumber":
+                    convertcucumber = "True"
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
