@@ -949,6 +949,28 @@ def get_and_run_tests(type):
                     testName = testName.split(circlecisplitstring)[-1]
                     
                 testName = testName.strip()
+            
+
+            if testtemplate == "cypress update":
+                suitename = testName.split(';')[0]
+                testName = testName.replace(suitename, "")
+                testName = testName.replace(';','',1)
+                testName = testName.strip()
+                if "(example #" in testName:
+                    testName = testName.split("(example #")[0]
+                    testName = testName.strip()
+
+            if testtemplate == "cypress update no env":
+                suitename = testName.split(';')[0]
+                testName = testName.replace(suitename, "")
+                testName = testName.replace(';','',1)
+                testName = testName.strip()
+                if "(example #" in testName:
+                    testName = testName.split("(example #")[0]
+                    testName = testName.strip()
+
+            
+
             if "cypress" in testtemplate:
                 testName = max(testName.split(","), key=len).strip()
 
@@ -2372,6 +2394,52 @@ def runtestswithappsurify(*args):
             )
             endspecificrun = ' --env grep="'
 
+        if testtemplate == "cypress update":
+            addtestsuitename = "true"
+            testsuitesnameseparator = ";"
+            testseparator = "; "
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' --env grep="'
+
+        if testtemplate == "cypress update include env":
+            addtestsuitename = "true"
+            testsuitesnameseparator = ";"
+            testseparator = "; "
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' grep="'
+
+        if testtemplate == "cypress json":
+            addtestsuitename = "true"
+            testsuitesnameseparator = ";"
+            testseparator = ","
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = "}'"
+            postfixtest = '"'
+            prefixtest = '"'
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = '"grep":'
+
+
         if testtemplate == "cypress circleci":
             testseparator = "; "
             reporttype = "file"
@@ -2384,6 +2452,20 @@ def runtestswithappsurify(*args):
                 "cypress run --reporter junit --reporter-options mochaFile=result.xml"
             )
             endspecificrun = ' --env grep="'
+
+        if testtemplate == "cypress filenames":
+            testseparator = ", "
+            filenames = "True"
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' --spec"'
 
         # mstest
         # /Tests:TestMethod1,testMethod2
@@ -3164,9 +3246,6 @@ def runtestswithappsurify(*args):
         if "azure" in testtemplate:
             
             max_length = 28000
-
-                            
-
             variable_num = 1
 
             if runnewtests != "false" and runnewtests != "true":
