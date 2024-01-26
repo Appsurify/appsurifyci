@@ -93,6 +93,7 @@ endrunprefix = ""
 endrunpostfix = ""
 executetests = "true"
 encodetests = "false"
+escapetests = "false"
 trainer = "false"
 azure_variable = "appsurifytests"
 pipeoutput = "false"
@@ -974,6 +975,9 @@ def get_and_run_tests(type):
             if "cypress" in testtemplate:
                 testName = max(testName.split(","), key=len).strip()
 
+            if escapetests == "true":
+                testName = testName.replace("\"", "\\\"") 
+
             if encodetests == "true":
                 testName = testName.encode("unicode_escape").decode()
                 testName = testName.replace("\\", "\\\\")
@@ -1828,7 +1832,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests
     try:    
 
         
@@ -1890,6 +1894,7 @@ def runtestswithappsurify(*args):
         endrunpostfix = ""
         executetests = "true"
         encodetests = "false"
+        escapetests = "false"
         trainer = "false"
         azure_variable = "appsurifytests"
         pipeoutput = "false"
@@ -2408,6 +2413,7 @@ def runtestswithappsurify(*args):
                 "cypress run --reporter junit --reporter-options mochaFile=result.xml"
             )
             endspecificrun = ' --env grep="'
+            escapetests = "true"
 
         if testtemplate == "cypress update include env":
             addtestsuitename = "true"
