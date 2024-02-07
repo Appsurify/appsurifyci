@@ -101,6 +101,8 @@ bitrise = "false"
 recursive = "false"
 executioncommand = ""
 githubactionsvariable = ""
+circlecivariable = ""
+circlecivariablenobash = ""
 printcommand = ""
 testsuiteencoded = ""
 projectencoded = ""
@@ -934,6 +936,7 @@ def get_and_run_tests(type):
         #    print("Setting screenplay")
         #    count = 1
         #    tests = "e2e.tests.EditWorkflowTest#datesChange"
+        addedtests = []
         for testName in testrunset:
             count = count + 1
             if testtemplate == "cypress circleci":
@@ -960,6 +963,25 @@ def get_and_run_tests(type):
                 if "(example #" in testName:
                     testName = testName.split("(example #")[0]
                     testName = testName.strip()
+
+            if testtemplate == "cypress inquirer":
+                suitename = testName.split(';')[0]
+                testName = testName.replace(suitename, "")
+                testName = testName.replace(';','',1)
+                testName = testName.strip()
+                if "(example #" in testName:
+                    testName = testName.split("(example #")[0]
+                    testName = testName.strip()
+                if "C" in testName:
+                    testName = "C"+ testName.split("C")[1]
+                    newTestName = testName[0:7].strip()
+                    testName = newTestName
+                else:
+                    testName = ""
+                    #to do fix this
+                
+                if testName in addedtests:
+                    testName = ""
 
             if testtemplate == "cypress update no env":
                 suitename = testName.split(';')[0]
@@ -1010,6 +1032,7 @@ def get_and_run_tests(type):
             if count == 1:
                 if  testName != "":
                     tests = prefixtest + testName + postfixtest
+                    addedtests.append(testName)
                 else:
                     count = 0
             else:
@@ -1020,6 +1043,7 @@ def get_and_run_tests(type):
                         #tests = tests + testseparator + prefixtest + testName + postfixtest
                 if testName != "":    
                     tests = tests + testseparator + prefixtest + testName + postfixtest
+                    addedtests.append(testName)
             maxtofind = maxtests
             if runcount <= numplusone:
                 maxtofind = maxtofind + 1
@@ -1832,7 +1856,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash
     try:    
 
         
@@ -1902,6 +1926,8 @@ def runtestswithappsurify(*args):
         recursive = "false"
         executioncommand = ""
         githubactionsvariable = ""
+        circlecivariable = ""
+        circlecivariablenobash = ""
         printcommand = ""
         testsuiteencoded = ""
         projectencoded = ""
@@ -2400,6 +2426,22 @@ def runtestswithappsurify(*args):
             endspecificrun = ' --env grep="'
 
         if testtemplate == "cypress update":
+            addtestsuitename = "true"
+            testsuitesnameseparator = ";"
+            testseparator = "; "
+            reporttype = "file"
+            report = "results.xml"
+            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            endrunspecific = '"'
+            postfixtest = ""
+            prefixtest = ""
+            startrunall = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
+            endspecificrun = ' --env grep="'
+            escapetests = "true"
+
+        if testtemplate == "cypress inquirer":
             addtestsuitename = "true"
             testsuitesnameseparator = ";"
             testseparator = "; "
@@ -2943,6 +2985,10 @@ def runtestswithappsurify(*args):
                     replaceretry = "true"
                 if sys.argv[k] == "--githubactionsvariable":
                     githubactionsvariable = sys.argv[k + 1]
+                if sys.argv[k] == "--circlecivariable":
+                    circlecivariable = sys.argv[k + 1]
+                if sys.argv[k] == "--circlecivariablenobash":
+                    circlecivariablenobash = sys.argv[k + 1]
                 if sys.argv[k] == "--executioncommand":
                     executioncommand = sys.argv[k + 1]
                 if sys.argv[k] == "--printcommand":
@@ -3037,6 +3083,18 @@ def runtestswithappsurify(*args):
                 'echo "{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
             )
             printcommand = '"{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
+
+        if circlecivariable != "" and circlecivariable is not None:
+            executioncommand = (
+                'echo \'export {circlecivariable}="[[teststorun]]"\' >> "$BASH_ENV"'
+            )
+            printcommand = 'echo \'export {circlecivariable}="[[teststorun]]"\' >> "$BASH_ENV"'
+        
+        if circlecivariablenobash != "" and circlecivariablenobash is not None:
+            executioncommand = (
+                'echo \'export {circlecivariablenobash}="[[teststorun]]"\''
+            )
+            printcommand = 'echo \'export {circlecivariablenobash}="[[teststorun]]"\''
 
         if "http://" in proxy:
             proxy = proxy.replace("http://", "")
