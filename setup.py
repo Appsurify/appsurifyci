@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='appsurifyci',
-  version='0.1.12',
+  version='0.1.13',
   description='Package used to run tests using Appsurify',
   long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type='text/markdown',
@@ -26,5 +26,5 @@ setup(
                             'testimportappsurify=appsurifyci.TestImport:testimport',
         'gittoappsurify=appsurifyci.GitToAppsurify:gittoappsurify']
     },
-  install_requires=['PyYAML','requests'] 
+  install_requires=['PyYAML','requests', 'junitparser'] 
 )
