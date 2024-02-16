@@ -29,7 +29,9 @@ import time
 from requests.adapters import HTTPAdapter, Retry
 import socket
 from urllib3.connection import HTTPConnection
-
+import pathlib
+from testbrain.contrib.report.mergers.junit import JUnitReportMerger
+from testbrain.contrib.report.utils import xml_string_to_fileobject
 
 try:
     import yaml
@@ -141,6 +143,7 @@ printout = "false"
 includefailing = "false"
 convertcucumber = "false"
 mergereports = "False"
+mergefiles = "False"
 
 def find(name):
     currentdir = (
@@ -1425,7 +1428,45 @@ def push_results():
     if trainer == "true":
         runcommand("trainer")
 
-    if reporttype == "directory":
+    if reporttype == "directory" and mergefiles == "True":
+        try:
+            directoryToPushFrom = report
+            if os.path.isdir(report):
+                print("directory is correct")
+            else:
+                directoryToPushFrom = os.path.join(
+                    os.getcwd(), directoryToPushFrom.strip("\\").strip("/")
+                )
+                if not os.path.isdir(directoryToPushFrom):
+                    if report.startswith('.') and not report.startswith('..'):
+                        directoryToPushFrom = os.path.join(
+                            os.getcwd(), report[1:].strip("\\").strip("/")
+                        )
+            if os.path.isdir(directoryToPushFrom):
+                print("using dir " + directoryToPushFrom)
+                path = pathlib.Path(directoryToPushFrom)
+                filetype = ".xml"
+                try:
+                    junit_merger = JUnitReportMerger.from_directory(
+                        directory=path
+                    )
+                except Exception as e:
+                    print(str(e))
+                junit_merger.merge()
+                result = junit_merger.result  # internal format
+                result_json_string = junit_merger.result_json  # to json format
+                result_xml_string = junit_merger.result_xml
+                full_report_file = os.path.abspath(os.path.join(directoryToPushFrom, 'full_report.xml'))
+                with open(full_report_file, "w") as text_file:
+                    text_file.write(result_xml_string)
+                print("Importing file: " + full_report_file)
+                call_import(full_report_file)
+            else:
+                print("ERROR - Path to report is incorrect, please use the full path")
+                
+        except:
+            print("Import failed")
+    if reporttype == "directory" and mergefiles != "True":
         directoryToPushFrom = report
         if os.path.isdir(report):
             print("directory is correct")
@@ -1457,19 +1498,14 @@ def push_results():
                 for file in files:
                     if file.endswith(filetype):
                         try:
-                            print("HERE "+mergereports)
                             if mergereports == "True":
                                 if "full_report" not in file:
                                     if pushedfile:
-                                        print("here2")
                                         full_report = JUnitXml.fromfile(full_report_file)
-                                        print("here2a")
                                         new_report = JUnitXml.fromfile(os.path.abspath(os.path.join(root, file)))
-                                        print("here3a")
                                         # Merge in place and write back to same file
                                         full_report += new_report
                                         full_report.write()
-                                        print("here3")
                                         pushedfile = True
                                     else:
                                         shutil.copyfile(os.path.abspath(os.path.join(root, file)),full_report_file)
@@ -1493,27 +1529,20 @@ def push_results():
             for file in os.listdir(directoryToPushFrom):
                 if file.endswith(filetype):
                     echo(file)
-                    print("HERE "+mergereports)
                     if mergereports == "True":
                         if "full_report" not in file:
                             if pushedfile:
-                                print("HERE2")
                                 print(full_report_file)
                                 full_report = JUnitXml.fromfile(full_report_file)
-                                print("here2a")
                                 new_report = JUnitXml.fromfile(os.path.join(directoryToPushFrom, file))
-                                print("here3a")
                                 # Merge in place and write back to same file
                                 full_report += new_report
                                 full_report.write()
-                                print("here3")
                                 pushedfile = True
                             else:
                                 try:
-                                    print("HEREnew")
                                     shutil.copyfile(os.path.join(directoryToPushFrom, file),full_report_file)
                                     pushedfile = True
-                                    print("HEREnew2")
                                 except Exception as e:
                                     print(str(e))
                     else:
@@ -1910,7 +1939,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles
     try:    
 
         
@@ -2020,6 +2049,7 @@ def runtestswithappsurify(*args):
         includefailing = "false"
         convertcucumber = "false"
         mergereports = "false"
+        mergefiles = "False"
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -3118,6 +3148,8 @@ def runtestswithappsurify(*args):
                     convertcucumber = "True"
                 if sys.argv[k] == "--mergereports":
                     mergereports = "True"
+                if sys.argv[k] == "--mergefiles":
+                    mergefiles = "True"
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
