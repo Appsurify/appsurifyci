@@ -26,5 +26,5 @@ setup(
                             'testimportappsurify=appsurifyci.TestImport:testimport',
         'gittoappsurify=appsurifyci.GitToAppsurify:gittoappsurify']
     },
-  install_requires=['PyYAML','requests', 'junitparser'] 
+  install_requires=['PyYAML','requests', 'junitparser', 'appsurify-testbrain-contrib'] 
 )
