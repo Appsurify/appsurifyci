@@ -144,6 +144,7 @@ includefailing = "false"
 convertcucumber = "false"
 mergereports = "False"
 mergefiles = "False"
+fullreportdir = ""
 
 def find(name):
     currentdir = (
@@ -1423,10 +1424,28 @@ def convertcucumberfolder(directoryToPushFrom):
             convertcucumberfile(os.path.abspath(os.path.join(directoryToPushFrom, file)), os.path.abspath(os.path.join(directoryToPushFrom, file))+".xml")
 
 def push_results():
-    global run_id
+    global run_id, fullreportdir
     print("pushing results " + reporttype + " " + report)
     if trainer == "true":
         runcommand("trainer")
+
+    if reporttype == "directory" and (mergefiles == "True" or mergereports == "True"):
+        if(fullreportdir!=""):
+            if os.path.isdir(fullreportdir):
+                print("fullreportdir directory is correct")
+            else:
+                fullreportdir = os.path.join(
+                    os.getcwd(), fullreportdir.strip("\\").strip("/")
+                )
+                if not os.path.isdir(fullreportdir):
+                    if report.startswith('.') and not report.startswith('..'):
+                        fullreportdir = os.path.join(
+                            os.getcwd(), report[1:].strip("\\").strip("/")
+                        )
+                if os.path.isdir(fullreportdir):
+                    print("using dir for fullreport" + fullreportdir)
+                else:
+                    print("ERROR - Path to report is incorrect, please use the full path")
 
     if reporttype == "directory" and mergefiles == "True":
         try:
@@ -1444,7 +1463,11 @@ def push_results():
                         )
             if os.path.isdir(directoryToPushFrom):
                 print("using dir " + directoryToPushFrom)
-                path = pathlib.Path(directoryToPushFrom)
+                if fullreportdir=="":
+                    fullreportdir = directoryToPushFrom
+                path = pathlib.Path(fullreportdir)
+                print(fullreportdir)
+                print(path)
                 filetype = ".xml"
                 try:
                     junit_merger = JUnitReportMerger.from_directory(
@@ -1452,15 +1475,21 @@ def push_results():
                     )
                 except Exception as e:
                     print(str(e))
-                junit_merger.merge()
-                result = junit_merger.result  # internal format
-                result_json_string = junit_merger.result_json  # to json format
-                result_xml_string = junit_merger.result_xml
-                full_report_file = os.path.abspath(os.path.join(directoryToPushFrom, 'full_report.xml'))
-                with open(full_report_file, "w") as text_file:
-                    text_file.write(result_xml_string)
-                print("Importing file: " + full_report_file)
-                call_import(full_report_file)
+                try:
+                    junit_merger.merge()
+                except Exception as e:
+                    print(str(e))
+                try:
+                    result = junit_merger.result  # internal format
+                    result_json_string = junit_merger.result_json  # to json format
+                    result_xml_string = junit_merger.result_xml
+                    full_report_file = os.path.abspath(os.path.join(fullreportdir, 'full_report.xml'))
+                    with open(full_report_file, "w") as text_file:
+                        text_file.write(result_xml_string)
+                    print("Importing file: " + full_report_file)
+                    call_import(full_report_file)
+                except Exception as e:
+                    print(str(e))
             else:
                 print("ERROR - Path to report is incorrect, please use the full path")
                 
@@ -1483,11 +1512,22 @@ def push_results():
                 print("using dir " + directoryToPushFrom)
             else:
                 print("ERROR - Path to report is incorrect, please use the full path")
+        if fullreportdir=="":
+            fullreportdir = directoryToPushFrom
         filetype = ".xml"
-        full_report_file = os.path.abspath(os.path.join(directoryToPushFrom, 'full_report.xml'))
+        full_report_file = os.path.abspath(os.path.join(fullreportdir, 'full_report.xml'))
+        print("Checking to merge reports")
         if mergereports == "True":
-            with open(full_report_file, 'w') as fp:
-                pass
+            print("Creating file full report")
+            print(full_report_file)
+            try:
+                with open(full_report_file, "w") as text_file:
+                    text_file.write("")
+            except Exception as e:
+                print(str(e))
+            #with open(full_report_file, 'w') as fp:
+            #    pass
+            print("Full report file created")
         if recursive == "true":
             if importtype == "trx":
                 filetype = ".trx"
@@ -1521,6 +1561,7 @@ def push_results():
             if pushedfile == False:
                 print("No files pushed")
         if recursive == "false":
+            print("Preparing to push files")
             if importtype == "trx":
                 filetype = ".trx"
             pushedfile = False
@@ -1534,6 +1575,7 @@ def push_results():
                             if pushedfile:
                                 print(full_report_file)
                                 full_report = JUnitXml.fromfile(full_report_file)
+                                print(os.path.join(directoryToPushFrom, file))
                                 new_report = JUnitXml.fromfile(os.path.join(directoryToPushFrom, file))
                                 # Merge in place and write back to same file
                                 full_report += new_report
@@ -1939,7 +1981,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir
     try:    
 
         
@@ -2050,6 +2092,7 @@ def runtestswithappsurify(*args):
         convertcucumber = "false"
         mergereports = "false"
         mergefiles = "False"
+        fullreportdir = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -3150,6 +3193,8 @@ def runtestswithappsurify(*args):
                     mergereports = "True"
                 if sys.argv[k] == "--mergefiles":
                     mergefiles = "True"
+                if sys.argv[k] == "--fullreportdir":
+                    fullreportdir = sys.argv[k + 1]              
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
@@ -3578,8 +3623,8 @@ def runtestswithappsurify(*args):
         #except:
         #    print("unable to find results")
         print("Command executed successfully")
-    except:
-        print("Command execution failed runtestswithappsurify")
+    except Exception as ex:
+        print(ex)
     exit()
 
 if __name__ == "__main__":

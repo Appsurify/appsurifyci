@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='appsurifyci',
-  version='0.1.15',
+  version='0.1.20',
   description='Package used to run tests using Appsurify',
   long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type='text/markdown',
@@ -27,3 +27,4 @@ setup(
         'gittoappsurify=appsurifyci.GitToAppsurify:gittoappsurify']
     },
   install_requires=['PyYAML','requests', 'junitparser', 'appsurify-testbrain-contrib']
+)
