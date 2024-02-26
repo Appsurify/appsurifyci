@@ -1465,8 +1465,8 @@ def push_results():
                 print("using dir " + directoryToPushFrom)
                 if fullreportdir=="":
                     fullreportdir = directoryToPushFrom
-                path = pathlib.Path(fullreportdir)
-                print(fullreportdir)
+                path = pathlib.Path(directoryToPushFrom)
+                print(directoryToPushFrom)
                 print(path)
                 filetype = ".xml"
                 try:
