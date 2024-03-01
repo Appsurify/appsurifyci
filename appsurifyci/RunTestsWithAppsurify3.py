@@ -19,6 +19,7 @@ import shutil
 import json
 import requests
 import re
+import pathlib
 from requests.auth import HTTPProxyAuth
 import csv
 import datetime
@@ -62,9 +63,7 @@ maxrerun = 3  # default 3
 rerun = "false"  # default false
 importtype = "junit"  # default junit
 reporttype = "directory"  # default directory other option file, when directory needs to end with /
-teststorun = (
-    "all"  # options include - high, medium, low, unassigned, ready, open, none
-)
+teststorun = "all"  # options include - high, medium, low, unassigned, ready, open, none
 deletereports = "false"  # options true or false, BE CAREFUL THIS WILL DELETE THE SPECIFIC FILE OR ALL XML FILES IN THE DIRECTORY
 startrunall = ""  # startrun needs to end with a space sometimes
 endrunall = ""  # endrun needs to start with a space sometimes
@@ -146,6 +145,7 @@ mergereports = "False"
 mergefiles = "False"
 fullreportdir = ""
 
+
 def find(name):
     currentdir = (
         os.getcwd()
@@ -212,13 +212,13 @@ def generate_opentest(teststocreate):
 
 # Script to run Katalon tests with Appsurify
 
+
 # inputs
 # link to test suite with all tests
 # will create copy of testsuite with all tests called temp.ts
 # list of tests with format testname,
 # i.e. #teststorun = "Test Cases/New Test Case 2, Test Cases/New Test Case"
 def generate_katalon(teststocreate):
-
     # Copy xml file with all tests
     # Source path
     source = os.path.join(testtemplatearg2, testtemplatearg3)
@@ -382,6 +382,7 @@ def strip_non_ascii(string):
     stripped = (c for c in string if 0 < ord(c) < 127)
     return "".join(stripped)
 
+
 def replace_non_ascii(string):
     """Returns the string without non ASCII characters"""
     newstring = ""
@@ -399,7 +400,6 @@ def replace_non_ascii(string):
                 newstring = newstring + " "
                 addedAsciiSpace = True
     return newstring
-    
 
 
 # created at 3/3 from below should be kept up to date.  Refactor to use the same method for both
@@ -483,7 +483,7 @@ def setVariables():
                 f"##vso[task.setvariable variable={azure_variable}]{azurefilter}{testsrun}"
             )
             while len(testsrun) > max_length:
-                stringtosplit = "|"+prefixtest
+                stringtosplit = "|" + prefixtest
                 split_string = testsrun.find(stringtosplit, max_length)
                 setval = testsrun[:split_string]
                 testsrun = testsrun[split_string:]
@@ -499,7 +499,6 @@ def setVariables():
     # print("Execution command = " + executioncommand)
 
     if executioncommand != "" and executioncommand is not None:
-
         # max_length = 28000
         # variable_num = 1
         # while len(testsrun) > max_length:
@@ -514,7 +513,6 @@ def setVariables():
         runcommand(executioncommand, True)
 
     if printcommand != "" and printcommand is not None:
-
         # max_length = 28000
         # variable_num = 1
         # while len(testsrun) > max_length:
@@ -532,7 +530,7 @@ def setVariables():
 
     if bitrise == "true":
         print(f'envman add --key TESTS_TO_RUN --value "{testsrun}"')
-    #envman add --key MY_RELEASE_NOTE --value "This is the release note"
+    # envman add --key MY_RELEASE_NOTE --value "This is the release note"
     if failfast == "false" and rerun == "true" and teststorun != "none":
         rerun_tests()
 
@@ -676,6 +674,7 @@ def execute_tests(testlist, testset):
     if nopush == "false":
         push_results()
 
+
 def get_always_tests_azure():
     count = 0
     tests = ""
@@ -700,7 +699,7 @@ def get_always_tests_azure():
 
 def get_tests(testpriority, retryGetTests=True):
     origtestpriority = testpriority
-    #echo("getting test set " + str(testpriority))
+    # echo("getting test set " + str(testpriority))
     tests = ""
     valuetests = ""
     finalTestNames = ""
@@ -761,7 +760,7 @@ def get_tests(testpriority, retryGetTests=True):
 
     if testpriority == 11:
         params["day"] = newdays
-    
+
     if repo_name != "":
         params["repo_name"] = repo_name
 
@@ -769,48 +768,61 @@ def get_tests(testpriority, retryGetTests=True):
         params["filename"] = "True"
         params["filename_separator"] = "#"
 
-
     print(params)
     api_url = url + "/api/external/prioritized-tests/"
 
-    #s = requests.Session()
+    # s = requests.Session()
 
-    #retries = Retry(total=3,
+    # retries = Retry(total=3,
     #                backoff_factor=5,
     #                status_forcelist=[ 400, 500, 502, 503, 504 ])
 
-    #s.mount(url, HTTPAdapter(max_retries=retries))
+    # s.mount(url, HTTPAdapter(max_retries=retries))
     retryCount = 6
-    #HTTPConnection.default_socket_options = (
+    # HTTPConnection.default_socket_options = (
     #    HTTPConnection.default_socket_options + [
     #        (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
     #        (socket.SOL_TCP, socket.TCP_KEEPIDLE, 45),
     #        (socket.SOL_TCP, socket.TCP_KEEPINTVL, 10),
     #        (socket.SOL_TCP, socket.TCP_KEEPCNT, 6)
     #    ]
-    #)
+    # )
     response_returned = True
     if proxy == "":
         try:
-            #response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+            # response = s.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
             try:
-                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+                response = requests.get(
+                    url + "/api/external/prioritized-tests/",
+                    headers=headers,
+                    params=params,
+                    timeout=600,
+                )
                 response_returned = True
             except:
                 response_returned = False
             for x in range(retryCount):
-                timetowait = maxretrytime*1.5/retryCount + maxretrytime*1.5/retryCount*x
+                timetowait = (
+                    maxretrytime * 1.5 / retryCount
+                    + maxretrytime * 1.5 / retryCount * x
+                )
                 if response_returned:
                     if response.status_code == 200:
                         break
                 print("Processing commits")
                 time.sleep(timetowait)
                 try:
-                    response = requests.get(url + "/api/external/prioritized-tests/", headers=headers, params=params, timeout=600)
+                    response = requests.get(
+                        url + "/api/external/prioritized-tests/",
+                        headers=headers,
+                        params=params,
+                        timeout=600,
+                    )
                     response_returned = True
                 except:
                     response_returned = False
-        except Exception as e: print(e)
+        except Exception as e:
+            print(e)
 
     else:
         try:
@@ -818,47 +830,107 @@ def get_tests(testpriority, retryGetTests=True):
             httpsproxy = "https://" + proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                #response = s.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
-                response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
+                # response = s.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
+                response = requests.get(
+                    url + "/api/external/prioritized-tests/",
+                    headers=headers,
+                    params=params,
+                    proxies=proxies,
+                    timeout=600,
+                )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
+                    timetowait = (
+                        maxretrytime / retryCount + maxretrytime / retryCount * x
+                    )
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
-                    response = requests.get(url + "/api/external/prioritized-tests/", headers=headers,params=params,proxies=proxies,timeout=600)
+                    response = requests.get(
+                        url + "/api/external/prioritized-tests/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        timeout=600,
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
-                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                # response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                response = requests.get(
+                    url + "/api/external/prioritized-tests/",
+                    headers=headers,
+                    params=params,
+                    proxies=proxies,
+                    auth=auth,
+                    timeout=600,
+                )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
+                    timetowait = (
+                        maxretrytime / retryCount + maxretrytime / retryCount * x
+                    )
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
-                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                    response = requests.get(
+                        url + "/api/external/prioritized-tests/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        auth=auth,
+                        timeout=600,
+                    )
         except:
             httpproxy = proxy
             httpsproxy = proxy
             proxies = {"http": httpproxy, "https": httpsproxy}
             if username == "":
-                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
-                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
+                # response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
+                response = requests.get(
+                    url + "/api/external/prioritized-tests/",
+                    headers=headers,
+                    params=params,
+                    proxies=proxies,
+                    timeout=600,
+                )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
+                    timetowait = (
+                        maxretrytime / retryCount + maxretrytime / retryCount * x
+                    )
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
-                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,timeout=600)
+                    response = requests.get(
+                        url + "/api/external/prioritized-tests/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        timeout=600,
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
-                #response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
-                response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                # response = s.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                response = requests.get(
+                    url + "/api/external/prioritized-tests/",
+                    headers=headers,
+                    params=params,
+                    proxies=proxies,
+                    auth=auth,
+                    timeout=600,
+                )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount + maxretrytime/retryCount*x
+                    timetowait = (
+                        maxretrytime / retryCount + maxretrytime / retryCount * x
+                    )
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
-                    response = requests.get(url + "/api/external/prioritized-tests/",headers=headers,params=params,proxies=proxies,auth=auth,timeout=600)
+                    response = requests.get(
+                        url + "/api/external/prioritized-tests/",
+                        headers=headers,
+                        params=params,
+                        proxies=proxies,
+                        auth=auth,
+                        timeout=600,
+                    )
     print("request sent to get tests")
     print((response.status_code))
 
@@ -878,7 +950,13 @@ def get_tests(testpriority, retryGetTests=True):
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
         return None
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
+        print(
+            (
+                "[!] [{0}] Bad Request: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
         return None
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
@@ -895,7 +973,7 @@ def get_tests(testpriority, retryGetTests=True):
             )
         )
 
-    #if retryGetTests == True:
+    # if retryGetTests == True:
     #    if response.status_code != 200:
     #        print("retrying getting prioritized tests")
     #        get_tests(origtestpriority, retryGetTests=False)
@@ -910,15 +988,16 @@ def get_and_run_tests(type):
     testset = ""
     try:
         oldmaxtests = maxtests
-    except Exception as e: print(e)
+    except Exception as e:
+        print(e)
     runcount = 1
     numplusone = 0
     try:
         testset = get_tests(type)
         count = 0
         tests = ""
-        #print(maxtests)
-        #print("max tests")
+        # print(maxtests)
+        # print("max tests")
         # print(type(maxtests))
         # print("type")
         testrunset = []
@@ -928,17 +1007,19 @@ def get_and_run_tests(type):
         if type == 9:
             testrunset = list(set(testrunset + alwaysrunset))
         if createfiles.isnumeric():
-            numoftests = len(testrunset)            
-            maxtests = numoftests // int(createfiles) + (numoftests % int(createfiles) > 0)
+            numoftests = len(testrunset)
+            maxtests = numoftests // int(createfiles) + (
+                numoftests % int(createfiles) > 0
+            )
             maxtests = numoftests // int(createfiles)
             numplusone = numoftests % int(createfiles)
-            #this below might not be a good idea :/
+            # this below might not be a good idea :/
             if maxtests > oldmaxtests:
                 maxtests = oldmaxtests
                 numplusone = 0
-        #if testtemplate == "mvn":
+        # if testtemplate == "mvn":
         #    testrunset = sorted(testrunset)
-        #if screenplay and project == "Campspot":
+        # if screenplay and project == "Campspot":
         #    print("Setting screenplay")
         #    count = 1
         #    tests = "e2e.tests.EditWorkflowTest#datesChange"
@@ -946,65 +1027,62 @@ def get_and_run_tests(type):
         for testName in testrunset:
             count = count + 1
             if testtemplate == "cypress circleci":
-                circlecisplitstring = "\""
+                circlecisplitstring = '"'
                 if testName.endswith(circlecisplitstring):
-                    testName = testName[0:-len(circlecisplitstring)]
+                    testName = testName[0 : -len(circlecisplitstring)]
                 if circlecisplitstring in testName:
                     testName = testName.split(circlecisplitstring)[-1]
 
                 circlecisplitstring = "&quot;"
                 if testName.endswith(circlecisplitstring):
-                    testName = testName[0:-len(circlecisplitstring)]
+                    testName = testName[0 : -len(circlecisplitstring)]
                 if circlecisplitstring in testName:
                     testName = testName.split(circlecisplitstring)[-1]
-                    
+
                 testName = testName.strip()
-            
 
             if testtemplate == "cypress update":
-                suitename = testName.split(';')[0]
+                suitename = testName.split(";")[0]
                 testName = testName.replace(suitename, "")
-                testName = testName.replace(';','',1)
+                testName = testName.replace(";", "", 1)
                 testName = testName.strip()
                 if "(example #" in testName:
                     testName = testName.split("(example #")[0]
                     testName = testName.strip()
 
             if testtemplate == "cypress inquirer":
-                suitename = testName.split(';')[0]
+                suitename = testName.split(";")[0]
                 testName = testName.replace(suitename, "")
-                testName = testName.replace(';','',1)
+                testName = testName.replace(";", "", 1)
                 testName = testName.strip()
                 if "(example #" in testName:
                     testName = testName.split("(example #")[0]
                     testName = testName.strip()
                 if "C" in testName:
-                    testName = "C"+ testName.split("C")[1]
+                    testName = "C" + testName.split("C")[1]
                     newTestName = testName[0:7].strip()
                     testName = newTestName
                 else:
                     testName = ""
-                    #to do fix this
-                
+                    # to do fix this
+
                 if testName in addedtests:
                     testName = ""
 
             if testtemplate == "cypress update no env":
-                suitename = testName.split(';')[0]
+                suitename = testName.split(";")[0]
                 testName = testName.replace(suitename, "")
-                testName = testName.replace(';','',1)
+                testName = testName.replace(";", "", 1)
                 testName = testName.strip()
                 if "(example #" in testName:
                     testName = testName.split("(example #")[0]
                     testName = testName.strip()
 
-            
-
             if "cypress" in testtemplate:
                 testName = max(testName.split(","), key=len).strip()
 
             if escapetests == "true":
-                testName = testName.replace("\"", "\\\"") 
+                testName = testName.replace('"', '\\"')
 
             if encodetests == "true":
                 testName = testName.encode("unicode_escape").decode()
@@ -1036,49 +1114,51 @@ def get_and_run_tests(type):
                 except:
                     testName = ""
             if count == 1:
-                if  testName != "":
+                if testName != "":
                     tests = prefixtest + testName + postfixtest
                     addedtests.append(testName)
                 else:
                     count = 0
             else:
-                #if testtemplate == "mvn":
-                    #if tests.split(testseparator)[-1].split(testsuitesnameseparator)[0] == testName.split(testsuitesnameseparator)[0]:
-                        #tests = tests + "+" + testName.split(testsuitesnameseparator)[1]
-                    #else:
-                        #tests = tests + testseparator + prefixtest + testName + postfixtest
-                if testName != "":    
+                # if testtemplate == "mvn":
+                # if tests.split(testseparator)[-1].split(testsuitesnameseparator)[0] == testName.split(testsuitesnameseparator)[0]:
+                # tests = tests + "+" + testName.split(testsuitesnameseparator)[1]
+                # else:
+                # tests = tests + testseparator + prefixtest + testName + postfixtest
+                if testName != "":
                     tests = tests + testseparator + prefixtest + testName + postfixtest
                     addedtests.append(testName)
             maxtofind = maxtests
             if runcount <= numplusone:
                 maxtofind = maxtofind + 1
             if count == maxtofind:
-                #print("reached max tests")
+                # print("reached max tests")
                 if createfiles.isnumeric():
-                    filetosave = "appsurifytests"+str(runcount)+".txt"
-                    #filedirectories doesn't work yet
+                    filetosave = "appsurifytests" + str(runcount) + ".txt"
+                    # filedirectories doesn't work yet
                     if createfilesdirectory != "":
-                        #use this so it is relative?
-                        #pathtocreate = os.path.join(getcwd(),createfilesdirectory)
-                        os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
+                        # use this so it is relative?
+                        # pathtocreate = os.path.join(getcwd(),createfilesdirectory)
+                        os.makedirs(
+                            os.path.dirname(createfilesdirectory), exist_ok=True
+                        )
                         filetosave = os.path.join(createfilesdirectory, filetosave)
-                    f= open(filetosave,"w+")
+                    f = open(filetosave, "w+")
                     f.write(tests)
                     f.close()
                 execute_tests(tests, type)
                 count = 0
                 tests = ""
-                #print("restarting test count")
+                # print("restarting test count")
                 failfast_tests()
                 runcount = runcount + 1
         if createfiles.isnumeric():
             if count != 0:
-                filetosave = "appsurifytests"+str(runcount)+".txt"
+                filetosave = "appsurifytests" + str(runcount) + ".txt"
                 if createfilesdirectory != "":
                     os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
                     filetosave = os.path.join(createfilesdirectory, filetosave)
-                f= open(filetosave,"w+")
+                f = open(filetosave, "w+")
                 f.write(tests)
                 f.close()
     except Exception as e:
@@ -1123,12 +1203,12 @@ def rerun_tests():
             numruns = numruns + 1
 
 
-def getresults(retryResults = True):
+def getresults(retryResults=True):
     global run_id
     print(run_id)
     if run_id == "":
         print("no results")
-        #os._exit(0)
+        # os._exit(0)
         return
     echo("getting results")
     headers = {
@@ -1139,26 +1219,28 @@ def getresults(retryResults = True):
     print(params)
     print(headers)
 
-    #s = requests.Session()
+    # s = requests.Session()
 
-    #retries = Retry(total=3,
+    # retries = Retry(total=3,
     #                backoff_factor=5,
     #                status_forcelist=[ 400, 500, 502, 503, 504 ])
 
-    #s.mount(url, HTTPAdapter(max_retries=retries))
+    # s.mount(url, HTTPAdapter(max_retries=retries))
     retryCount = 3
     if proxy == "":
-        
         response = requests.get(
             url + "/api/external/output/", headers=headers, params=params, timeout=600
         )
         for x in range(retryCount):
-            timetowait = maxretrytime/retryCount
+            timetowait = maxretrytime / retryCount
             if response.status_code == 200:
                 break
             time.sleep(timetowait)
             response = requests.get(
-                url + "/api/external/output/", headers=headers, params=params, timeout=600
+                url + "/api/external/output/",
+                headers=headers,
+                params=params,
+                timeout=600,
             )
     else:
         try:
@@ -1171,10 +1253,10 @@ def getresults(retryResults = True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=600
+                    timeout=600,
                 )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime / retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1183,7 +1265,7 @@ def getresults(retryResults = True):
                         headers=headers,
                         params=params,
                         proxies=proxies,
-                        timeout=600
+                        timeout=600,
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -1193,10 +1275,10 @@ def getresults(retryResults = True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=600
+                    timeout=600,
                 )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime / retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1206,7 +1288,7 @@ def getresults(retryResults = True):
                         params=params,
                         proxies=proxies,
                         auth=auth,
-                        timeout=600
+                        timeout=600,
                     )
         except:
             httpproxy = proxy
@@ -1218,10 +1300,10 @@ def getresults(retryResults = True):
                     headers=headers,
                     params=params,
                     proxies=proxies,
-                    timeout=600
+                    timeout=600,
                 )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime / retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1230,7 +1312,7 @@ def getresults(retryResults = True):
                         headers=headers,
                         params=params,
                         proxies=proxies,
-                        timeout=600
+                        timeout=600,
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
@@ -1240,10 +1322,10 @@ def getresults(retryResults = True):
                     params=params,
                     proxies=proxies,
                     auth=auth,
-                    timeout=600
+                    timeout=600,
                 )
                 for x in range(retryCount):
-                    timetowait = maxretrytime/retryCount
+                    timetowait = maxretrytime / retryCount
                     if response.status_code == 200:
                         break
                     time.sleep(timetowait)
@@ -1253,7 +1335,7 @@ def getresults(retryResults = True):
                         params=params,
                         proxies=proxies,
                         auth=auth,
-                        timeout=600
+                        timeout=600,
                     )
     print("result request sent")
     resultset = ""
@@ -1273,7 +1355,13 @@ def getresults(retryResults = True):
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
         return None
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
+        print(
+            (
+                "[!] [{0}] Bad Request: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
         return None
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
@@ -1289,8 +1377,8 @@ def getresults(retryResults = True):
                 )
             )
         )
-    
-    #if retryResults == True:
+
+    # if retryResults == True:
     #    if response.status_code != 200:
     #        print("retrying getting results")
     #        getresults(retryResults=False)
@@ -1319,10 +1407,12 @@ def convertcucumberfile(cucumberfile, xmlfile):
             json_data = json.load(json_file)
         except Exception as error:
             # handle the exception
-            print("An exception occurred:", error) # An exception occurred: division by zero
+            print(
+                "An exception occurred:", error
+            )  # An exception occurred: division by zero
 
     test_cases = ""
-    header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+    header = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
 
     test_suite_time = 0.0
     failure_count = 0
@@ -1378,24 +1468,24 @@ def convertcucumberfile(cucumberfile, xmlfile):
             steps_blob += "]]>"
 
             test_case = "<testcase "
-            test_case += "classname=\"" + feature_name + "\" "
-            test_case += "name=\"" + scenario_name + "\" "
-            test_case += "time=\"" + str(scenario_time) + "\">"
+            test_case += 'classname="' + feature_name + '" '
+            test_case += 'name="' + scenario_name + '" '
+            test_case += 'time="' + str(scenario_time) + '">'
             if scenario_status == "passed":
                 test_case += "<system-out>" + steps_blob + "</system-out>\n"
             else:
-                test_case += "<failure message=\"" + err_blob + "\">"
+                test_case += '<failure message="' + err_blob + '">'
                 test_case += steps_blob + "</failure>\n"
             test_case += "</testcase>\n"
 
             test_cases += test_case
             test_suite_time += feature_time
     test_suite = "<testsuite "
-    test_suite += "failures=\"" + str(failure_count) + "\" "
-    test_suite += "name=\"Cucumber JSON to JUnit\" "
-    test_suite += "skipped=\"0\" "
-    test_suite += "tests=\"" + str(scenario_count) + "\" "
-    test_suite += "time=\"" + str(test_suite_time) + "\">\n"
+    test_suite += 'failures="' + str(failure_count) + '" '
+    test_suite += 'name="Cucumber JSON to JUnit" '
+    test_suite += 'skipped="0" '
+    test_suite += 'tests="' + str(scenario_count) + '" '
+    test_suite += 'time="' + str(test_suite_time) + '">\n'
     for test_case in test_cases:
         test_suite += test_case
     test_suite += "</testsuite>"
@@ -1404,33 +1494,44 @@ def convertcucumberfile(cucumberfile, xmlfile):
         junit_file.write(header)
         junit_file.write(test_suite)
 
+
 def sanitize(input):
     try:
-        input = input.replace("&","&amp;").replace("\"","&quot;")
-        input = input.replace("<","&lt;").replace(">","&gt;")
+        input = input.replace("&", "&amp;").replace('"', "&quot;")
+        input = input.replace("<", "&lt;").replace(">", "&gt;")
     except:
         input = ""
     return input
+
 
 def convertcucumberfolderrecursive(directoryToPushFrom):
     for root, dirs, files in os.walk(directoryToPushFrom):
         for file in files:
             if file.lower().endswith(".json"):
-                convertcucumberfile(os.path.abspath(os.path.join(root, file)), os.path.abspath(os.path.join(root, file))+".xml")
+                convertcucumberfile(
+                    os.path.abspath(os.path.join(root, file)),
+                    os.path.abspath(os.path.join(root, file)) + ".xml",
+                )
+
 
 def convertcucumberfolder(directoryToPushFrom):
     for file in os.listdir(directoryToPushFrom):
         if file.lower().endswith(".json"):
-            convertcucumberfile(os.path.abspath(os.path.join(directoryToPushFrom, file)), os.path.abspath(os.path.join(directoryToPushFrom, file))+".xml")
+            convertcucumberfile(
+                os.path.abspath(os.path.join(directoryToPushFrom, file)),
+                os.path.abspath(os.path.join(directoryToPushFrom, file)) + ".xml",
+            )
+
 
 def push_results():
     global run_id, fullreportdir
     print("pushing results " + reporttype + " " + report)
+
     if trainer == "true":
         runcommand("trainer")
 
     if reporttype == "directory" and (mergefiles == "True" or mergereports == "True"):
-        if(fullreportdir!=""):
+        if fullreportdir != "":
             if os.path.isdir(fullreportdir):
                 print("fullreportdir directory is correct")
             else:
@@ -1438,14 +1539,16 @@ def push_results():
                     os.getcwd(), fullreportdir.strip("\\").strip("/")
                 )
                 if not os.path.isdir(fullreportdir):
-                    if report.startswith('.') and not report.startswith('..'):
+                    if report.startswith(".") and not report.startswith(".."):
                         fullreportdir = os.path.join(
                             os.getcwd(), report[1:].strip("\\").strip("/")
                         )
                 if os.path.isdir(fullreportdir):
                     print("using dir for fullreport" + fullreportdir)
                 else:
-                    print("ERROR - Path to report is incorrect, please use the full path")
+                    print(
+                        "ERROR - Path to report is incorrect, please use the full path"
+                    )
 
     if reporttype == "directory" and mergefiles == "True":
         try:
@@ -1457,44 +1560,38 @@ def push_results():
                     os.getcwd(), directoryToPushFrom.strip("\\").strip("/")
                 )
                 if not os.path.isdir(directoryToPushFrom):
-                    if report.startswith('.') and not report.startswith('..'):
+                    if report.startswith(".") and not report.startswith(".."):
                         directoryToPushFrom = os.path.join(
                             os.getcwd(), report[1:].strip("\\").strip("/")
                         )
             if os.path.isdir(directoryToPushFrom):
                 print("using dir " + directoryToPushFrom)
-                if fullreportdir=="":
+                if fullreportdir == "":
                     fullreportdir = directoryToPushFrom
+
+                # Ensure directory exists or created
+                fullreportdir = pathlib.Path(fullreportdir)
+                fullreportdir.mkdir(parents=True, exist_ok=True)
+
                 path = pathlib.Path(directoryToPushFrom)
                 print(directoryToPushFrom)
                 print(path)
-                filetype = ".xml"
                 try:
-                    junit_merger = JUnitReportMerger.from_directory(
-                        directory=path
-                    )
-                except Exception as e:
-                    print(str(e))
-                try:
+                    junit_merger = JUnitReportMerger.from_directory(directory=path)
                     junit_merger.merge()
-                except Exception as e:
-                    print(str(e))
-                try:
-                    result = junit_merger.result  # internal format
-                    result_json_string = junit_merger.result_json  # to json format
-                    result_xml_string = junit_merger.result_xml
-                    full_report_file = os.path.abspath(os.path.join(fullreportdir, 'full_report.xml'))
-                    with open(full_report_file, "w") as text_file:
-                        text_file.write(result_xml_string)
-                    print("Importing file: " + full_report_file)
-                    call_import(full_report_file)
+                    junit_report = junit_merger.result  # internal format
+                    full_report_file = fullreportdir.joinpath("full_report.xml")
+                    full_report_file.write_text(junit_report.model_dump_xml())
+                    print(f"Importing file: {full_report_file}")
+                    call_import(str(full_report_file.resolve()))
                 except Exception as e:
                     print(str(e))
             else:
                 print("ERROR - Path to report is incorrect, please use the full path")
-                
+
         except:
             print("Import failed")
+
     if reporttype == "directory" and mergefiles != "True":
         directoryToPushFrom = report
         if os.path.isdir(report):
@@ -1504,7 +1601,7 @@ def push_results():
                 os.getcwd(), directoryToPushFrom.strip("\\").strip("/")
             )
             if not os.path.isdir(directoryToPushFrom):
-                if report.startswith('.') and not report.startswith('..'):
+                if report.startswith(".") and not report.startswith(".."):
                     directoryToPushFrom = os.path.join(
                         os.getcwd(), report[1:].strip("\\").strip("/")
                     )
@@ -1512,10 +1609,12 @@ def push_results():
                 print("using dir " + directoryToPushFrom)
             else:
                 print("ERROR - Path to report is incorrect, please use the full path")
-        if fullreportdir=="":
+        if fullreportdir == "":
             fullreportdir = directoryToPushFrom
         filetype = ".xml"
-        full_report_file = os.path.abspath(os.path.join(fullreportdir, 'full_report.xml'))
+        full_report_file = os.path.abspath(
+            os.path.join(fullreportdir, "full_report.xml")
+        )
         print("Checking to merge reports")
         if mergereports == "True":
             print("Creating file full report")
@@ -1525,7 +1624,7 @@ def push_results():
                     text_file.write("")
             except Exception as e:
                 print(str(e))
-            #with open(full_report_file, 'w') as fp:
+            # with open(full_report_file, 'w') as fp:
             #    pass
             print("Full report file created")
         if recursive == "true":
@@ -1541,16 +1640,23 @@ def push_results():
                             if mergereports == "True":
                                 if "full_report" not in file:
                                     if pushedfile:
-                                        full_report = JUnitXml.fromfile(full_report_file)
-                                        new_report = JUnitXml.fromfile(os.path.abspath(os.path.join(root, file)))
+                                        full_report = JUnitXml.fromfile(
+                                            full_report_file
+                                        )
+                                        new_report = JUnitXml.fromfile(
+                                            os.path.abspath(os.path.join(root, file))
+                                        )
                                         # Merge in place and write back to same file
                                         full_report += new_report
                                         full_report.write()
                                         pushedfile = True
                                     else:
-                                        shutil.copyfile(os.path.abspath(os.path.join(root, file)),full_report_file)
+                                        shutil.copyfile(
+                                            os.path.abspath(os.path.join(root, file)),
+                                            full_report_file,
+                                        )
                                         pushedfile = True
-                            else:    
+                            else:
                                 call_import(os.path.abspath(os.path.join(root, file)))
                                 pushedfile = True
                         except:
@@ -1576,14 +1682,19 @@ def push_results():
                                 print(full_report_file)
                                 full_report = JUnitXml.fromfile(full_report_file)
                                 print(os.path.join(directoryToPushFrom, file))
-                                new_report = JUnitXml.fromfile(os.path.join(directoryToPushFrom, file))
+                                new_report = JUnitXml.fromfile(
+                                    os.path.join(directoryToPushFrom, file)
+                                )
                                 # Merge in place and write back to same file
                                 full_report += new_report
                                 full_report.write()
                                 pushedfile = True
                             else:
                                 try:
-                                    shutil.copyfile(os.path.join(directoryToPushFrom, file),full_report_file)
+                                    shutil.copyfile(
+                                        os.path.join(directoryToPushFrom, file),
+                                        full_report_file,
+                                    )
                                     pushedfile = True
                                 except Exception as e:
                                     print(str(e))
@@ -1599,7 +1710,7 @@ def push_results():
                 call_import(full_report_file)
             if pushedfile == False:
                 print("No files pushed")
-        
+
     if reporttype == "file":
         try:
             print("Importing file: " + report)
@@ -1608,7 +1719,7 @@ def push_results():
             print("Import failed")
 
 
-def call_import(filepath, retryImport = True, replaceAscii = False):
+def call_import(filepath, retryImport=True, replaceAscii=False):
     global run_id
     origfilepath = filepath
 
@@ -1641,16 +1752,21 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             filedata = openfile.read()
 
             # Replace the target string
-        if filedata.startswith("This XML file does not appear to have any style information associated with it. The document tree is shown below."):
+        if filedata.startswith(
+            "This XML file does not appear to have any style information associated with it. The document tree is shown below."
+        ):
             print("replacing invalid xml")
-            filedata = filedata.replace("This XML file does not appear to have any style information associated with it. The document tree is shown below.", "")
+            filedata = filedata.replace(
+                "This XML file does not appear to have any style information associated with it. The document tree is shown below.",
+                "",
+            )
             with open(filepath, "w") as openfile:
                 openfile.write(filedata)
 
         # Write the file out again
     except:
         testpath = filepath
-        #print("unable to remove text")
+        # print("unable to remove text")
     if replaceAscii:
         try:
             with open(filepath, "r", errors="ignore") as openfile:
@@ -1722,8 +1838,8 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                 root = ET.fromstring(f.read())
                 tree = ET.ElementTree()
                 added_failure_type = False
-                for test in root.findall('testcase'):
-                    failure = test.find('failure')
+                for test in root.findall("testcase"):
+                    failure = test.find("failure")
                     if failure is None:
                         continue
                     else:
@@ -1773,9 +1889,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     #     "file": open(filepath, "rb"),
     # }
 
-    files = [
-        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-    ]
+    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
 
     headers = {
         "Token": apikey,
@@ -1787,10 +1901,9 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     print("=======================================")
 
     retryCount = 3
-    timetowait = (maxretrytime/2)/retryCount
+    timetowait = (maxretrytime / 2) / retryCount
 
     if proxy == "":
-
         response = requests.post(apiurl, headers=headers, data=payload, files=files)
 
         for x in range(retryCount):
@@ -1801,9 +1914,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
             # files = {
             #     "file": open(filepath, "rb"),
             # }
-            files = [
-                ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-            ]
+            files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
             response = requests.post(apiurl, headers=headers, data=payload, files=files)
     else:
         try:
@@ -1814,9 +1925,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                 # files = {
                 #    "file": open(filepath, "rb"),
                 # }
-                files = [
-                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                ]
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1827,20 +1936,20 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     # files = {
                     #    "file": open(filepath, "rb"),
                     # }
-                    files = [
-                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                    ]
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                     response = requests.post(
-                        apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
                 # files = {
                 #    "file": open(filepath, "rb"),
                 # }
-                files = [
-                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                ]
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1856,9 +1965,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     # files = {
                     #     "file": open(filepath, "rb"),
                     # }
-                    files = [
-                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                    ]
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                     response = requests.post(
                         apiurl,
                         headers=headers,
@@ -1866,7 +1973,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                         files=files,
                         proxies=proxies,
                         auth=auth,
-                    )  
+                    )
         except:
             print("Exception importing, retrying")
             httpproxy = proxy
@@ -1876,9 +1983,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                 # files = {
                 #    "file": open(filepath, "rb"),
                 # }
-                files = [
-                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                ]
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                 response = requests.post(
                     apiurl, headers=headers, data=payload, files=files, proxies=proxies
                 )
@@ -1889,20 +1994,20 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     # files = {
                     #     "file": open(filepath, "rb"),
                     # }
-                    files = [
-                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                    ]
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                     response = requests.post(
-                        apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
                     )
             else:
                 auth = HTTPProxyAuth(username, password)
                 # files = {
                 #     "file": open(filepath, "rb"),
                 # }
-                files = [
-                    ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                ]
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                 response = requests.post(
                     apiurl,
                     headers=headers,
@@ -1918,9 +2023,7 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
                     # files = {
                     #     "file": open(filepath, "rb"),
                     # }
-                    files = [
-                        ('file', (filepath, open(filepath,'rb'), 'text/xml'))
-                    ]
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                     response = requests.post(
                         apiurl,
                         headers=headers,
@@ -1949,7 +2052,13 @@ def call_import(filepath, retryImport = True, replaceAscii = False):
     elif response.status_code == 401:
         print(("[!] [{0}] Authentication Failed".format(response.status_code)))
     elif response.status_code == 400:
-        print(("[!] [{0}] Bad Request: Content: {1}".format(response.status_code, response.content)))
+        print(
+            (
+                "[!] [{0}] Bad Request: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
     elif response.status_code == 200 or response.status_code == 201:
@@ -1982,9 +2091,7 @@ def runtestswithappsurify(*args):
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
     global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir
-    try:    
-
-        
+    try:
         tests = ""
         testsrun = ""
         run_id = ""
@@ -2096,9 +2203,9 @@ def runtestswithappsurify(*args):
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
-        #sys.argv = args
-        #print(sys.argv)
-        #print(type(sys.argv))
+        # sys.argv = args
+        # print(sys.argv)
+        # print(type(sys.argv))
         try:
             sys.argv = args[0]
             if type(sys.argv) == tuple:
@@ -2241,17 +2348,17 @@ def runtestswithappsurify(*args):
             startrunspecific = "testrunner temp.dd.csv"
             startrunall = "testrunner " + testtemplatearg2
             report = testtemplatearg1
-        
+
         # https://stackoverflow.com/questions/22505533/how-to-run-only-one-unit-test-class-using-gradle
         if testtemplate == "gradle":
             testseparator = "--test "
             addtestsuitename = "true"
             testsuitesnameseparator = "."
-        # startrunspecific = "gradle test --test '"
+            # startrunspecific = "gradle test --test '"
             startrunspecific = "gradle test"
             prefixtest = " --test '"
             postfixtest = "'"
-            #endrunspecific = "'"
+            # endrunspecific = "'"
             startrunall = "gradle test"
             report = "./build/test-results/"
             reporttype = "directory"
@@ -2266,27 +2373,27 @@ def runtestswithappsurify(*args):
             startrunspecific = "gradle test "
             prefixtest = ""
             postfixtest = ""
-            #endrunspecific = "'"
+            # endrunspecific = "'"
             startrunall = "gradle test "
             report = "./build/test-results/"
             reporttype = "directory"
             deletereports = "false"
-            endrunspecific = "\""
-            endspecificrun = " -Pappsurifytests=\""
+            endrunspecific = '"'
+            endspecificrun = ' -Pappsurifytests="'
 
-        #https://stackoverflow.com/questions/48098352/how-to-run-single-cucumber-scenario-by-name
+        # https://stackoverflow.com/questions/48098352/how-to-run-single-cucumber-scenario-by-name
         if testtemplate == "gradle cucumber old":
             testseparator = "|"
             startrunspecific = "gradle test "
             prefixtest = ""
             postfixtest = ""
-            #endrunspecific = "'"
+            # endrunspecific = "'"
             startrunall = "gradle test "
             report = "./build/test-results/"
             reporttype = "directory"
             deletereports = "false"
-            endrunspecific = "\""
-            endspecificrun = " -Pappsurifytests=\""
+            endrunspecific = '"'
+            endspecificrun = ' -Pappsurifytests="'
 
         if testtemplate == "testcafe":
             testseparator = ","
@@ -2299,21 +2406,21 @@ def runtestswithappsurify(*args):
             reporttype = "directory"
             deletereports = "false"
             endspecificrun = " -Dtest="
-            
-        #https://jadala-ajay16.medium.com/running-tests-from-command-line-different-options-427a5dadd224
-        #https://maven.apache.org/surefire/maven-surefire-plugin/test-mojo.html
+
+        # https://jadala-ajay16.medium.com/running-tests-from-command-line-different-options-427a5dadd224
+        # https://maven.apache.org/surefire/maven-surefire-plugin/test-mojo.html
         if testtemplate == "mvn old":
-            #testseparator = ","
+            # testseparator = ","
             testseparator = "+"
-            #addtestsuitename = "true"
-            #testsuitesnameseparator = "#"
+            # addtestsuitename = "true"
+            # testsuitesnameseparator = "#"
             startrunspecific = "mvn test"
-            endrunspecific = "\""
+            endrunspecific = '"'
             startrunall = "mvn test"
             report = "./target/surefire-reports/"
             reporttype = "directory"
             deletereports = "false"
-            endspecificrun = " -Dtest=\"#"
+            endspecificrun = ' -Dtest="#'
 
         if testtemplate == "mvn":
             testseparator = ","
@@ -2329,7 +2436,7 @@ def runtestswithappsurify(*args):
 
         if testtemplate == "printout":
             testseparator = "\n"
-            startrunspecific = 'mvn test '
+            startrunspecific = "mvn test "
             endrunspecific = '" '
             postfixtest = "$'"
             prefixtest = "--name '^"
@@ -2353,17 +2460,17 @@ def runtestswithappsurify(*args):
             screenplay = True
 
         if testtemplate == "mvn integration old":
-            #testseparator = ","
+            # testseparator = ","
             testseparator = "+"
-            #addtestsuitename = "true"
-            #testsuitesnameseparator = "#"
+            # addtestsuitename = "true"
+            # testsuitesnameseparator = "#"
             startrunspecific = "mvn test"
-            endrunspecific = "\""
+            endrunspecific = '"'
             startrunall = "mvn test"
             report = "./target/surefire-reports/"
             reporttype = "directory"
             deletereports = "false"
-            endspecificrun = " -Dit.test=\"#"
+            endspecificrun = ' -Dit.test="#'
 
         if testtemplate == "mvn integration":
             testseparator = ","
@@ -2402,8 +2509,8 @@ def runtestswithappsurify(*args):
             webdriverio = "true"
             endspecificrun = " -g '"
 
-        #behave
-        #https://behave.readthedocs.io/en/latest/behave.html?highlight=command#command-line-arguments
+        # behave
+        # https://behave.readthedocs.io/en/latest/behave.html?highlight=command#command-line-arguments
 
         # https://www.npmjs.com/package/jest-junit
         # https://jestjs.io/docs/cli#--testnamepatternregex
@@ -2424,7 +2531,7 @@ def runtestswithappsurify(*args):
         # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
         if testtemplate == "cucumber mvn":
             testseparator = " "
-            startrunspecific = 'mvn test '
+            startrunspecific = "mvn test "
             endrunspecific = '" '
             postfixtest = "$'"
             prefixtest = "--name '^"
@@ -2436,7 +2543,7 @@ def runtestswithappsurify(*args):
 
         if testtemplate == "cucumber protractor":
             testseparator = " "
-            startrunspecific = 'mvn test '
+            startrunspecific = "mvn test "
             endrunspecific = '" '
             postfixtest = "$'"
             prefixtest = "--name '^"
@@ -2471,7 +2578,6 @@ def runtestswithappsurify(*args):
             startrunspecific = testtemplatearg1 + " -x " + testtemplatearg3 + " "
             endrunall = testtemplatearg2
             endspecificrun = " "
-            
 
         # mocha
         # install https://www.npmjs.com/package/mocha-junit-reporter
@@ -2544,7 +2650,9 @@ def runtestswithappsurify(*args):
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2559,7 +2667,9 @@ def runtestswithappsurify(*args):
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2575,7 +2685,9 @@ def runtestswithappsurify(*args):
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2591,7 +2703,9 @@ def runtestswithappsurify(*args):
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2606,7 +2720,9 @@ def runtestswithappsurify(*args):
             testseparator = ","
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = "}'"
             postfixtest = '"'
             prefixtest = '"'
@@ -2615,12 +2731,13 @@ def runtestswithappsurify(*args):
             )
             endspecificrun = '"grep":'
 
-
         if testtemplate == "cypress circleci":
             testseparator = "; "
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2634,7 +2751,9 @@ def runtestswithappsurify(*args):
             filenames = "True"
             reporttype = "file"
             report = "results.xml"
-            startrunspecific = 'cypress run --reporter junit --reporter-options mochaFile=result.xml'
+            startrunspecific = (
+                "cypress run --reporter junit --reporter-options mochaFile=result.xml"
+            )
             endrunspecific = '"'
             postfixtest = ""
             prefixtest = ""
@@ -2753,7 +2872,6 @@ def runtestswithappsurify(*args):
             importtype = "trx"
             endspecificrun = " /tests:"
 
-
         if testtemplate == "azure specflow":
             encodetests = "true"
             executetests = "false"
@@ -2812,7 +2930,6 @@ def runtestswithappsurify(*args):
             endspecificrun = " /tests:"
             azurevariablenum = 1
             spliton = ","
-            
 
         # Jasmine3
         # npm install -g jasmine-xml-reporter for jasmine 2.x then use --junitreport and --output to determine where to output the report.
@@ -2828,7 +2945,7 @@ def runtestswithappsurify(*args):
             startrunall = "jasmine test --reporter=jasmine-junit-reporter "
             endspecificrun = "  --filter='"
 
-        #add reporter - https://playwright.dev/docs/test-reporters
+        # add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright net":
             testseparator = "|"
             reporttype = "file"
@@ -2840,7 +2957,7 @@ def runtestswithappsurify(*args):
             startrunall = "playwright test "
             endspecificrun = " -g '"
 
-        #add reporter - https://playwright.dev/docs/test-reporters
+        # add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright node":
             testseparator = "|"
             reporttype = "file"
@@ -2852,7 +2969,7 @@ def runtestswithappsurify(*args):
             startrunall = "playwright test "
             endspecificrun = " -g '"
 
-        #add reporter - https://playwright.dev/docs/test-reporters
+        # add reporter - https://playwright.dev/docs/test-reporters
         if testtemplate == "playwright java":
             testseparator = ","
             addtestsuitename = "true"
@@ -2865,8 +2982,8 @@ def runtestswithappsurify(*args):
             deletereports = "false"
             endspecificrun = " -Dtest="
 
-        #add reporter - https://playwright.dev/docs/test-reporters
-        #if testtemplate == "playwright python":
+        # add reporter - https://playwright.dev/docs/test-reporters
+        # if testtemplate == "playwright python":
         #    testseparator = "|"
         #    reporttype = "file"
         #    report = "test-results.xml"
@@ -2939,7 +3056,7 @@ def runtestswithappsurify(*args):
                 + report_file
                 + "'"
             )
-            #endspecificrun = "  --filter='"
+            # endspecificrun = "  --filter='"
             generatefile = "katalon"
 
         # opentest
@@ -3142,23 +3259,25 @@ def runtestswithappsurify(*args):
                 if sys.argv[k] == "--alwaysrun":
                     alwaysrun = sys.argv[k + 1]
                     if alwaysrun.lower() != "none":
-                        alwaysrunset = [x.strip() for x in alwaysrun.split(',')]
+                        alwaysrunset = [x.strip() for x in alwaysrun.split(",")]
                 if sys.argv[k] == "--azurealwaysrun":
                     azurealwaysrun = sys.argv[k + 1]
                     print("setting azurealwaysrun")
                     if azurealwaysrun.lower() != "none":
-                        azurealwaysrunset = [x.strip() for x in azurealwaysrun.split(',')]
+                        azurealwaysrunset = [
+                            x.strip() for x in azurealwaysrun.split(",")
+                        ]
                         print(azurealwaysrunset)
                 if sys.argv[k] == "--runcommand":
                     commandset = sys.argv[k + 1]
                     startrunall = sys.argv[k + 1]
                     startrunspecific = sys.argv[k + 1] + endspecificrun
-                    #print("fall back command = " + startrunall)
-                    #print("prioritized run = " + startrunspecific)
+                    # print("fall back command = " + startrunall)
+                    # print("prioritized run = " + startrunspecific)
                 if sys.argv[k] == "--endcommand":
                     endcommand = sys.argv[k + 1]
-                    #print("fall back command = " + startrunall)
-                    #print("prioritized run = " + startrunspecific)
+                    # print("fall back command = " + startrunall)
+                    # print("prioritized run = " + startrunspecific)
                 # if sys.argv[k] == "--runnewtests":
                 #    runnewtests = sys.argv[k+1]
                 if sys.argv[k] == "--noupload":
@@ -3194,24 +3313,23 @@ def runtestswithappsurify(*args):
                 if sys.argv[k] == "--mergefiles":
                     mergefiles = "True"
                 if sys.argv[k] == "--fullreportdir":
-                    fullreportdir = sys.argv[k + 1]              
+                    fullreportdir = sys.argv[k + 1]
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
                     )
-                
-        
+
         if commandset == "":
             startrunspecific = startrunspecific + endspecificrun
             print("################################################")
-            #print("prioritized run = " + startrunspecific)
+            # print("prioritized run = " + startrunspecific)
 
         if endcommand != "":
             endrunpostfix = endcommand
 
         if printout == "True":
             testseparator = testseparator + "\n"
-        
+
         if githubactionsvariable != "" and githubactionsvariable is not None:
             executioncommand = (
                 'echo "{githubactionsvariable}={[[teststorun]]}" >> $GITHUB_ENV'
@@ -3222,13 +3340,15 @@ def runtestswithappsurify(*args):
             executioncommand = (
                 'echo \'export {circlecivariable}="[[teststorun]]"\' >> "$BASH_ENV"'
             )
-            printcommand = 'echo \'export {circlecivariable}="[[teststorun]]"\' >> "$BASH_ENV"'
-        
+            printcommand = (
+                'echo \'export {circlecivariable}="[[teststorun]]"\' >> "$BASH_ENV"'
+            )
+
         if circlecivariablenobash != "" and circlecivariablenobash is not None:
             executioncommand = (
-                'echo \'export {circlecivariablenobash}="[[teststorun]]"\''
+                "echo 'export {circlecivariablenobash}=\"[[teststorun]]\"'"
             )
-            printcommand = 'echo \'export {circlecivariablenobash}="[[teststorun]]"\''
+            printcommand = "echo 'export {circlecivariablenobash}=\"[[teststorun]]\"'"
 
         if "http://" in proxy:
             proxy = proxy.replace("http://", "")
@@ -3258,7 +3378,7 @@ def runtestswithappsurify(*args):
         testsuiteencoded = testsuite
         projectencoded = project
 
-        #if commit == "" and repository == "git":
+        # if commit == "" and repository == "git":
         #    commit = runcommand('git log -1 --pretty="%H"')
         #    commit = commit.rstrip().rstrip("\n\r")
         #    print(("commit id = " + commit))
@@ -3267,7 +3387,7 @@ def runtestswithappsurify(*args):
         # git rev-parse --abbrev-ref HEAD
         # https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
 
-        #if branch == "" and repository == "git":
+        # if branch == "" and repository == "git":
         #    branch = runcommand("git rev-parse --abbrev-ref HEAD").rstrip("\n\r").rstrip()
         #    print(("branch = " + branch))
 
@@ -3324,21 +3444,20 @@ def runtestswithappsurify(*args):
         # run_id=""
 
         # $url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commit $run_id
-        #if repo_name != "":
+        # if repo_name != "":
         #    print("Uploading results")
         #    from time import sleep
         #    sleep(30)
         #    print("Upload completed")
         #    return
-            #print("Uploading results3")
-        
-        
+        # print("Uploading results3")
+
         echo("Getting tests to run")
 
         valuetests = ""
         finalTestNames = ""
         testsrun = ""
-        #print("test to run = " + teststorun)
+        # print("test to run = " + teststorun)
         if teststorun == "all":
             execute_tests("", 0)
             # testsrun="all"
@@ -3377,30 +3496,34 @@ def runtestswithappsurify(*args):
             print("Weekend running all tests")
             testtypes = []
 
-        daysofweek = {0:"monday", 1:"tuesday", 2:"wednesday", 3:"thursday", 4:"friday", 5:"saturday", 6:"sunday"}
+        daysofweek = {
+            0: "monday",
+            1: "tuesday",
+            2: "wednesday",
+            3: "thursday",
+            4: "friday",
+            5: "saturday",
+            6: "sunday",
+        }
         day = daysofweek[weekno]
         runningallday = False
         if daysrunall != "":
-            for runfullday in daysrunall.split(','):
+            for runfullday in daysrunall.split(","):
                 if (
                     teststorun != "all"
                     and teststorun != "none"
                     and (runfullday in day or day in runfullday)
                 ):
-                    print("Running all tests as we are on "+ day)
+                    print("Running all tests as we are on " + day)
                     testtypes = []
                     runningallday = True
-            
+
             if not runningallday:
-                if (
-                    teststorun != "all"
-                    and teststorun != "none"
-                    and day in daysrunall
-                ):
-                    print("Running all tests as we are on "+ day)
+                if teststorun != "all" and teststorun != "none" and day in daysrunall:
+                    print("Running all tests as we are on " + day)
                     testtypes = []
                     runningallday = True
-        
+
         ####start loop
         for i in testtypes:
             # print(("testsrun1 = " + testsrun))
@@ -3408,7 +3531,7 @@ def runtestswithappsurify(*args):
                 testsrun = get_and_run_tests(i) + testsrun
             except Exception as e:
                 print("Error running tests in set")
-                #print(e)
+                # print(e)
 
         if executetests == "false":
             print("Tests to run")
@@ -3430,19 +3553,18 @@ def runtestswithappsurify(*args):
             if createfilesdirectory != "":
                 os.makedirs(os.path.dirname(createfilesdirectory), exist_ok=True)
                 filetosave = os.path.join(createfilesdirectory, filetosave)
-            f= open(filetosave,"w+")
+            f = open(filetosave, "w+")
             f.write(testsrun)
             f.close()
 
         if createpropertiesfile == "true":
-            f= open("appsurifytests.properties","w+")
+            f = open("appsurifytests.properties", "w+")
             f.write(f"appsurifytests={testsrun}")
             f.close()
 
         # print("tests " + os.environ.get('TESTSTORUN'))
         # print("##vso[task.setvariable variable=TestsToRun;isOutput=true]"+testsrun)
         if "azure" in testtemplate:
-            
             max_length = 28000
             variable_num = 1
 
@@ -3502,8 +3624,10 @@ def runtestswithappsurify(*args):
                 try:
                     numtestsets = int(numtestsets)
                     testlength = len(testsrun)
-                    new_max_length = int(testlength / numtestsets) + (testlength % numtestsets > 0)
-                    #print("new max length = "+ str(new_max_length))
+                    new_max_length = int(testlength / numtestsets) + (
+                        testlength % numtestsets > 0
+                    )
+                    # print("new max length = "+ str(new_max_length))
                     if new_max_length <= max_length:
                         max_length = new_max_length + 50
                 except Exception as e:
@@ -3522,7 +3646,9 @@ def runtestswithappsurify(*args):
                     print(
                         f"##vso[task.setvariable variable={azure_variable}{variable_num}]{azurefilter}"
                     )
-                    print(f"##vso[task.setvariable variable={azure_variable}]{azurefilter}")
+                    print(
+                        f"##vso[task.setvariable variable={azure_variable}]{azurefilter}"
+                    )
                 if azurefilter == "":
                     print("running all tests")
                     # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
@@ -3534,7 +3660,11 @@ def runtestswithappsurify(*args):
             else:
                 azurealwaysruntestsformatted = get_always_tests_azure()
                 print("running subset of azure tests")
-                if azurefilter[0:-1].endswith("TestCategory=Batch") and azurevariablenum!="" and numtestsets != "":
+                if (
+                    azurefilter[0:-1].endswith("TestCategory=Batch")
+                    and azurevariablenum != ""
+                    and numtestsets != ""
+                ):
                     azurefilter = azurefilter[0:-19]
                 if azurefilter != "":
                     if (
@@ -3548,7 +3678,7 @@ def runtestswithappsurify(*args):
                     )
                 azuresets = []
                 while len(testsrun) > max_length:
-                    stringtosplit = "|"+prefixtest
+                    stringtosplit = "|" + prefixtest
                     split_string = testsrun.find(stringtosplit, max_length)
                     setval = testsrun[:split_string]
                     if setval.startswith("|"):
@@ -3591,7 +3721,7 @@ def runtestswithappsurify(*args):
             executioncommand = executioncommand.replace("[[teststorun]]", testsrun)
             print("Execution command is " + executioncommand)
             runcommand(executioncommand, True)
-        
+
         if printcommand != "" and printcommand is not None:
             # max_length = 28000
             # variable_num = 1
@@ -3604,7 +3734,6 @@ def runtestswithappsurify(*args):
             # print (f'##vso[task.setvariable variable={azure_variable}{variable_num}]{testsrun}')
             printcommand = printcommand.replace("[[teststorun]]", testsrun)
             print(printcommand)
-            
 
         # if githubactionsvariable != "" and githubactionsvariable is not None:
         #    executioncommand = "echo \"\{githubactionsvariable\}={[[teststorun]]}\" >> $GITHUB_ENV"
@@ -3615,25 +3744,26 @@ def runtestswithappsurify(*args):
         if failfast == "false" and rerun == "true" and teststorun != "none":
             rerun_tests()
 
-        #try:
+        # try:
         if upload == "true":
             getresults()
-        #except Exception as e:
-            #print(e)
-        #except:
+        # except Exception as e:
+        # print(e)
+        # except:
         #    print("unable to find results")
         print("Command executed successfully")
     except Exception as ex:
         print(ex)
     exit()
 
+
 if __name__ == "__main__":
     runtestswithappsurify(sys.argv)
 
-#def main(*sys.argv):
-    # print(sys.argv)
+# def main(*sys.argv):
+# print(sys.argv)
 #    runtestswithappsurify(sys.argv)
 
 #    exit()
 
-#main(sys.sys.argv)
+# main(sys.sys.argv)
