@@ -3,3 +3,8 @@
 /appsurifyci.egg-info/
 /.testbrain/
 /.jython_cache/
+.egg-info/
+build
+dist
+.jython_cache/
+.testbrain/
