@@ -1,0 +1,19 @@
+FROM python:3.11.7-slim-bullseye
+MAINTAINER Artem Demidenko <ar.demidenko@gmail.com>
+
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=utf8 \
+    GIT_PYTHON_REFRESH='quiet' \
+    GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
+
+WORKDIR /app
+
+RUN pip3 install appsurifyci --pre
