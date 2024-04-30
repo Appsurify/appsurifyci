@@ -1589,7 +1589,8 @@ def push_results():
             else:
                 print("ERROR - Path to report is incorrect, please use the full path")
 
-        except:
+        except Exception as e:
+            print(e)
             print("Import failed")
 
     if reporttype == "directory" and mergefiles != "True":
@@ -1715,7 +1716,8 @@ def push_results():
         try:
             print("Importing file: " + report)
             call_import(report)
-        except:
+        except Exception as e:
+            print(e)
             print("Import failed")
 
 
@@ -1862,10 +1864,13 @@ def call_import(filepath, retryImport=True, replaceAscii=False):
             #    test.remove(sysout)
             # for syserror in test.findall('system-err'):
             #    test.remove(syserror)
+            message = ""
             for error in test.findall("error"):
                 message = error.get("message")
+
             for failure in test.findall("failure"):
                 failure.set("message", message)
+
         tree.write(filepath)
 
     apiurl = url + "/api/external/import/"
