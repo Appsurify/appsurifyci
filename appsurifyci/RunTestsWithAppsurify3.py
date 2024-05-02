@@ -2205,6 +2205,9 @@ def runtestswithappsurify(*args):
         mergereports = "false"
         mergefiles = "False"
         fullreportdir = ""
+        azureTest = False
+        dll = ""
+        vstestlocation = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2236,6 +2239,29 @@ def runtestswithappsurify(*args):
                     testtemplatearg4 = sys.argv[k + 1]
                 if sys.argv[k] == "--filenames":
                     filenames = "True"
+                if sys.argv[k] == "--azuretest":
+                    azureTest = True
+                if sys.argv[k] == "--dll":
+                    dll = sys.argv[k + 1]
+                if sys.argv[k] == "--vstestlocation":
+                    vstestlocation = sys.argv[k + 1]
+
+        if azureTest:
+            #vstestlocation = "c:\\test\\this"
+            print("vs test location = ")
+            print(vstestlocation)
+            if vstestlocation.endswith("\""):
+                vstestlocation = vstestlocation[:-1]
+            if not vstestlocation.endswith("\\"):
+                if vstestlocation != "":
+                    vstestlocation = vstestlocation + "\\"
+            vstestlocation = "\""+vstestlocation + "vstest.console\""
+            commandToRun = vstestlocation + " " + dll+ " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+            runcommand(commandToRun)
+            f = open('testlist.txt', 'r')
+            print(f.read())
+            f.close()
+            exit()
 
         #####Test Run Templates######
 
