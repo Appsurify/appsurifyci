@@ -144,6 +144,9 @@ convertcucumber = "false"
 mergereports = "False"
 mergefiles = "False"
 fullreportdir = ""
+azureTest = False
+dll = ""
+vstestlocation = ""
 
 
 def find(name):
@@ -995,7 +998,7 @@ def get_and_run_tests(type):
     try:
         testset = get_tests(type)
         count = 0
-        tests = ""
+        tests = ""    
         # print(maxtests)
         # print("max tests")
         # print(type(maxtests))
@@ -1152,6 +1155,34 @@ def get_and_run_tests(type):
                 # print("restarting test count")
                 failfast_tests()
                 runcount = runcount + 1
+        #####shouuld change this to add to test set at the start and be part of the standard loop
+        if azureTest:
+            try:
+                #vstestlocation = "c:\\test\\this"
+                print("vs test location = ")
+                print(vstestlocation)
+                if vstestlocation.endswith("\""):
+                    vstestlocation = vstestlocation[:-1]
+                if not vstestlocation.endswith("\\"):
+                    if vstestlocation != "":
+                        vstestlocation = vstestlocation + "\\"
+                vstestlocation = "\""+vstestlocation + "vstest.console\""
+                commandToRun = vstestlocation + " " + dll+ " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+                runcommand(commandToRun)
+                old_tests = get_tests_file()
+                call_upload()
+                if old_tests != "{\"message\":\"No file found\"}":
+                    new_tests = compare_file_to_string("testlist.txt",old_tests)
+                    print("Checking for new tests")
+                    for testName in new_tests:
+                        print(testName)
+                        tests = tests + testseparator + prefixtest + testName + postfixtest
+                        addedtests.append(testName)
+            except Exception as error:
+                # handle the exception
+                print(
+                    "An exception occurred:", error
+                )  # An exception occurred: division by zero
         if createfiles.isnumeric():
             if count != 0:
                 filetosave = "appsurifytests" + str(runcount) + ".txt"
@@ -1178,6 +1209,242 @@ def get_and_run_tests(type):
     #        print("executing all tests")
     #        execute_tests("", 0)
 
+def get_tests_file(retryImport=True):
+    
+    payload = {
+        "project_name": project,
+        "testsuite_name": testsuite,
+    }
+
+    headers = {
+        "Token": apikey,
+    }
+    apiurl = "/fileimport/download"
+
+    print(headers)
+    print(payload)
+    print(apiurl)
+    print("=======================================")
+
+    retryCount = 3
+    timetowait = (maxretrytime / 2) / retryCount
+
+    if proxy == "":
+        response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                )
+       
+        for x in range(retryCount):
+            if response.status_code == 200 or response.status_code == 201:
+                break
+            print(("Status code : [{0}] Retrying".format(response.status_code)))
+            time.sleep(timetowait)
+            # files = {
+            #     "file": open(filepath, "rb"),
+            # }
+            response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                )
+    else:
+        try:
+            httpproxy = "http://" + proxy
+            httpsproxy = "https://" + proxy
+            proxies = {"http": httpproxy, "https": httpsproxy}
+            if username == "":
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                    proxies=proxies
+                )               
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #    "file": open(filepath, "rb"),
+                    # }
+                    
+                    response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                    proxies = proxies
+                )
+            else:
+                auth = HTTPProxyAuth(username, password)
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                
+                    proxies=proxies,
+                    auth=auth,
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    response = requests.get(
+                        apiurl,
+                        headers=headers,
+                        params=payload,
+                        timeout=600,
+                
+                        proxies=proxies,
+                        auth=auth,
+                    )
+        except:
+            print("Exception importing, retrying")
+            httpproxy = proxy
+            httpsproxy = proxy
+            proxies = {"http": httpproxy, "https": httpsproxy}
+            if username == "":
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                #files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                    proxies=proxies
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    response = requests.get(
+                        apiurl,
+                        headers=headers,
+                        params=payload,
+                        timeout=600,
+                
+                        proxies=proxies,
+                    )
+            else:
+                auth = HTTPProxyAuth(username, password)
+                # files = {
+                #     "file": open(filepath, "rb"),
+                # }
+                response = requests.get(
+                    apiurl,
+                    headers=headers,
+                    params=payload,
+                    timeout=600,
+                
+                    proxies=proxies,
+                    auth=auth,
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    #files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    response = requests.get(
+                        apiurl,
+                        headers=headers,
+                        params=payload,
+                        timeout=600,
+                
+                        proxies=proxies,
+                        auth=auth,
+                    )
+
+    print("file sent")
+    if response.status_code >= 500:
+        if retryImport == True and "Parse error" in response.content.decode("utf-8"):
+            print("retrying import after parsing errors")
+            get_tests_file(retryImport=False)
+            return
+        else:
+            print(
+                (
+                    "[!] [{0}] Server Error {1}".format(
+                        response.status_code, response.content.decode("utf-8")
+                    )
+                )
+            )
+    elif response.status_code == 404:
+        print(("[!] [{0}] URL not found: []".format(response.status_code)))
+    elif response.status_code == 401:
+        print(("[!] [{0}] Authentication Failed".format(response.status_code)))
+    elif response.status_code == 400:
+        print(
+            (
+                "[!] [{0}] Bad Request: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
+    elif response.status_code >= 300:
+        print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
+    elif response.status_code == 200 or response.status_code == 201:
+        #resultset = json.loads(response.content.decode("utf-8"))
+        #print(response.content)
+        return response.content.decode("utf-8")
+    else:
+        print(
+            (
+                "[?] Unexpected Error: [HTTP {0}]: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
+    if retryImport == True:
+        if response.status_code != 200 and response.status_code != 201:
+            print("retrying import")
+            time.sleep(5)
+            get_tests_file(retryImport=False)
+
+def compare_file_to_string(file_path, string):
+    """
+    Compares the contents of a file to a given string.
+    Returns an array of lines from the file that were not found in the string.
+    """
+    lines_not_found = []
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()  # Remove leading/trailing whitespace
+            if line not in string:
+                lines_not_found.append(line)
+
+    return lines_not_found
+
+# Example usage
+file_path = 'example.txt'
+string_to_compare = "This is a sample string to compare against the file."
+
+lines_missing = compare_file_to_string(file_path, string_to_compare)
+print("Lines from the file that were not found in the string:")
+for line in lines_missing:
+    print(line)
 
 # def failfast_tests(tests):
 def failfast_tests():
@@ -2087,6 +2354,203 @@ def call_import(filepath, retryImport=True, replaceAscii=False):
             call_import(origfilepath, retryImport=False)
 
 
+def call_upload(retryImport=True):
+    payload = {
+        "project_name": project,
+        "testsuite_name": testsuite,
+    }
+    filepath = "testlist.txt"
+
+    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+
+    headers = {
+        "Token": apikey,
+    }
+    apiurl = url + "/fileimport/upload"
+
+    print(headers)
+    print(payload)
+    print(apiurl)
+    print("=======================================")
+
+    retryCount = 3
+    timetowait = (maxretrytime / 2) / retryCount
+
+    if proxy == "":
+        response = requests.post(apiurl, headers=headers, data=payload, files=files)
+
+        for x in range(retryCount):
+            if response.status_code == 200 or response.status_code == 201:
+                break
+            print(("Status code : [{0}] Retrying".format(response.status_code)))
+            time.sleep(timetowait)
+            # files = {
+            #     "file": open(filepath, "rb"),
+            # }
+            files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+            response = requests.post(apiurl, headers=headers, data=payload, files=files)
+    else:
+        try:
+            httpproxy = "http://" + proxy
+            httpsproxy = "https://" + proxy
+            proxies = {"http": httpproxy, "https": httpsproxy}
+            if username == "":
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                response = requests.post(
+                    apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #    "file": open(filepath, "rb"),
+                    # }
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                    )
+            else:
+                auth = HTTPProxyAuth(username, password)
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                response = requests.post(
+                    apiurl,
+                    headers=headers,
+                    data=payload,
+                    files=files,
+                    proxies=proxies,
+                    auth=auth,
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                        auth=auth,
+                    )
+        except:
+            print("Exception importing, retrying")
+            httpproxy = proxy
+            httpsproxy = proxy
+            proxies = {"http": httpproxy, "https": httpsproxy}
+            if username == "":
+                # files = {
+                #    "file": open(filepath, "rb"),
+                # }
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                response = requests.post(
+                    apiurl, headers=headers, data=payload, files=files, proxies=proxies
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                    )
+            else:
+                auth = HTTPProxyAuth(username, password)
+                # files = {
+                #     "file": open(filepath, "rb"),
+                # }
+                files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                response = requests.post(
+                    apiurl,
+                    headers=headers,
+                    data=payload,
+                    files=files,
+                    proxies=proxies,
+                    auth=auth,
+                )
+                for x in range(retryCount):
+                    if response.status_code == 200 or response.status_code == 201:
+                        break
+                    time.sleep(timetowait)
+                    # files = {
+                    #     "file": open(filepath, "rb"),
+                    # }
+                    files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    response = requests.post(
+                        apiurl,
+                        headers=headers,
+                        data=payload,
+                        files=files,
+                        proxies=proxies,
+                        auth=auth,
+                    )
+
+    print("file upload sent")
+    if response.status_code >= 500:
+        if retryImport == True and "Parse error" in response.content.decode("utf-8"):
+            print("retrying import after parsing errors")
+            call_upload(retryImport=False)
+            return
+        else:
+            print(
+                (
+                    "[!] [{0}] Server Error {1}".format(
+                        response.status_code, response.content.decode("utf-8")
+                    )
+                )
+            )
+    elif response.status_code == 404:
+        print(("[!] [{0}] URL not found: []".format(response.status_code)))
+    elif response.status_code == 401:
+        print(("[!] [{0}] Authentication Failed".format(response.status_code)))
+    elif response.status_code == 400:
+        print(
+            (
+                "[!] [{0}] Bad Request: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
+    elif response.status_code >= 300:
+        print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
+    elif response.status_code == 200 or response.status_code == 201:
+        resultset = json.loads(response.content.decode("utf-8"))
+    else:
+        print(
+            (
+                "[?] Unexpected Error: [HTTP {0}]: Content: {1}".format(
+                    response.status_code, response.content
+                )
+            )
+        )
+    if retryImport == True:
+        if response.status_code != 200 and response.status_code != 201:
+            print("retrying import")
+            time.sleep(5)
+            call_upload(retryImport=False)
+
+
 def runtestswithappsurify(*args):
     global tests, teststorun, run_id, proxy, username, password, url, apikey, project, testsuite, report, maxtests, fail, additionalargs, testseparator, postfixtest, prefixtest
     global fullnameseparator, fullname, failfast, maxrerun, rerun, importtype, reporttype, teststorun, deletereports, startrunall, endrunall, startrunspecific, endrunspecific
@@ -2095,7 +2559,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir, azureTest, dll, vstestlocation
     try:
         tests = ""
         testsrun = ""
@@ -2239,29 +2703,7 @@ def runtestswithappsurify(*args):
                     testtemplatearg4 = sys.argv[k + 1]
                 if sys.argv[k] == "--filenames":
                     filenames = "True"
-                if sys.argv[k] == "--azuretest":
-                    azureTest = True
-                if sys.argv[k] == "--dll":
-                    dll = sys.argv[k + 1]
-                if sys.argv[k] == "--vstestlocation":
-                    vstestlocation = sys.argv[k + 1]
-
-        if azureTest:
-            #vstestlocation = "c:\\test\\this"
-            print("vs test location = ")
-            print(vstestlocation)
-            if vstestlocation.endswith("\""):
-                vstestlocation = vstestlocation[:-1]
-            if not vstestlocation.endswith("\\"):
-                if vstestlocation != "":
-                    vstestlocation = vstestlocation + "\\"
-            vstestlocation = "\""+vstestlocation + "vstest.console\""
-            commandToRun = vstestlocation + " " + dll+ " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
-            runcommand(commandToRun)
-            f = open('testlist.txt', 'r')
-            print(f.read())
-            f.close()
-            exit()
+                
 
         #####Test Run Templates######
 
@@ -3345,6 +3787,14 @@ def runtestswithappsurify(*args):
                     mergefiles = "True"
                 if sys.argv[k] == "--fullreportdir":
                     fullreportdir = sys.argv[k + 1]
+                if sys.argv[k] == "--azuretest":
+                    azureTest = True
+                if sys.argv[k] == "--dll":
+                    dll = sys.argv[k + 1]
+                    azureTest = True
+                if sys.argv[k] == "--vstestlocation":
+                    vstestlocation = sys.argv[k + 1]
+
                 if sys.argv[k] == "--help":
                     echo(
                         "please see url for more details on this script and how to execute your tests with appsurify - https://github.com/Appsurify/AppsurifyScriptInstallation"
