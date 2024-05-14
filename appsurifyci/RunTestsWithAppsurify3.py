@@ -998,7 +998,7 @@ def get_and_run_tests(type):
     try:
         testset = get_tests(type)
         count = 0
-        tests = ""    
+        tests = ""
         # print(maxtests)
         # print("max tests")
         # print(type(maxtests))
@@ -1158,25 +1158,32 @@ def get_and_run_tests(type):
         #####shouuld change this to add to test set at the start and be part of the standard loop
         if azureTest:
             try:
-                #vstestlocation = "c:\\test\\this"
+                # vstestlocation = "c:\\test\\this"
                 print("vs test location = ")
                 print(vstestlocation)
-                if vstestlocation.endswith("\""):
+                if vstestlocation.endswith('"'):
                     vstestlocation = vstestlocation[:-1]
                 if not vstestlocation.endswith("\\"):
                     if vstestlocation != "":
                         vstestlocation = vstestlocation + "\\"
-                vstestlocation = "\""+vstestlocation + "vstest.console\""
-                commandToRun = vstestlocation + " " + dll+ " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+                vstestlocation = '"' + vstestlocation + 'vstest.console"'
+                commandToRun = (
+                    vstestlocation
+                    + " "
+                    + dll
+                    + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+                )
                 runcommand(commandToRun)
                 old_tests = get_tests_file()
                 call_upload()
-                if old_tests != "{\"message\":\"No file found\"}":
-                    new_tests = compare_file_to_string("testlist.txt",old_tests)
+                if old_tests != '{"message":"No file found"}':
+                    new_tests = compare_file_to_string("testlist.txt", old_tests)
                     print("Checking for new tests")
                     for testName in new_tests:
                         print(testName)
-                        tests = tests + testseparator + prefixtest + testName + postfixtest
+                        tests = (
+                            tests + testseparator + prefixtest + testName + postfixtest
+                        )
                         addedtests.append(testName)
             except Exception as error:
                 # handle the exception
@@ -1209,8 +1216,8 @@ def get_and_run_tests(type):
     #        print("executing all tests")
     #        execute_tests("", 0)
 
+
 def get_tests_file(retryImport=True):
-    
     payload = {
         "project_name": project,
         "testsuite_name": testsuite,
@@ -1231,12 +1238,12 @@ def get_tests_file(retryImport=True):
 
     if proxy == "":
         response = requests.get(
-                    apiurl,
-                    headers=headers,
-                    params=payload,
-                    timeout=600,
-                )
-       
+            apiurl,
+            headers=headers,
+            params=payload,
+            timeout=600,
+        )
+
         for x in range(retryCount):
             if response.status_code == 200 or response.status_code == 201:
                 break
@@ -1246,11 +1253,11 @@ def get_tests_file(retryImport=True):
             #     "file": open(filepath, "rb"),
             # }
             response = requests.get(
-                    apiurl,
-                    headers=headers,
-                    params=payload,
-                    timeout=600,
-                )
+                apiurl,
+                headers=headers,
+                params=payload,
+                timeout=600,
+            )
     else:
         try:
             httpproxy = "http://" + proxy
@@ -1265,8 +1272,8 @@ def get_tests_file(retryImport=True):
                     headers=headers,
                     params=payload,
                     timeout=600,
-                    proxies=proxies
-                )               
+                    proxies=proxies,
+                )
                 for x in range(retryCount):
                     if response.status_code == 200 or response.status_code == 201:
                         break
@@ -1274,14 +1281,14 @@ def get_tests_file(retryImport=True):
                     # files = {
                     #    "file": open(filepath, "rb"),
                     # }
-                    
+
                     response = requests.get(
-                    apiurl,
-                    headers=headers,
-                    params=payload,
-                    timeout=600,
-                    proxies = proxies
-                )
+                        apiurl,
+                        headers=headers,
+                        params=payload,
+                        timeout=600,
+                        proxies=proxies,
+                    )
             else:
                 auth = HTTPProxyAuth(username, password)
                 # files = {
@@ -1292,7 +1299,6 @@ def get_tests_file(retryImport=True):
                     headers=headers,
                     params=payload,
                     timeout=600,
-                
                     proxies=proxies,
                     auth=auth,
                 )
@@ -1308,7 +1314,6 @@ def get_tests_file(retryImport=True):
                         headers=headers,
                         params=payload,
                         timeout=600,
-                
                         proxies=proxies,
                         auth=auth,
                     )
@@ -1321,13 +1326,13 @@ def get_tests_file(retryImport=True):
                 # files = {
                 #    "file": open(filepath, "rb"),
                 # }
-                #files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                # files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                 response = requests.get(
                     apiurl,
                     headers=headers,
                     params=payload,
                     timeout=600,
-                    proxies=proxies
+                    proxies=proxies,
                 )
                 for x in range(retryCount):
                     if response.status_code == 200 or response.status_code == 201:
@@ -1341,7 +1346,6 @@ def get_tests_file(retryImport=True):
                         headers=headers,
                         params=payload,
                         timeout=600,
-                
                         proxies=proxies,
                     )
             else:
@@ -1354,7 +1358,6 @@ def get_tests_file(retryImport=True):
                     headers=headers,
                     params=payload,
                     timeout=600,
-                
                     proxies=proxies,
                     auth=auth,
                 )
@@ -1365,13 +1368,12 @@ def get_tests_file(retryImport=True):
                     # files = {
                     #     "file": open(filepath, "rb"),
                     # }
-                    #files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
+                    # files = [("file", (filepath, open(filepath, "rb"), "text/xml"))]
                     response = requests.get(
                         apiurl,
                         headers=headers,
                         params=payload,
                         timeout=600,
-                
                         proxies=proxies,
                         auth=auth,
                     )
@@ -1405,8 +1407,8 @@ def get_tests_file(retryImport=True):
     elif response.status_code >= 300:
         print(("[!] [{0}] Unexpected Redirect".format(response.status_code)))
     elif response.status_code == 200 or response.status_code == 201:
-        #resultset = json.loads(response.content.decode("utf-8"))
-        #print(response.content)
+        # resultset = json.loads(response.content.decode("utf-8"))
+        # print(response.content)
         return response.content.decode("utf-8")
     else:
         print(
@@ -1422,6 +1424,7 @@ def get_tests_file(retryImport=True):
             time.sleep(5)
             get_tests_file(retryImport=False)
 
+
 def compare_file_to_string(file_path, string):
     """
     Compares the contents of a file to a given string.
@@ -1429,7 +1432,7 @@ def compare_file_to_string(file_path, string):
     """
     lines_not_found = []
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         for line in file:
             line = line.strip()  # Remove leading/trailing whitespace
             if line not in string:
@@ -1437,14 +1440,16 @@ def compare_file_to_string(file_path, string):
 
     return lines_not_found
 
-# Example usage
-file_path = 'example.txt'
-string_to_compare = "This is a sample string to compare against the file."
 
-lines_missing = compare_file_to_string(file_path, string_to_compare)
-print("Lines from the file that were not found in the string:")
-for line in lines_missing:
-    print(line)
+# Example usage
+# file_path = 'example.txt'
+# string_to_compare = "This is a sample string to compare against the file."
+#
+# lines_missing = compare_file_to_string(file_path, string_to_compare)
+# print("Lines from the file that were not found in the string:")
+# for line in lines_missing:
+#     print(line)
+
 
 # def failfast_tests(tests):
 def failfast_tests():
@@ -2703,7 +2708,6 @@ def runtestswithappsurify(*args):
                     testtemplatearg4 = sys.argv[k + 1]
                 if sys.argv[k] == "--filenames":
                     filenames = "True"
-                
 
         #####Test Run Templates######
 
