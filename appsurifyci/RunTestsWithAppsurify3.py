@@ -985,7 +985,7 @@ def get_tests(testpriority, retryGetTests=True):
 
 
 def get_and_run_tests(type):
-    global maxtests, vstestlocation
+    global maxtests, vstestlocation, dll
     count = 0
     tests = ""
     testset = ""
