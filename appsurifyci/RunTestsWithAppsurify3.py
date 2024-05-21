@@ -1226,7 +1226,7 @@ def get_tests_file(retryImport=True):
     headers = {
         "Token": apikey,
     }
-    apiurl = "/fileimport/download"
+    apiurl = url + "/fileimport/download"
 
     print(headers)
     print(payload)
