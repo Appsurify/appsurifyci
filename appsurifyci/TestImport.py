@@ -13,43 +13,130 @@ def urlencode(name):
 
 parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
 
-parser.add_argument('--url', type=str, required=True,
+parser.add_argument('--url', type=str, required=False,
                     help='Enter your organization url')
-parser.add_argument('--project', type=str, required=True,
+parser.add_argument('--project', type=str, required=False,
                     help='Enter project name')
-parser.add_argument('--apikey', type=str, required=True,
+parser.add_argument('--apikey', type=str, required=False,
                     help='The API key to communicate with API')
-parser.add_argument('--commit', type=str, required=True,
+parser.add_argument('--commit', type=str, required=False,
                     help='Enter the commit that would be the starter')
-parser.add_argument('--report', type=str, required=True,
+parser.add_argument('--report', type=str, required=False,
                     help='Enter the report.  Currently only supports a single file')
-parser.add_argument('--branch', type=str, required=True,
+parser.add_argument('--branch', type=str, required=False,
                     help='Enter the explicity branch to process commit')
-parser.add_argument('--testsuite', type=str, required=True,
+parser.add_argument('--testsuite', type=str, required=False,
                     help='Enter the testsuite')
-parser.add_argument('--importtype', type=str, required=True,
+parser.add_argument('--importtype', type=str, required=False,
+                    help='Enter the import type junit or trx')
+parser.add_argument('--vstestlocation', type=str, required=False,
+                    help='Enter the import type junit or trx')
+parser.add_argument('--dll', type=str, required=False,
                     help='Enter the import type junit or trx')
 parser.add_argument('--repo_name', type=str, required=False, default='',
                     help='Define repository name')
 
 
 args = parser.parse_args()
-url = args.url.rstrip('/')
-project = args.project
-apikey = args.apikey
-commit = args.commit
-branch = args.branch
-filepath = args.report
-repository = args.repo_name
-testsuite = args.testsuite
-importtype = args.importtype
+#url = args.url.rstrip('/')
+#project = args.project
+#apikey = args.apikey
+#commit = args.commit
+#branch = args.branch
+#filepath = args.report
+#repository = args.repo_name
+#testsuite = args.testsuite
+#importtype = args.importtype
+vstestlocation = args.vstestlocation
+dll = args.dll
 
-testsuiteencoded = urlencode(testsuite)
-projectencoded = urlencode(project)
-testsuiteencoded = testsuite
-projectencoded = project
+#testsuiteencoded = urlencode(testsuite)
+#projectencoded = urlencode(project)
+#testsuiteencoded = testsuite
+#projectencoded = project
 
 def testimport():
+    cwd = os.getcwd()
+
+    print("vs test location = ")
+
+    print(vstestlocation)
+    #runcommand("cd\\")
+    os.chdir(vstestlocation)
+    #runcommand("cd "+vstestlocation)
+    #runcommand("dir")
+    print(os.listdir(os.getcwd()))
+    commandToRun = (
+        
+        "vstest.console "
+        + dll
+        + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+    )
+    
+    runcommand(commandToRun)
+    print("completed v1")
+    commandToRun = (
+        "vstest.console.exe "
+        + dll
+        + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+    )
+    runcommand(commandToRun)
+    print("completed v2")
+
+    os.chdir(cwd)
+    print(os.listdir(os.getcwd()))
+
+    #if vstestlocation.endswith('"'):
+    #    vstestlocation = vstestlocation[:-1]
+    #if not vstestlocation.endswith("\\"):
+    #    if vstestlocation != "":
+    #        vstestlocation = vstestlocation + "\\"
+    #vstestlocation = '"' + vstestlocation + 'vstest.console"'
+    #if vstestlocation == '"vstest.console"':
+    #    vstestlocation = "vstest.console"
+    #commandToRun = (
+    #    vstestlocation
+    #    + " "
+    #    + dll
+    #    + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+    #)
+    #runcommand(commandToRun)
+
+def runcommand(command, stream="false"):
+    print("Running command " + command)
+    print("platform = " + sys.platform)
+    try:
+        if stream == "true":
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                encoding="utf-8",
+            )
+            output = ""
+            while True:
+                # returns None while subprocess is running
+                retcode = process.poll()
+                line = process.stdout.readline()
+                output = output + line
+                print(line, end="")
+                # yield line
+                if retcode is not None:
+                    break
+            return output
+        if stream == "false":
+            result = subprocess.run(command, shell=True, capture_output=True)
+            # subprocess.run(['ls', '-l'])stdout=subprocess.PIPE,
+            print((result.stdout.decode("utf-8")))
+            print((result.stderr.decode("utf-8")))
+            return result.stdout.decode("utf-8")
+    except Exception as ex:
+        print(ex)
+
+
+
+def testimportold():
 
     log = logging.getLogger('urllib3')
     log.setLevel(logging.DEBUG)

@@ -1167,6 +1167,8 @@ def get_and_run_tests(type):
                     if vstestlocation != "":
                         vstestlocation = vstestlocation + "\\"
                 vstestlocation = '"' + vstestlocation + 'vstest.console"'
+                if vstestlocation == '"vstest.console"':
+                    vstestlocation = "vstest.console"
                 commandToRun = (
                     vstestlocation
                     + " "
