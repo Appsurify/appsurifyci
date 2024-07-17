@@ -3006,8 +3006,7 @@ def runtestswithappsurify(*args):
 
         # protractor - https://stackoverflow.com/questions/24536572/how-to-run-a-single-specific-test-case-when-using-protractor
         # https://github.com/angular/protractor/issues/164
-
-        # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
+        
         if testtemplate == "cucumber mvn":
             testseparator = " "
             startrunspecific = "mvn test "
@@ -3019,6 +3018,29 @@ def runtestswithappsurify(*args):
             reporttype = "directory"
             deletereports = "false"
             endspecificrun = ' -Dcucumber.options="'
+
+        #startrunspecific
+                #+ startrunpostfix
+                #+ testlist
+                #+ endrunprefix
+                #+ endrunspecific
+                #+ endrunpostfix
+
+                #-Dcucumber.filter.name="REGEXP"
+        #https://github.com/cucumber/cucumber-jvm/tree/main/cucumber-core#properties-environment-variables-system-options
+
+        # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
+        if testtemplate == "cucumber6 mvn":
+            testseparator = "|"
+            startrunspecific = 'mvn test '
+            endrunspecific = '" '
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = ' -Dcucumber.filter.name="'
 
         if testtemplate == "cucumber protractor":
             testseparator = " "

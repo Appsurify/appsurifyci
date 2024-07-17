@@ -31,6 +31,8 @@ parser.add_argument('--importtype', type=str, required=False,
                     help='Enter the import type junit or trx')
 parser.add_argument('--vstestlocation', type=str, required=False,
                     help='Enter the import type junit or trx')
+parser.add_argument('--vstestsearch', type=str, required=False, default='',
+                    help='Enter the import type junit or trx')
 parser.add_argument('--dll', type=str, required=False,
                     help='Enter the import type junit or trx')
 parser.add_argument('--repo_name', type=str, required=False, default='',
@@ -49,40 +51,59 @@ args = parser.parse_args()
 #importtype = args.importtype
 vstestlocation = args.vstestlocation
 dll = args.dll
+vstestsearch = args.vstestsearch
 
 #testsuiteencoded = urlencode(testsuite)
 #projectencoded = urlencode(project)
 #testsuiteencoded = testsuite
 #projectencoded = project
 
+
+
 def testimport():
-    cwd = os.getcwd()
 
-    print("vs test location = ")
-
-    print(vstestlocation)
-    #runcommand("cd\\")
-    os.chdir(vstestlocation)
-    #runcommand("cd "+vstestlocation)
-    #runcommand("dir")
-    print(os.listdir(os.getcwd()))
-    commandToRun = (
-        
-        "vstest.console "
-        + dll
-        + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
-    )
     
-    runcommand(commandToRun)
-    print("completed v1")
-    commandToRun = (
-        "vstest.console.exe "
-        + dll
-        + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
-    )
-    runcommand(commandToRun)
-    print("completed v2")
+    cwd = os.getcwd()
+    try:
+        print("vs test location = ")
 
+        if vstestsearch != "":
+            os.chdir(vstestsearch)
+            directories = os.listdir(os.getcwd())
+            print(directories)
+            directories.sort(reverse=True)
+            print(directories)
+            temploc = os.path.join(vstestsearch, directories[0])
+            print(temploc)
+            vstestlocation = os.path.join(temploc, "x64")
+            
+            print(vstestlocation)
+
+
+        print(vstestlocation)
+        #runcommand("cd\\")
+        os.chdir(vstestlocation)
+        #runcommand("cd "+vstestlocation)
+        #runcommand("dir")
+        print(os.listdir(os.getcwd()))
+        commandToRun = (
+            
+            "vstest.console "
+            + dll
+            + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+        )
+        
+        runcommand(commandToRun)
+        print("completed v1")
+        commandToRun = (
+            "vstest.console.exe "
+            + dll
+            + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
+        )
+        runcommand(commandToRun)
+        print("completed v2")
+    except Exception as e:
+        print(e)
     os.chdir(cwd)
     print(os.listdir(os.getcwd()))
 
