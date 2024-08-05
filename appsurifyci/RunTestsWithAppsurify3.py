@@ -33,6 +33,7 @@ from urllib3.connection import HTTPConnection
 import pathlib
 from testbrain.contrib.report.mergers.junit import JUnitReportMerger
 from testbrain.contrib.report.utils import xml_string_to_fileobject
+import datetime as dt  
 
 try:
     import yaml
@@ -147,6 +148,13 @@ fullreportdir = ""
 azureTest = False
 dll = ""
 vstestlocation = ""
+#https://stackoverflow.com/questions/10048249/how-do-i-determine-if-current-time-is-within-a-specified-range-using-pythons-da
+startTimeRunAll = ""
+
+def isNowAfter(startTime): 
+    nowTime = dt.datetime.now().time()
+    #Over midnight: 
+    return nowTime >= startTime 
 
 
 def find(name):
@@ -2566,7 +2574,7 @@ def runtestswithappsurify(*args):
     global endrunpostfix, executetests, encodetests, testsuiteencoded, projectencoded, testsrun, trainer, azure_variable, pipeoutput, recursive, bitrise, executioncommand, githubactionsvariable, printcommand
     global azurefilter, replaceretry, webdriverio, percentage, endspecificrun, runnewtests, weekendrunall, daysrunall, newdays, azurefilteronall, azurevariablenum, commandset, alwaysrun, alwaysrunset
     global azurealwaysrun, azurealwaysrunset, upload, createfile, createpropertiesfile, spliton, nopush, repo_name, screenplay, endcommand, createfiles, createfilesdirectory, maxretrytime, testsetnum
-    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir, azureTest, dll, vstestlocation
+    global numtestsets, filenames, printout, includefailing, convertcucumber, escapetests, circlecivariable, circlecivariablenobash, mergereports, mergefiles, fullreportdir, azureTest, dll, vstestlocation, startTimeRunAll
     try:
         tests = ""
         testsrun = ""
@@ -2679,6 +2687,7 @@ def runtestswithappsurify(*args):
         azureTest = False
         dll = ""
         vstestlocation = ""
+        startTimeRunAll = ""
         # --testsuitesnameseparator and classnameseparator need to be encoded i.e. # is %23
 
         # Templates
@@ -2827,6 +2836,21 @@ def runtestswithappsurify(*args):
             startrunspecific = "testrunner temp.dd.csv"
             startrunall = "testrunner " + testtemplatearg2
             report = testtemplatearg1
+
+        # set endrun to being final command for test runner i.e. browser etccls
+        if testtemplate == "sbt":
+            testseparator = "--test "
+            addtestsuitename = "true"
+            testsuitesnameseparator = "."
+            # startrunspecific = "gradle test --test '"
+            startrunspecific = "gradle test"
+            prefixtest = " --test '"
+            postfixtest = "'"
+            # endrunspecific = "'"
+            startrunall = "gradle test"
+            report = "./build/test-results/"
+            reporttype = "directory"
+            deletereports = "false"
 
         # https://stackoverflow.com/questions/22505533/how-to-run-only-one-unit-test-class-using-gradle
         if testtemplate == "gradle":
@@ -3031,6 +3055,18 @@ def runtestswithappsurify(*args):
 
         # mvn test -Dcucumber.options="--name 'another scenario' --name '^a few cukes$'"
         if testtemplate == "cucumber6 mvn":
+            testseparator = "|"
+            startrunspecific = 'mvn test '
+            endrunspecific = '" '
+            postfixtest = "$"
+            prefixtest = "^"
+            startrunall = "mvn test"
+            report = "./target/surefire-reports/"
+            reporttype = "directory"
+            deletereports = "false"
+            endspecificrun = ' -Dcucumber.filter.name="'
+
+        if testtemplate == "cucumber6mvn":
             testseparator = "|"
             startrunspecific = 'mvn test '
             endrunspecific = '" '
@@ -3822,6 +3858,8 @@ def runtestswithappsurify(*args):
                     azureTest = True
                 if sys.argv[k] == "--vstestlocation":
                     vstestlocation = sys.argv[k + 1]
+                if sys.argv[k] == "--starttimerunall":
+                    startTimeRunAll = sys.argv[k + 1]    
 
                 if sys.argv[k] == "--help":
                     echo(
@@ -4016,6 +4054,8 @@ def runtestswithappsurify(*args):
         }
         day = daysofweek[weekno]
         runningallday = False
+        
+
         if daysrunall != "":
             for runfullday in daysrunall.split(","):
                 if (
@@ -4032,6 +4072,15 @@ def runtestswithappsurify(*args):
                     print("Running all tests as we are on " + day)
                     testtypes = []
                     runningallday = True
+
+        if startTimeRunAll != "":
+            starthour = int(startTimeRunAll.split(":")[0])
+            startmin = int(startTimeRunAll.split(":")[1])
+            if isNowAfter(dt.time(starthour,startmin)):
+                print("Running all tests as we are after " + startTimeRunAll)
+                testtypes = []
+                runningallday = True
+
 
         ####start loop
         for i in testtypes:
