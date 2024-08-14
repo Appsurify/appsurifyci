@@ -85,7 +85,7 @@ def testimport():
             temploc = os.path.join(vstestsearch, directories[0])
             print(temploc)
             vstestlocation = os.path.join(temploc, "x64")
-            
+            vstestlocation = os.path.join(temploc, "tools")
             print(vstestlocation)
 
 
