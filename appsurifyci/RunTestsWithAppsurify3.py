@@ -1171,6 +1171,8 @@ def get_and_run_tests(type):
                 print(vstestlocation)
                 if vstestlocation.endswith('"'):
                     vstestlocation = vstestlocation[:-1]
+                if vstestlocation.endswith("vstest.console.exe"):
+                    vstestlocation = vstestlocation.split("vstest.console.exe")[0]
                 if not vstestlocation.endswith("\\"):
                     if vstestlocation != "":
                         vstestlocation = vstestlocation + "\\"
@@ -1187,6 +1189,7 @@ def get_and_run_tests(type):
                 old_tests = get_tests_file()
                 call_upload()
                 if old_tests != '{"message":"No file found"}':
+                    print("No old tests")
                     new_tests = compare_file_to_string("testlist.txt", old_tests)
                     print("Checking for new tests")
                     for testName in new_tests:
@@ -1198,7 +1201,7 @@ def get_and_run_tests(type):
             except Exception as error:
                 # handle the exception
                 print(
-                    "An exception occurred:", error
+                    "No tests to add", error
                 )  # An exception occurred: division by zero
         if createfiles.isnumeric():
             if count != 0:

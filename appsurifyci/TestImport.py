@@ -71,12 +71,63 @@ vstestsearch = args.vstestsearch
 
 def testimport():
 
+
+    parser = argparse.ArgumentParser(description='Sync a number of commits before a specific commit')
+
+    parser.add_argument('--url', type=str, required=False,
+                        help='Enter your organization url')
+    parser.add_argument('--project', type=str, required=False,
+                        help='Enter project name')
+    parser.add_argument('--apikey', type=str, required=False,
+                        help='The API key to communicate with API')
+    parser.add_argument('--commit', type=str, required=False,
+                        help='Enter the commit that would be the starter')
+    parser.add_argument('--report', type=str, required=False,
+                        help='Enter the report.  Currently only supports a single file')
+    parser.add_argument('--branch', type=str, required=False,
+                        help='Enter the explicity branch to process commit')
+    parser.add_argument('--testsuite', type=str, required=False,
+                        help='Enter the testsuite')
+    parser.add_argument('--importtype', type=str, required=False,
+                        help='Enter the import type junit or trx')
+    parser.add_argument('--vstestlocation', type=str, required=False,
+                        help='Enter the import type junit or trx')
+    parser.add_argument('--vstestsearch', type=str, required=False, default='',
+                        help='Enter the import type junit or trx')
+    parser.add_argument('--dll', type=str, required=False,
+                        help='Enter the import type junit or trx')
+    parser.add_argument('--dlllocation', type=str, required=False,
+                        help='Enter the import type junit or trx')
+    parser.add_argument('--repo_name', type=str, required=False, default='',
+                        help='Define repository name')
+
+
+    args = parser.parse_args()
+    #url = args.url.rstrip('/')
+    #project = args.project
+    #apikey = args.apikey
+    #commit = args.commit
+    #branch = args.branch
+    #filepath = args.report
+    #repository = args.repo_name
+    #testsuite = args.testsuite
+    #importtype = args.importtype
+    vstestlocation = args.vstestlocation
+    dll = args.dll
+    dlllocation = args.dlllocation
+    vstestsearch = args.vstestsearch
+
+    #testsuiteencoded = urlencode(testsuite)
+    #projectencoded = urlencode(project)
+    #testsuiteencoded = testsuite
+    #projectencoded = project
     
     cwd = os.getcwd()
     try:
         print("vs test location = ")
 
         if vstestsearch != "":
+            print("-1")
             os.chdir(vstestsearch)
             directories = os.listdir(os.getcwd())
             print("1")
@@ -149,23 +200,25 @@ def testimport():
             print(directories)
 
 
-
-        print("6")
-        print(vstestlocation)
-        print("7")
+        #if vstestlocation.endswith("vstest.console.exe"):
+        #    vstestlocation = vstestlocation.split("vstest.console.exe")[0]
+        #print("6")
+        #print(vstestlocation)
+        #print("7")
         #runcommand("cd\\")
-        os.chdir(vstestlocation)
+        os.chdir(dlllocation)
         #runcommand("cd "+vstestlocation)
         #runcommand("dir")
         print("8")
         print(os.listdir(os.getcwd()))
+        print("9")
         commandToRun = (
-            
-            "vstest.console "
+            ""+
+            vstestlocation + " "
             + dll
             + " /ListFullyQualifiedTests /ListTestsTargetPath:testlist.txt"
         )
-        
+        print("10")        
         runcommand(commandToRun)
         print("completed v1")
         commandToRun = (
