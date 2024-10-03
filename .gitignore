@@ -8,3 +8,4 @@ build
 dist
 .jython_cache/
 .testbrain/
+.idea/
